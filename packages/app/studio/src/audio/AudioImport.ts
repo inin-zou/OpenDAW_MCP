@@ -1,4 +1,4 @@
-import {Arrays, ProgressHandler, UUID} from "@opendaw/lib-std"
+import {Arrays, Progress, UUID} from "@opendaw/lib-std"
 import {estimateBpm} from "@opendaw/lib-dsp"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioData, Sample, SampleMetaData} from "@opendaw/studio-adapters"
@@ -10,7 +10,7 @@ export namespace AudioImporter {
         uuid?: UUID.Format,
         name: string,
         arrayBuffer: ArrayBuffer,
-        progressHandler: ProgressHandler
+        progressHandler: Progress.Handler
     }
 
     export const run = async (context: AudioContext,

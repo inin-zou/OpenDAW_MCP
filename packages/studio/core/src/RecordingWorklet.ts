@@ -1,5 +1,6 @@
 import {
     Arrays,
+    assert,
     ByteArrayInput,
     int,
     isUndefined,
@@ -7,6 +8,7 @@ import {
     Nullable,
     Observer,
     Option,
+    Progress,
     Subscription,
     Terminable,
     UUID
@@ -46,6 +48,7 @@ class PeaksWriter implements Peaks, Peaks.Stage {
     append(frames: ReadonlyArray<Float32Array>): void {
         for (let channel = 0; channel < this.numChannels; ++channel) {
             const channelFrames = frames[channel]
+            assert(channelFrames.length === RenderQuantum, "Invalid number of frames.")
             let min = Number.POSITIVE_INFINITY
             let max = Number.NEGATIVE_INFINITY
             for (let i = 0; i < RenderQuantum; ++i) {
@@ -58,9 +61,7 @@ class PeaksWriter implements Peaks, Peaks.Stage {
         this.numFrames += RenderQuantum
     }
 
-    nearest(_unitsPerPixel: number): Nullable<Peaks.Stage> {
-        return this.stages.at(0) ?? null
-    }
+    nearest(_unitsPerPixel: number): Nullable<Peaks.Stage> {return this.stages.at(0) ?? null}
 }
 
 export class RecordingWorklet extends AudioWorkletNode implements Terminable, SampleLoader {
@@ -139,11 +140,8 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
         }
         this.#data = Option.wrap(audioData)
         const shifts = SamplePeaks.findBestFit(numberOfFrames)
-        const peaks = await WorkerAgents.Peak
-            .generateAsync(progress => this.#setState({
-                type: "progress",
-                progress
-            }), shifts, frames, numberOfFrames, numberOfChannels)
+        const peaks = await WorkerAgents
+            .Peak.generateAsync(Progress.Empty, shifts, frames, numberOfFrames, numberOfChannels)
         this.#peaks = Option.wrap(SamplePeaks.from(new ByteArrayInput(peaks)))
         const bpm = BPMTools.detect(frames[0], sample_rate)
         const duration = numberOfFrames / sample_rate

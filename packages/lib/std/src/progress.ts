@@ -1,11 +1,12 @@
 import {int, Procedure, unitValue} from "./lang"
 import {Arrays} from "./arrays"
 
-export type ProgressHandler = Procedure<unitValue>
-export const SilentProgressHandler: ProgressHandler = _ => {}
-
 export namespace Progress {
-    export const split = (progress: ProgressHandler, count: int): ReadonlyArray<ProgressHandler> => {
+    export type Handler = Procedure<unitValue>
+
+    export const Empty: Handler = Object.freeze(_ => {})
+
+    export const split = (progress: Handler, count: int): ReadonlyArray<Handler> => {
         const collect = new Float32Array(count)
         return Arrays.create(index => (value: number) => {
             collect[index] = value

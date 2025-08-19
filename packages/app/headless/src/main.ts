@@ -1,5 +1,5 @@
 import "./style.css"
-import {assert, ProgressHandler, UUID} from "@opendaw/lib-std"
+import {assert, Progress, UUID} from "@opendaw/lib-std"
 import {PPQN} from "@opendaw/lib-dsp"
 import {AnimationFrame, Browser} from "@opendaw/lib-dom"
 import {Promises} from "@opendaw/lib-runtime"
@@ -39,7 +39,7 @@ import {createExampleProject} from "./ExampleProject"
     }
     {
         const sampleManager = new MainThreadSampleManager({
-            fetch: (uuid: UUID.Format, progress: ProgressHandler): Promise<[AudioData, SampleMetaData]> =>
+            fetch: (uuid: UUID.Format, progress: Progress.Handler): Promise<[AudioData, SampleMetaData]> =>
                 SampleApi.load(context, uuid, progress)
         }, context)
 

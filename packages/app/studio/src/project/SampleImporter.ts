@@ -1,4 +1,4 @@
-import {ProgressHandler, UUID} from "@opendaw/lib-std"
+import {Progress, UUID} from "@opendaw/lib-std"
 import {Sample} from "@opendaw/studio-adapters"
 
 export type SampleImporter = {
@@ -6,6 +6,6 @@ export type SampleImporter = {
         uuid: UUID.Format,
         name: string,
         arrayBuffer: ArrayBuffer,
-        progressHandler?: ProgressHandler
+        progressHandler?: Progress.Handler
     }): Promise<Sample>
 }

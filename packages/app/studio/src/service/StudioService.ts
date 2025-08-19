@@ -12,9 +12,7 @@ import {
     panic,
     Procedure,
     Progress,
-    ProgressHandler,
     Provider,
-    SilentProgressHandler,
     Subscription,
     Terminator,
     UUID
@@ -352,11 +350,11 @@ export class StudioService implements ProjectEnv {
         }
     }
 
-    async importSample({uuid, name, arrayBuffer, progressHandler = SilentProgressHandler}: {
+    async importSample({uuid, name, arrayBuffer, progressHandler = Progress.Empty}: {
         uuid?: UUID.Format,
         name: string,
         arrayBuffer: ArrayBuffer,
-        progressHandler?: ProgressHandler
+        progressHandler?: Progress.Handler
     }): Promise<Sample> {
         console.debug(`Importing '${name}' (${arrayBuffer.byteLength >> 10}kb)`)
         return AudioImporter.run(this.context, {uuid, name, arrayBuffer, progressHandler})

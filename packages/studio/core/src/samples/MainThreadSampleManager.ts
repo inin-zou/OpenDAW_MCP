@@ -1,4 +1,4 @@
-import {ProgressHandler, SortedSet, UUID} from "@opendaw/lib-std"
+import {Progress, SortedSet, UUID} from "@opendaw/lib-std"
 import {AudioData, SampleLoader, SampleManager, SampleMetaData} from "@opendaw/studio-adapters"
 import {MainThreadSampleLoader} from "./MainThreadSampleLoader"
 import {SampleProvider} from "./SampleProvider"
@@ -16,7 +16,7 @@ export class MainThreadSampleManager implements SampleManager, SampleProvider {
 
     get context(): AudioContext {return this.#context}
 
-    fetch(uuid: UUID.Format, progress: ProgressHandler): Promise<[AudioData, SampleMetaData]> {
+    fetch(uuid: UUID.Format, progress: Progress.Handler): Promise<[AudioData, SampleMetaData]> {
         return this.#api.fetch(uuid, progress)
     }
 

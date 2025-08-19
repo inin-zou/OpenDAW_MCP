@@ -61,9 +61,14 @@ export namespace RecordAudio {
                     streamGain.connect(recordingWorklet)
                     writing = editing.modify(() => {
                         const position = quantizeFloor(owner.getValue(), beats)
-                        const fileBox = AudioFileBox.create(boxGraph, uuid, box => {
-                            box.fileName.setValue("Recording")
-                        })
+                        const fileDateString = new Date()
+                            .toISOString()
+                            .replaceAll("T", "-")
+                            .replaceAll(".", "-")
+                            .replaceAll(":", "-")
+                            .replaceAll("Z", "")
+                        const fileName = `Recording-${fileDateString}`
+                        const fileBox = AudioFileBox.create(boxGraph, uuid, box => box.fileName.setValue(fileName))
                         const regionBox = AudioRegionBox.create(boxGraph, UUID.generate(), box => {
                             box.file.refer(fileBox)
                             box.regions.refer(trackBox.regions)
