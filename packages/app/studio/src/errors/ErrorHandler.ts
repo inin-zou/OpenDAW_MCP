@@ -39,13 +39,13 @@ export class ErrorHandler {
         }
         console.error(scope, error.name, error.message, error.stack)
         const probablyHasExtension = document.scripts.length > 1
-            || error.message.includes("script-src blocked eval")
+            || error.message?.includes("script-src blocked eval") === true
             || error.stack?.includes("chrome-extension://") === true
         if (Surface.isAvailable()) {
             showErrorDialog({
                 scope: scope,
                 name: error.name,
-                message: error.message,
+                message: error.message ?? "no message",
                 probablyHasExtension,
                 backupCommand: this.#service.recovery.createBackupCommand()
             })

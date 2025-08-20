@@ -2,7 +2,7 @@ import {isDefined} from "@opendaw/lib-std"
 
 export type ErrorInfo = {
     name: string
-    message: string
+    message?: string
     stack?: string
 }
 
