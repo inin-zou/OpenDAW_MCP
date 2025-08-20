@@ -25,7 +25,7 @@ import {createPanelFactory} from "@/ui/workspace/PanelFactory.tsx"
 import {SpotlightDataSupplier} from "@/ui/spotlight/SpotlightDataSupplier.ts"
 import {Workspace} from "@/ui/workspace/Workspace.ts"
 import {PanelType} from "@/ui/workspace/PanelType.ts"
-import {showApproveDialog, showInfoDialog, showProcessDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs, showApproveDialog, showInfoDialog, showProcessDialog} from "@/ui/components/dialogs.tsx"
 import {BuildInfo} from "@/BuildInfo.ts"
 import {MidiDeviceAccess} from "@/midi/devices/MidiDeviceAccess"
 import {SamplePlayback} from "@/service/SamplePlayback"
@@ -266,10 +266,7 @@ export class StudioService implements ProjectEnv {
             engine: this.engine,
             requestMIDIAccess: MidiDeviceAccess.requestMidiAccess,
             audioContext: this.context
-        }, countIn).catch(reason => {
-            console.debug(reason)
-            showInfoDialog({headline: "Could not start recording", message: String(reason)}).then()
-        })
+        }, countIn).catch(Dialogs.WarningProcedure)
     }
 
     stopRecording(): void {this.engine.stopRecording()}

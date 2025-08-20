@@ -2,21 +2,20 @@
 
 ## Next
 
-* Stop recording at quantized position
+* Fully implement capture
+    * List all devices
+    * If MIDI, select all channels or specific channel
+    * If Audio, let the user select the number of channels (max and default is 2)
+* Implement monitor
+    * If audio, show peak-meter and allow monitoring
+    * If MIDI, show incoming midi notes and merge with MIDI learning
 
 ## Level #1
 
 * If the project is empty, ask if the user wants to record audio or midi
 * If tracks, use the first available audio-unit to record
 * We need a flag to identify audio-unit's main content (audio or MIDI)
-* Fully implement capture
-    * List all devices
-    * If MIDI, select all channels or specific channel
-    * If Audio, let the user select the number of channels (max and default is 2)
-* Find a way to stop recording on quantized duration (audio)
-* Implement monitor
-    * If audio, show peak-meter and allow monitoring
-    * If MIDI, show incoming midi notes and merge with MIDI learning
+* Stop (start) recording at quantized positions
 * Inform the user if there is no outputLatency (Chrome only)
 * Find a way to overlay, replace, mix on existing regions
 * Find a way to handle loops/jumps while recording

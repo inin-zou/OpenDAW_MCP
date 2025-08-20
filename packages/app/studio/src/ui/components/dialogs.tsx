@@ -6,10 +6,12 @@ import {
     isDefined,
     ObservableValue,
     Option,
+    panic,
     Procedure,
     Provider,
     Terminator,
-    unitValue
+    unitValue,
+    Warning
 } from "@opendaw/lib-std"
 import {Surface} from "@/ui/surface/Surface.tsx"
 import {IconSymbol} from "@opendaw/studio-adapters"
@@ -20,6 +22,16 @@ import {ProgressBar} from "@/ui/components/ProgressBar.tsx"
 import EmailBody from "@/ErrorMail.txt?raw"
 import {Errors} from "@opendaw/lib-dom"
 import {Colors} from "@opendaw/studio-core"
+
+export namespace Dialogs {
+    export const WarningProcedure = (reason: unknown): unknown => reason instanceof Warning
+        ? showDialog({
+            headline: "Warning",
+            content: (<p>{reason.message}</p>),
+            buttons: Arrays.empty()
+        }).catch(Errors.CatchAbort)
+        : panic(reason)
+}
 
 export const showDialog = async ({headline, content, okText, buttons, origin}: {
     headline?: string,
@@ -49,7 +61,7 @@ export const showDialog = async ({headline, content, okText, buttons, origin}: {
     )
     Surface.get(origin).body.appendChild(dialog)
     dialog.showModal()
-    dialog.addEventListener("close", () => {if (!resolved) {reject()}}, {once: true})
+    dialog.addEventListener("close", () => {if (!resolved) {reject(Errors.AbortError)}}, {once: true})
     return promise
 }
 

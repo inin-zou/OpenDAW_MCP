@@ -1,4 +1,4 @@
-import {assert, Option, panic, Terminable, Terminator} from "@opendaw/lib-std"
+import {assert, Option, Terminable, Terminator, warn} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {RecordingContext} from "./RecordingContext"
 
@@ -9,17 +9,15 @@ export class Recording {
         const {captureManager, editing} = project
         const terminator = new Terminator()
         const captures = captureManager.filterArmed()
-        console.debug("Arming captures")
+        console.debug("Filter armed captures...")
         if (captures.length === 0) {
-            return panic("No track is armed for Recording")
+            return warn("No track is armed for Recording")
         }
         const {status, error} =
             await Promises.tryCatch(Promise.all(captures.map(capture => capture.prepareRecording(context))))
         if (status === "rejected") {
-            console.warn(error)
-            return panic(error)
+            return warn(`Could not prepare recording: ${error}`)
         }
-        console.debug("start recording")
         terminator.ownAll(...captures.map(capture => capture.startRecording(context)))
         engine.startRecording(countIn)
         const {isRecording, isCountingIn} = engine
