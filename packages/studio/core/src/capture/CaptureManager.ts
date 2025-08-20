@@ -22,7 +22,7 @@ export class CaptureManager implements Terminable {
                     }))
                 if (isDefined(capture)) {this.#captures.add(capture)}
             },
-            onRemove: ({box: {address: {uuid}}}) => this.#captures.removeByKey(uuid)
+            onRemove: ({box: {address: {uuid}}}) => this.#captures.removeByKeyIfExist(uuid)?.terminate()
         })
     }
 

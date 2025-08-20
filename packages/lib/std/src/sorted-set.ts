@@ -99,6 +99,16 @@ export class SortedSet<K, V> implements Iterable<V> {
         return panic(`Could not remove ${key}`)
     }
 
+    removeByKeyIfExist(key: K): Nullable<V> {
+        const deleteIndex = BinarySearch.leftMostMapped(this.#array, key, this.#comparator, this.#extractor)
+        const candidate: Nullish<V> = this.#array[deleteIndex]
+        if (isDefined(candidate) && this.#comparator(this.#extractor(candidate), key) === 0) {
+            this.#array.splice(deleteIndex, 1)
+            return candidate
+        }
+        return null
+    }
+
     removeRange(startIndex: int, endIndex?: int): void {
         this.#array.splice(startIndex, (endIndex ?? this.#array.length) - startIndex)
     }
