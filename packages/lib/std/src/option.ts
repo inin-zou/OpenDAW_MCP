@@ -18,7 +18,7 @@ export interface Option<T> {
     unwrapOrNull(): Nullable<T>
     unwrapOrUndefined(): T | undefined
     match<R>(matchable: Option.Matchable<T, R>): R
-    ifSome<R>(procedure: Procedure<T>): R | void
+    ifSome<R>(procedure: Procedure<T>): R | undefined
     contains(value: T): boolean
     isEmpty(): boolean
     nonEmpty(): boolean
@@ -54,7 +54,7 @@ export namespace Option {
         unwrapOrUndefined(): T | undefined {return this.#value }
         contains(value: T): boolean { return value === this.#value }
         match<R>(matchable: Matchable<T, R>): R {return matchable.some(this.#value)}
-        ifSome<R>(run: Func<T, R>): R {return run(this.#value)}
+        ifSome<R extends undefined>(run: Func<T, R>): R {return run(this.#value)}
         isEmpty(): boolean { return false }
         nonEmpty(): boolean { return true }
         map<U>(callback: (value: T) => Nullable<U>): Option<U> {return Option.wrap(callback(this.#value))}
@@ -73,7 +73,7 @@ export namespace Option {
         readonly unwrapOrUndefined = <T>(): T | undefined => undefined
         readonly contains = (_: unknown): boolean => false
         readonly match = <R>(matchable: Matchable<never, R>): R => matchable.none()
-        readonly ifSome = (_: Procedure<never>): void => {}
+        readonly ifSome = (_: Procedure<never>): undefined => {}
         readonly isEmpty = (): boolean => true
         readonly nonEmpty = (): boolean => false
         readonly map = <U>(_: (_: never) => U): Option<U> => None

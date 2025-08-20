@@ -29,7 +29,7 @@ export namespace RecordAudio {
         const terminator = new Terminator()
         const beats = PPQN.fromSignature(1, project.timelineBox.signature.denominator.getValue())
         const {editing, boxGraph} = project
-        const trackBox: TrackBox = RecordTrack.findOrCreate(editing, capture.box, TrackType.Audio)
+        const trackBox: TrackBox = RecordTrack.findOrCreate(editing, capture.audioUnitBox, TrackType.Audio)
         const uuid = recordingWorklet.uuid
         sampleManager.record(recordingWorklet)
         const streamSource = audioContext.createMediaStreamSource(mediaStream)

@@ -1,25 +1,33 @@
 import {assert, byte, isDefined, isUndefined, Notifier, Option, panic, Terminable} from "@opendaw/lib-std"
 import {Events} from "@opendaw/lib-dom"
 import {MidiData} from "@opendaw/lib-midi"
-import {AudioUnitBox} from "@opendaw/studio-boxes"
+import {AudioUnitBox, CaptureMidiBox} from "@opendaw/studio-boxes"
 import {Capture} from "./Capture"
 import {RecordMidi} from "./RecordMidi"
 import {RecordingContext} from "./RecordingContext"
 
-export class CaptureMidi extends Capture {
+export class CaptureMidi extends Capture<CaptureMidiBox> {
     #midiAccess: Option<MIDIAccess> = Option.None
 
-    #filterDeviceId: Option<string> = Option.None
     #filterChannel: Option<byte> = Option.None
 
-    constructor(box: AudioUnitBox) {super(box)}
+    constructor(audioUnitBox: AudioUnitBox, captureMidiBox: CaptureMidiBox) {
+        super(audioUnitBox, captureMidiBox)
+
+        this.ownAll(
+            captureMidiBox.channel.catchupAndSubscribe(owner => {
+                const channel = owner.getValue()
+                this.#filterChannel = channel >= 0 ? Option.wrap(channel) : Option.None
+            })
+        )
+    }
 
     async prepareRecording({requestMIDIAccess}: RecordingContext): Promise<void> {
         return requestMIDIAccess()
             .then(midiAccess => {
-                if (this.#filterDeviceId.nonEmpty()) {
+                if (this.filterDeviceId.nonEmpty()) {
                     const captureDevices = Array.from(midiAccess.inputs.values())
-                    const id = this.#filterDeviceId.unwrap()
+                    const id = this.filterDeviceId.unwrap()
                     if (isUndefined(captureDevices.find(device => id === device.id))) {
                         return panic(`Could not find MIDI device with id: '${id}'`)
                     }
@@ -33,7 +41,7 @@ export class CaptureMidi extends Capture {
         const midiAccess = this.#midiAccess.unwrap()
         const notifier = new Notifier<MIDIMessageEvent>()
         const captureDevices = Array.from(midiAccess.inputs.values())
-        this.#filterDeviceId.ifSome(id => captureDevices.filter(device => id === device.id))
+        this.filterDeviceId.ifSome(id => captureDevices.filter(device => id === device.id))
         return Terminable.many(
             Terminable.many(
                 ...captureDevices.map(input => Events.subscribe(input, "midimessage",

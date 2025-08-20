@@ -2,8 +2,6 @@
 
 ## Bugs
 
-* Template "Liquid" and "Release" timing issue because of CaptureManager
-
 ## Next
 
 * Fully implement capture
@@ -22,10 +20,14 @@
 * Inform the user if there is no outputLatency (Chrome only)
 * Find a way to overlay, replace, mix on existing regions
 * Find a way to handle loops/jumps while recording
-* Store capture filters in boxes
 * Audio editor
 * Respect zero-crossing
 * Handle external changes to the project (deletion of audio-units, tracks, regions, etc. while recording)
+
+## Done
+
+* ~~Store capture filters in boxes~~
+* ~~Template "Liquid" and "Release" timing issue because of CaptureManager~~
 * ~~We need a flag to identify audio-unit's main content (audio or MIDI)~~
 * ~~Generate peaks while recording~~
 * ~~Store samples in OPFS (to upload later into the cloud)~~

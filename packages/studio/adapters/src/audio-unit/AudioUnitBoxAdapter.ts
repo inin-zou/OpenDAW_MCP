@@ -47,8 +47,7 @@ export class AudioUnitBoxAdapter implements DeviceHost, BoxAdapter {
         this.#output = this.#terminator.own(new AudioUnitOutput(this.#box.output, this.#context.boxAdapters))
         this.namedParameter = this.#wrapParameters(box)
 
-        assert(this.type !== AudioUnitType.Instrument || this.#box.capture.targetAddress.nonEmpty(),
-            `AudioUnit '${this.address.toString()}' must have a capture. AudioUnit is typed ${this.type} and has input ${this.#box.input.pointerHub.incoming().at(0)?.box.name}, but capture is ${this.#box.capture.targetAddress.unwrapOrUndefined()}`)
+        this.#sanityCheck()
     }
 
     get box(): AudioUnitBox {return this.#box}
@@ -121,5 +120,12 @@ export class AudioUnitBoxAdapter implements DeviceHost, BoxAdapter {
                 ValueMapping.bool,
                 StringMapping.bool, "solo")
         } as const
+    }
+
+    #sanityCheck(): void {
+        const address = this.address.toString()
+        const capture = this.#box.capture.targetAddress.unwrapOrUndefined()
+        const fail = () => `AudioUnit '${address}' must have a capture. AudioUnit is typed ${this.type} and has input ${this.#box.input.pointerHub.incoming().at(0)?.box.name}, but capture is ${capture}`
+        assert(this.type !== AudioUnitType.Instrument || this.#box.capture.targetAddress.nonEmpty(), fail)
     }
 }

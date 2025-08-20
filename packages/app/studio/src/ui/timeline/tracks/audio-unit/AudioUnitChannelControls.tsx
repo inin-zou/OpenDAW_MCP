@@ -25,7 +25,7 @@ type Construct = {
 
 export const AudioUnitChannelControls = ({lifecycle, project, midiDevices, adapter}: Construct) => {
     const {volume, panning, mute, solo} = adapter.namedParameter
-    const {editing, captureManager} = project
+    const {editing} = project
     const volumeControl = (
         <RelativeUnitValueDragging lifecycle={lifecycle}
                                    editing={project.editing}
@@ -80,12 +80,17 @@ export const AudioUnitChannelControls = ({lifecycle, project, midiDevices, adapt
                 {muteControl}
                 {soloControl}
             </div>
-            <Checkbox lifecycle={lifecycle}
-                      model={captureManager.getObservableArmedState(adapter.address.uuid)}
-                      style={{fontSize: "0.75em"}}
-                      appearance={{activeColor: Colors.red, landscape: false}}>
-                <Icon symbol={IconSymbol.Record}/>
-            </Checkbox>
+            {adapter.captureBox.match({
+                none: () => <div/>,
+                some: box => (
+                    <Checkbox lifecycle={lifecycle}
+                              model={EditWrapper.forValue(editing, box.armed)}
+                              style={{fontSize: "0.75em"}}
+                              appearance={{activeColor: Colors.red, landscape: false}}>
+                        <Icon symbol={IconSymbol.Record}/>
+                    </Checkbox>
+                )
+            })}
         </div>
     )
 }

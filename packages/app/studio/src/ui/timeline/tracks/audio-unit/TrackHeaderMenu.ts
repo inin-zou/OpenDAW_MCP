@@ -1,9 +1,9 @@
 import {MenuItem} from "@/ui/model/menu-item"
-import {Procedure, UUID} from "@opendaw/lib-std"
+import {isInstanceOf, Procedure, UUID} from "@opendaw/lib-std"
 import {AudioUnitBoxAdapter, DeviceAccepts, TrackBoxAdapter, TrackType} from "@opendaw/studio-adapters"
 import {DebugMenus} from "@/ui/menu/debug"
 import {MidiImport} from "@/ui/timeline/MidiImport.ts"
-import {TrackBox} from "@opendaw/studio-boxes"
+import {CaptureMidiBox, TrackBox} from "@opendaw/studio-boxes"
 import {StudioService} from "@/service/StudioService"
 
 export const installTrackHeaderMenu = (service: StudioService,
@@ -13,6 +13,7 @@ export const installTrackHeaderMenu = (service: StudioService,
         const inputAdapter = audioUnitBoxAdapter.input.getValue()
         if (inputAdapter.isEmpty()) {return parent}
         const accepts: DeviceAccepts = inputAdapter.unwrap().accepts
+        const acceptMidi = audioUnitBoxAdapter.captureBox.mapOr(box => isInstanceOf(box, CaptureMidiBox), false)
         const trackType = DeviceAccepts.toTrackType(accepts)
         const {project, engine, midiLearning} = service
         const {editing, selection} = project
@@ -57,7 +58,7 @@ export const installTrackHeaderMenu = (service: StudioService,
                     .forEach(region => selection.select(region.box))),
             MenuItem.default({
                 label: "Import Midi...",
-                selectable: inputAdapter.mapOr(x => x.accepts === "midi", false)
+                hidden: !acceptMidi
             }).setTriggerProcedure(() => MidiImport.toTracks(project, audioUnitBoxAdapter)),
             MenuItem.default({
                 label: midiLearning.hasMidiConnection(audioUnitBoxAdapter.address) ? "Forget Midi" : "Learn Midi...",

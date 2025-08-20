@@ -31,7 +31,7 @@ export namespace RecordMidi {
         console.debug("RecordMidi.start")
         const beats = PPQN.fromSignature(1, project.timelineBox.signature.denominator.getValue())
         const {editing, boxGraph} = project
-        const trackBox: TrackBox = RecordTrack.findOrCreate(editing, capture.box, TrackType.Notes)
+        const trackBox: TrackBox = RecordTrack.findOrCreate(editing, capture.audioUnitBox, TrackType.Notes)
         const terminator = new Terminator()
         const activeNotes = new Map<byte, NoteEventBox>()
         let writing: Option<{ region: NoteRegionBox, collection: NoteEventCollectionBox }> = Option.None

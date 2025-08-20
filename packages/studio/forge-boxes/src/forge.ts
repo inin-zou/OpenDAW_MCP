@@ -1,7 +1,7 @@
 import {BoxForge} from "@opendaw/lib-box-forge"
 import {Pointers} from "@opendaw/studio-enums"
 import {StepAutomationBox} from "./schema/step-automation"
-import {AudioBusBox, AudioUnitBox, AuxSendBox, CaptureAudioBox, CaptureMidiBox} from "./schema/audio-unit"
+import {AudioBusBox, AudioUnitBox, AuxSendBox} from "./schema/audio-unit"
 import {TimelineBox} from "./schema/timeline/timeline"
 import {AudioFileBox} from "./schema/audio"
 import {RootBox} from "./schema/root"
@@ -27,6 +27,7 @@ import {
 import {TrackBox} from "./schema/timeline/track"
 import {MarkerBox} from "./schema/timeline/marker"
 import {GrooveShuffleBox} from "./schema/grooves"
+import {CaptureAudioBox, CaptureMidiBox} from "./schema/capture"
 
 BoxForge.gen<Pointers>({
     path: "../boxes/src/",

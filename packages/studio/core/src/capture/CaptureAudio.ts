@@ -1,19 +1,29 @@
 import {assert, isUndefined, Option, panic, Terminable} from "@opendaw/lib-std"
-import {AudioUnitBox} from "@opendaw/studio-boxes"
+import {AudioUnitBox, CaptureAudioBox} from "@opendaw/studio-boxes"
 import {Capture} from "./Capture"
 import {RecordAudio} from "./RecordAudio"
 import {RecordingContext} from "./RecordingContext"
 
-export class CaptureAudio extends Capture {
+export class CaptureAudio extends Capture<CaptureAudioBox> {
     #stream: Option<MediaStream> = Option.None
 
-    #filterDeviceId: Option<string> = Option.None
     #requestChannels: Option<1 | 2> = Option.None
+    #gainDb: number = 0.0
 
-    constructor(box: AudioUnitBox) {super(box)}
+    constructor(audioUnitBox: AudioUnitBox, captureBox: CaptureAudioBox) {
+        super(audioUnitBox, captureBox)
+
+        this.ownAll(
+            captureBox.requestChannels.catchupAndSubscribe(owner => {
+                const channels = owner.getValue()
+                this.#requestChannels = channels === 1 || channels === 2 ? Option.wrap(channels) : Option.None
+            }),
+            captureBox.gainDb.catchupAndSubscribe(owner => this.#gainDb = owner.getValue())
+        )
+    }
 
     async prepareRecording({audioContext: {sampleRate}}: RecordingContext): Promise<void> {
-        const deviceId = this.#filterDeviceId.unwrapOrUndefined()
+        const deviceId = this.filterDeviceId.unwrapOrUndefined()
         return navigator.mediaDevices.getUserMedia({
             audio: {
                 deviceId,
@@ -26,7 +36,6 @@ export class CaptureAudio extends Capture {
             }
         }).then(stream => {
             const tracks = stream.getAudioTracks()
-            console.debug(deviceId, tracks.at(0)?.getSettings().deviceId)
             if (isUndefined(deviceId) || deviceId === tracks.at(0)?.getSettings().deviceId) {
                 this.#stream = Option.wrap(stream)
             } else {
@@ -48,7 +57,7 @@ export class CaptureAudio extends Capture {
                 engine,
                 project,
                 capture: this,
-                gainDb: 6.0
+                gainDb: this.#gainDb
             }),
             Terminable.create(() => mediaStream.getTracks().forEach(track => track.stop()))
         )
