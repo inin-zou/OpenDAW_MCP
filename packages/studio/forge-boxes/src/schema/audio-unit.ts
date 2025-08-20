@@ -1,4 +1,4 @@
-import {AudioSendRouting, AudioUnitType, Pointers} from "@opendaw/studio-enums"
+import {AudioSendRouting, AudioUnitContentType, AudioUnitType, Pointers} from "@opendaw/studio-enums"
 import {DefaultParameterPointerRules} from "./defaults"
 import {BoxSchema, FieldRecord, mergeFields, reserveMany} from "@opendaw/lib-box-forge"
 
@@ -47,6 +47,7 @@ export const AudioUnitBox: BoxSchema<Pointers> = {
             1: {type: "string", name: "type", value: AudioUnitType.Instrument},
             2: {type: "pointer", name: "collection", pointerType: Pointers.AudioUnits, mandatory: true},
             3: {type: "field", name: "editing", pointerRules: {accepts: [Pointers.Editing], mandatory: false}},
+            4: {type: "string", name: "content-type", value: AudioUnitContentType.None},
             11: {type: "int32", name: "index"},
             12: {type: "float32", name: "volume", pointerRules: DefaultParameterPointerRules},
             13: {type: "float32", name: "panning", pointerRules: DefaultParameterPointerRules},

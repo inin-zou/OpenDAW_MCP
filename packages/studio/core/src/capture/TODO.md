@@ -1,5 +1,9 @@
 # TODO
 
+## Bugs
+
+* Template Liquid timing issue because of CaptureManager
+
 ## Next
 
 * Fully implement capture
@@ -14,7 +18,6 @@
 
 * If the project is empty, ask if the user wants to record audio or midi
 * If tracks, use the first available audio-unit to record
-* We need a flag to identify audio-unit's main content (audio or MIDI)
 * Stop (start) recording at quantized positions
 * Inform the user if there is no outputLatency (Chrome only)
 * Find a way to overlay, replace, mix on existing regions
@@ -23,6 +26,7 @@
 * Audio editor
 * Respect zero-crossing
 * Handle external changes to the project (deletion of audio-units, tracks, regions, etc. while recording)
+* ~~We need a flag to identify audio-unit's main content (audio or MIDI)~~
 * ~~Generate peaks while recording~~
 * ~~Store samples in OPFS (to upload later into the cloud)~~
 * ~~Shift + Record to suppress count-in~~

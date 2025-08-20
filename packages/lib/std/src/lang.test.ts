@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest"
-import {ifDefined, isValidIdentifier} from "./lang"
+import {ifDefined, isEnumValue, isValidIdentifier} from "./lang"
 
 describe("lang", () => {
     it("isValidIdentifier", () => {
@@ -18,5 +18,26 @@ describe("lang", () => {
         const def = "def"
         expect(ifDefined(abc, value => value + "+")).toBeUndefined()
         expect(ifDefined(def, value => value + "+")).toBe("def+")
+    })
+    it("isEnumValue", () => {
+        enum Strings {
+            A = "A",
+            B = "B",
+        }
+
+        enum Numbers {
+            A = 0,
+            B = 1,
+        }
+
+        expect(isEnumValue(Strings, "A")).true
+        expect(isEnumValue(Strings, "B")).true
+        expect(isEnumValue(Strings, "C")).false
+        expect(isEnumValue(Strings, 0)).false
+
+        expect(isEnumValue(Numbers, 0)).true
+        expect(isEnumValue(Numbers, 1)).true
+        expect(isEnumValue(Numbers, 2)).false
+        expect(isEnumValue(Numbers, "A")).false
     })
 })

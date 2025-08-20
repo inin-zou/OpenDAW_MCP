@@ -1,7 +1,7 @@
 import {AudioUnitBox} from "@opendaw/studio-boxes"
-import {int, Option, StringMapping, Terminator, UUID, ValueMapping} from "@opendaw/lib-std"
+import {assert, int, isEnumValue, Option, StringMapping, Terminator, UUID, ValueMapping} from "@opendaw/lib-std"
 import {Address, BooleanField, Field, Int32Field} from "@opendaw/lib-box"
-import {AudioUnitType, Pointers} from "@opendaw/studio-enums"
+import {AudioUnitContentType, AudioUnitType, Pointers} from "@opendaw/studio-enums"
 import {AudioEffectDeviceAdapter, DeviceHost, Devices, MidiEffectDeviceAdapter} from "../DeviceAdapter"
 import {AudioUnitTracks} from "./AudioUnitTracks"
 import {AudioUnitInput} from "./AudioUnitInput"
@@ -46,6 +46,9 @@ export class AudioUnitBoxAdapter implements DeviceHost, BoxAdapter {
             box => this.#context.boxAdapters.adapterFor(box, AuxSendBoxAdapter), Pointers.AuxSend))
         this.#output = this.#terminator.own(new AudioUnitOutput(this.#box.output, this.#context.boxAdapters))
         this.namedParameter = this.#wrapParameters(box)
+
+        assert(isEnumValue(AudioUnitType, box.type.getValue()), "Not a AudioUnitType")
+        assert(isEnumValue(AudioUnitContentType, box.contentType.getValue()), "Not a AudioUnitContentType")
     }
 
     get box(): AudioUnitBox {return this.#box}
@@ -53,6 +56,7 @@ export class AudioUnitBoxAdapter implements DeviceHost, BoxAdapter {
     get address(): Address {return this.#box.address}
     get indexField(): Int32Field {return this.#box.index}
     get type(): AudioUnitType {return this.#box.type.getValue() as AudioUnitType}
+    get contentType(): AudioUnitContentType {return this.#box.contentType.getValue() as AudioUnitContentType}
     get tracks(): AudioUnitTracks {return this.#tracks}
     get input(): AudioUnitInput {return this.#input}
     get midiEffects(): IndexedBoxAdapterCollection<MidiEffectDeviceAdapter, Pointers.MidiEffectHost> {return this.#midiEffects}

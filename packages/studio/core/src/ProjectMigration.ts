@@ -1,12 +1,14 @@
 import {ProjectDecoder} from "@opendaw/studio-adapters"
 import {
+    AudioUnitBox,
     BoxVisitor,
     GrooveShuffleBox,
     ValueEventBox,
     ValueEventCurveBox,
     ZeitgeistDeviceBox
 } from "@opendaw/studio-boxes"
-import {asInstanceOf, UUID} from "@opendaw/lib-std"
+import {asInstanceOf, isEnumValue, UUID} from "@opendaw/lib-std"
+import {AudioUnitContentType} from "@opendaw/studio-enums"
 
 export class ProjectMigration {
     static migrate({boxGraph, mandatoryBoxes}: ProjectDecoder.Skeleton): void {
@@ -58,6 +60,19 @@ export class ProjectMigration {
                         boxGraph.endTransaction()
                     }
                 }
+            },
+            visitAudioUnitBox: (box: AudioUnitBox): void => {
+                if (isEnumValue(AudioUnitContentType, box.contentType.getValue())) {return}
+                boxGraph.beginTransaction()
+                box.contentType.setValue(
+                    box.input.pointerHub.incoming().at(0)?.box
+                        .accept<BoxVisitor<AudioUnitContentType>>({
+                            visitVaporisateurDeviceBox: () => AudioUnitContentType.Notes,
+                            visitNanoDeviceBox: () => AudioUnitContentType.Notes,
+                            visitPlayfieldDeviceBox: () => AudioUnitContentType.Notes,
+                            visitTapeDeviceBox: () => AudioUnitContentType.Audio
+                        }) ?? AudioUnitContentType.None)
+                boxGraph.endTransaction()
             }
         }))
     }

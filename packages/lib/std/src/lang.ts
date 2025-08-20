@@ -99,6 +99,8 @@ export const tryCatch = <T>(statement: Provider<T>)
 export const isValidIdentifier = (identifier: string): boolean => /^[A-Za-z_$][A-Za-z0-9_]*$/.test(identifier)
 export const asValidIdentifier = (identifier: string): string =>
     isValidIdentifier(identifier) ? identifier : panic(`'${identifier}' is not a valid identifier`)
+export const isEnumValue = <E extends Record<string, string | number>>(e: E, v: unknown): v is E[keyof E] =>
+    Object.keys(e).some(k => isNaN(+k) && e[k as keyof E] === v)
 export const EmptyExec: Exec = (): void => {}
 export const EmptyProvider: Provider<any> = (): any => {}
 export const EmptyProcedure: Procedure<any> = (_: any): void => {}

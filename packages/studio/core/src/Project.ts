@@ -24,7 +24,7 @@ import {
     VertexSelection
 } from "@opendaw/studio-adapters"
 import {LiveStreamBroadcaster, LiveStreamReceiver} from "@opendaw/lib-fusion"
-import {AudioUnitType} from "@opendaw/studio-enums"
+import {AudioUnitContentType, AudioUnitType} from "@opendaw/studio-enums"
 import {ProjectEnv} from "./ProjectEnv"
 import {Mixer} from "./Mixer"
 import {ProjectApi} from "./ProjectApi"
@@ -55,6 +55,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
         })
         const masterAudioUnit = AudioUnitBox.create(boxGraph, UUID.generate(), box => {
             box.type.setValue(AudioUnitType.Output)
+            box.contentType.setValue(AudioUnitContentType.None)
             box.collection.refer(rootBox.audioUnits)
             box.output.refer(rootBox.outputDevice)
             box.index.setValue(0)

@@ -41,7 +41,7 @@ import {
     TransportSchema,
     WarpsSchema
 } from "@opendaw/lib-dawproject"
-import {AudioSendRouting, AudioUnitType, Pointers} from "@opendaw/studio-enums"
+import {AudioSendRouting, AudioUnitContentType, AudioUnitType, Pointers} from "@opendaw/studio-enums"
 import {
     AudioBusBox,
     AudioFileBox,
@@ -87,6 +87,11 @@ export namespace DawProjectImport {
         skeleton: ProjectDecoder.Skeleton
     }
 
+    const toAudioUnitContentType = (contentType: Nullish<string>): AudioUnitContentType => {
+        if (contentType === "audio") return AudioUnitContentType.Audio
+        if (contentType === "notes") return AudioUnitContentType.Notes
+        return AudioUnitContentType.None
+    }
     export const read = async (schema: ProjectSchema, resources: DawProject.ResourceProvider): Promise<Result> => {
         const boxGraph = new BoxGraph<BoxIO.TypeMap>(Option.wrap(BoxIO.create))
         boxGraph.beginTransaction()
@@ -212,19 +217,22 @@ export namespace DawProjectImport {
             return panic(`Cannot create instrument box for track '${track.name}' with contentType '${track.contentType}' and device '${device?.deviceName}'`)
         }
 
-        const createAudioUnit = (channel: ChannelSchema, type: AudioUnitType): AudioUnitBox =>
+        const createAudioUnit = (channel: ChannelSchema, type: AudioUnitType, contentType: AudioUnitContentType): AudioUnitBox =>
             AudioUnitBox.create(rootBox.graph, UUID.generate(), box => {
                 box.collection.refer(rootBox.audioUnits)
                 box.type.setValue(type)
+                box.contentType.setValue(contentType)
                 box.volume.setValue(gainToDb(channel.volume?.value ?? 1.0))
                 box.panning.setValue(ValueMapping.bipolar().y(channel.pan?.value ?? 0.5))
                 box.mute.setValue(channel.mute?.value === true)
                 box.solo.setValue(channel.solo === true)
             })
 
-        const createInstrumentUnit = (track: TrackSchema, type: AudioUnitType): InstrumentUnit => {
+        const createInstrumentUnit = (track: TrackSchema,
+                                      type: AudioUnitType,
+                                      contentType: AudioUnitContentType): InstrumentUnit => {
             const channel: ChannelSchema = asDefined(track.channel)
-            const audioUnitBox = createAudioUnit(channel, type)
+            const audioUnitBox = createAudioUnit(channel, type, contentType)
             sortAudioUnits.add(AudioUnitOrdering[type], audioUnitBox)
             const instrumentDevice: Nullish<DeviceSchema> = ifDefined(channel.devices, devices => {
                 devices
@@ -244,7 +252,7 @@ export namespace DawProjectImport {
                                     type: AudioUnitType,
                                     icon: IconSymbol): AudioBusUnit => {
             const channel: ChannelSchema = asDefined(track.channel)
-            const audioUnitBox = createAudioUnit(channel, type)
+            const audioUnitBox = createAudioUnit(channel, type, AudioUnitContentType.None)
             sortAudioUnits.add(AudioUnitOrdering[type], audioUnitBox)
             const audioBusBox = AudioBusBox.create(rootBox.graph, UUID.generate(), box => {
                 box.collection.refer(rootBox.audioBusses)
@@ -266,7 +274,7 @@ export namespace DawProjectImport {
                 const channel = asDefined(track.channel, "Track has no Channel")
                 const channelId = asDefined(channel.id, "Channel must have an Id")
                 if (channel.role === ChannelRole.REGULAR) {
-                    const {audioUnitBox} = createInstrumentUnit(track, AudioUnitType.Instrument)
+                    const {audioUnitBox} = createInstrumentUnit(track, AudioUnitType.Instrument, toAudioUnitContentType(track.contentType))
                     registerAudioUnit(asDefined(track.id, "Track must have an Id."), audioUnitBox)
                     ifDefined(channel.sends, sends => createSends(audioUnitBox, sends))
                     outputPointers.push({target: channel.destination!, pointer: audioUnitBox.output})
