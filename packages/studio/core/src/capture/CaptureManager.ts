@@ -11,7 +11,6 @@ export class CaptureManager implements Terminable {
 
     constructor({rootBox}: Project) {
         this.#captures = UUID.newSet<Capture>(unit => unit.uuid)
-
         this.#subscription = rootBox.audioUnits.pointerHub.catchupAndSubscribeTransactual({
             onAdd: ({box}) => {
                 const audioUnitBox = asInstanceOf(box, AudioUnitBox)
@@ -33,6 +32,7 @@ export class CaptureManager implements Terminable {
 
     terminate(): void {
         this.#subscription.terminate()
+        this.#captures.forEach(capture => capture.terminate())
         this.#captures.clear()
     }
 }
