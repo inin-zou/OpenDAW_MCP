@@ -41,7 +41,7 @@ import {
     TransportSchema,
     WarpsSchema
 } from "@opendaw/lib-dawproject"
-import {AudioSendRouting, AudioUnitContentType, AudioUnitType, Pointers} from "@opendaw/studio-enums"
+import {AudioSendRouting, AudioUnitType, Pointers} from "@opendaw/studio-enums"
 import {
     AudioBusBox,
     AudioFileBox,
@@ -50,6 +50,8 @@ import {
     AuxSendBox,
     BoxIO,
     BoxVisitor,
+    CaptureAudioBox,
+    CaptureMidiBox,
     GrooveShuffleBox,
     NoteEventBox,
     NoteEventCollectionBox,
@@ -61,13 +63,12 @@ import {
     UnknownMidiEffectDeviceBox,
     UserInterfaceBox
 } from "@opendaw/studio-boxes"
-import {DeviceBoxUtils, IconSymbol, ProjectDecoder, TrackType} from "@opendaw/studio-adapters"
+import {CaptureBox, DeviceBoxUtils, IconSymbol, ProjectDecoder, TrackType} from "@opendaw/studio-adapters"
 import {DawProject} from "./DawProject"
 import {InstrumentBox} from "../InstrumentBox"
 import {AudioUnitOrdering} from "../AudioUnitOrdering"
 import {InstrumentFactories} from "../InstrumentFactories"
 import {ColorCodes} from "../ColorCodes"
-import {Colors} from "../Colors"
 import {DeviceIO} from "./DeviceIO"
 import {BuiltinDevices} from "./BuiltinDevices"
 
@@ -87,10 +88,10 @@ export namespace DawProjectImport {
         skeleton: ProjectDecoder.Skeleton
     }
 
-    const toAudioUnitContentType = (contentType: Nullish<string>): AudioUnitContentType => {
-        if (contentType === "audio") return AudioUnitContentType.Audio
-        if (contentType === "notes") return AudioUnitContentType.Notes
-        return AudioUnitContentType.None
+    const toAudioUnitCapture = (boxGraph: BoxGraph, contentType: Nullish<string>): Option<CaptureBox> => {
+        if (contentType === "audio") return Option.wrap(CaptureAudioBox.create(boxGraph, UUID.generate()))
+        if (contentType === "notes") return Option.wrap(CaptureMidiBox.create(boxGraph, UUID.generate()))
+        return Option.None
     }
     export const read = async (schema: ProjectSchema, resources: DawProject.ResourceProvider): Promise<Result> => {
         const boxGraph = new BoxGraph<BoxIO.TypeMap>(Option.wrap(BoxIO.create))
@@ -217,22 +218,22 @@ export namespace DawProjectImport {
             return panic(`Cannot create instrument box for track '${track.name}' with contentType '${track.contentType}' and device '${device?.deviceName}'`)
         }
 
-        const createAudioUnit = (channel: ChannelSchema, type: AudioUnitType, contentType: AudioUnitContentType): AudioUnitBox =>
+        const createAudioUnit = (channel: ChannelSchema, type: AudioUnitType, capture: Option<CaptureBox>): AudioUnitBox =>
             AudioUnitBox.create(rootBox.graph, UUID.generate(), box => {
                 box.collection.refer(rootBox.audioUnits)
                 box.type.setValue(type)
-                box.contentType.setValue(contentType)
                 box.volume.setValue(gainToDb(channel.volume?.value ?? 1.0))
                 box.panning.setValue(ValueMapping.bipolar().y(channel.pan?.value ?? 0.5))
                 box.mute.setValue(channel.mute?.value === true)
                 box.solo.setValue(channel.solo === true)
+                capture.ifSome(capture => box.capture.refer(capture))
             })
 
         const createInstrumentUnit = (track: TrackSchema,
                                       type: AudioUnitType,
-                                      contentType: AudioUnitContentType): InstrumentUnit => {
+                                      capture: Option<CaptureBox>): InstrumentUnit => {
             const channel: ChannelSchema = asDefined(track.channel)
-            const audioUnitBox = createAudioUnit(channel, type, contentType)
+            const audioUnitBox = createAudioUnit(channel, type, capture)
             sortAudioUnits.add(AudioUnitOrdering[type], audioUnitBox)
             const instrumentDevice: Nullish<DeviceSchema> = ifDefined(channel.devices, devices => {
                 devices
@@ -252,7 +253,7 @@ export namespace DawProjectImport {
                                     type: AudioUnitType,
                                     icon: IconSymbol): AudioBusUnit => {
             const channel: ChannelSchema = asDefined(track.channel)
-            const audioUnitBox = createAudioUnit(channel, type, AudioUnitContentType.None)
+            const audioUnitBox = createAudioUnit(channel, type, Option.None)
             sortAudioUnits.add(AudioUnitOrdering[type], audioUnitBox)
             const audioBusBox = AudioBusBox.create(rootBox.graph, UUID.generate(), box => {
                 box.collection.refer(rootBox.audioBusses)
@@ -274,7 +275,7 @@ export namespace DawProjectImport {
                 const channel = asDefined(track.channel, "Track has no Channel")
                 const channelId = asDefined(channel.id, "Channel must have an Id")
                 if (channel.role === ChannelRole.REGULAR) {
-                    const {audioUnitBox} = createInstrumentUnit(track, AudioUnitType.Instrument, toAudioUnitContentType(track.contentType))
+                    const {audioUnitBox} = createInstrumentUnit(track, AudioUnitType.Instrument, toAudioUnitCapture(boxGraph, track.contentType))
                     registerAudioUnit(asDefined(track.id, "Track must have an Id."), audioUnitBox)
                     ifDefined(channel.sends, sends => createSends(audioUnitBox, sends))
                     outputPointers.push({target: channel.destination!, pointer: audioUnitBox.output})

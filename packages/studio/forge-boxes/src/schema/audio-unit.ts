@@ -1,13 +1,12 @@
-import {AudioSendRouting, AudioUnitContentType, AudioUnitType, Pointers} from "@opendaw/studio-enums"
+import {AudioSendRouting, AudioUnitType, Pointers} from "@opendaw/studio-enums"
 import {DefaultParameterPointerRules} from "./defaults"
 import {BoxSchema, FieldRecord, mergeFields, reserveMany} from "@opendaw/lib-box-forge"
 
 const CaptureAttributes = {
-    1: {type: "pointer", name: "audio-unit", pointerType: Pointers.AudioUnits, mandatory: true},
-    2: {type: "boolean", name: "armed"},
-    3: {type: "string", name: "device-id"},
-    4: {type: "string", name: "record-mode", value: "normal"}, // "normal" | "replace" | "punch"
-    ...reserveMany(5, 6, 7, 8, 9)
+    1: {type: "boolean", name: "armed"},
+    2: {type: "string", name: "device-id"},
+    3: {type: "string", name: "record-mode", value: "normal"}, // "normal" | "replace" | "punch"
+    ...reserveMany(4, 5, 6, 7, 8, 9)
 } as const satisfies FieldRecord<Pointers>
 
 export const CaptureAudioBox: BoxSchema<Pointers> = {
@@ -26,7 +25,7 @@ export const CaptureAudioBox: BoxSchema<Pointers> = {
                 }
             }
         })
-    }
+    }, pointerRules: {accepts: [Pointers.Capture], mandatory: true}
 }
 
 export const CaptureMidiBox: BoxSchema<Pointers> = {
@@ -36,7 +35,7 @@ export const CaptureMidiBox: BoxSchema<Pointers> = {
         fields: mergeFields(CaptureAttributes, {
             10: {type: "int32", name: "channel", value: -1} // -1 for all channels
         })
-    }
+    }, pointerRules: {accepts: [Pointers.Capture], mandatory: true}
 }
 
 export const AudioUnitBox: BoxSchema<Pointers> = {
@@ -47,7 +46,6 @@ export const AudioUnitBox: BoxSchema<Pointers> = {
             1: {type: "string", name: "type", value: AudioUnitType.Instrument},
             2: {type: "pointer", name: "collection", pointerType: Pointers.AudioUnits, mandatory: true},
             3: {type: "field", name: "editing", pointerRules: {accepts: [Pointers.Editing], mandatory: false}},
-            4: {type: "string", name: "content-type", value: AudioUnitContentType.None},
             11: {type: "int32", name: "index"},
             12: {type: "float32", name: "volume", pointerRules: DefaultParameterPointerRules},
             13: {type: "float32", name: "panning", pointerRules: DefaultParameterPointerRules},
@@ -82,6 +80,11 @@ export const AudioUnitBox: BoxSchema<Pointers> = {
                 type: "pointer",
                 name: "output",
                 pointerType: Pointers.AudioOutput, mandatory: false
+            },
+            26: {
+                type: "pointer",
+                name: "capture",
+                pointerType: Pointers.Capture, mandatory: false
             }
         } as const
     }, pointerRules: {accepts: [Pointers.Selection, Pointers.Automation], mandatory: false}

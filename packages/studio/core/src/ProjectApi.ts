@@ -12,11 +12,13 @@ import {
     UUID
 } from "@opendaw/lib-std"
 import {ppqn, PPQN} from "@opendaw/lib-dsp"
-import {Field, IndexedBox, PointerField, StringField} from "@opendaw/lib-box"
-import {AudioUnitContentType, AudioUnitType, Pointers} from "@opendaw/studio-enums"
+import {BoxGraph, Field, IndexedBox, PointerField, StringField} from "@opendaw/lib-box"
+import {AudioUnitType, Pointers} from "@opendaw/studio-enums"
 import {
     AudioBusBox,
     AudioUnitBox,
+    CaptureAudioBox,
+    CaptureMidiBox,
     NoteClipBox,
     NoteEventBox,
     NoteEventCollectionBox,
@@ -29,6 +31,7 @@ import {
 import {
     AnyClipBox,
     AudioUnitBoxAdapter,
+    CaptureBox,
     EffectPointerType,
     IconSymbol,
     IndexedAdapterCollectionListener,
@@ -90,7 +93,7 @@ export class ProjectApi {
         return this.#project.rootBoxAdapter.audioUnits.catchupAndSubscribe(listener)
     }
 
-    createInstrument({create, defaultIcon, defaultName, trackType, contentType}: InstrumentFactory,
+    createInstrument({create, defaultIcon, defaultName, trackType}: InstrumentFactory,
                      {name, icon, index}: InstrumentOptions = {}): InstrumentProduct {
         const {boxGraph, rootBox, userEditingManager} = this.#project
         assert(rootBox.isAttached(), "rootBox not attached")
@@ -98,7 +101,7 @@ export class ProjectApi {
             const inputBox = asDefined(asInstanceOf(box, AudioUnitBox).input.pointerHub.incoming().at(0)).box
             return "label" in inputBox && inputBox.label instanceof StringField ? inputBox.label.getValue() : "N/A"
         })
-        const audioUnitBox = this.#createAudioUnit(AudioUnitType.Instrument, contentType, index)
+        const audioUnitBox = this.#createAudioUnit(AudioUnitType.Instrument, this.#trackTypeToCapture(boxGraph, trackType), index)
         const uniqueName = Strings.getUniqueName(existingNames, name ?? defaultName)
         const iconSymbol = icon ?? defaultIcon
         const instrumentBox = create(boxGraph, audioUnitBox.input, uniqueName, iconSymbol)
@@ -126,7 +129,7 @@ export class ProjectApi {
             box.icon.setValue(IconSymbol.toName(icon))
             box.color.setValue(color)
         })
-        const audioUnitBox = this.#createAudioUnit(type, AudioUnitContentType.None)
+        const audioUnitBox = this.#createAudioUnit(type, Option.None)
         TrackBox.create(boxGraph, UUID.generate(), box => {
             box.tracks.refer(audioUnitBox.tracks)
             box.target.refer(audioUnitBox)
@@ -266,7 +269,7 @@ export class ProjectApi {
         audioUnitBox.delete()
     }
 
-    #createAudioUnit(type: AudioUnitType, contentType: AudioUnitContentType, index?: int): AudioUnitBox {
+    #createAudioUnit(type: AudioUnitType, capture: Option<CaptureBox>, index?: int): AudioUnitBox {
         const {boxGraph, rootBox, masterBusBox} = this.#project
         const insertIndex = index ?? this.#sortAudioUnitOrdering(type)
         console.debug(`createAudioUnit type: ${type}, insertIndex: ${insertIndex}`)
@@ -275,7 +278,7 @@ export class ProjectApi {
             box.output.refer(masterBusBox.input)
             box.index.setValue(insertIndex)
             box.type.setValue(type)
-            box.contentType.setValue(contentType)
+            capture.ifSome(capture => box.capture.refer(capture))
         })
     }
 
@@ -307,5 +310,16 @@ export class ProjectApi {
             boxes[index].index.setValue(++index)
         }
         return insertIndex
+    }
+
+    #trackTypeToCapture(boxGraph: BoxGraph, trackType: TrackType): Option<CaptureBox> {
+        switch (trackType) {
+            case TrackType.Audio:
+                return Option.wrap(CaptureAudioBox.create(boxGraph, UUID.generate()))
+            case TrackType.Notes:
+                return Option.wrap(CaptureMidiBox.create(boxGraph, UUID.generate()))
+            default:
+                return Option.None
+        }
     }
 }

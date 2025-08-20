@@ -2,13 +2,15 @@ import {ProjectDecoder} from "@opendaw/studio-adapters"
 import {
     AudioUnitBox,
     BoxVisitor,
+    CaptureAudioBox,
+    CaptureMidiBox,
     GrooveShuffleBox,
     ValueEventBox,
     ValueEventCurveBox,
     ZeitgeistDeviceBox
 } from "@opendaw/studio-boxes"
-import {asInstanceOf, isEnumValue, UUID} from "@opendaw/lib-std"
-import {AudioUnitContentType} from "@opendaw/studio-enums"
+import {asDefined, asInstanceOf, UUID} from "@opendaw/lib-std"
+import {AudioUnitType} from "@opendaw/studio-enums"
 
 export class ProjectMigration {
     static migrate({boxGraph, mandatoryBoxes}: ProjectDecoder.Skeleton): void {
@@ -26,7 +28,8 @@ export class ProjectMigration {
             boxGraph.endTransaction()
         }
         // TODO We can remove this when we delete all not-migrated, local(!) project files from my machine
-        boxGraph.boxes().forEach(box => box.accept<BoxVisitor>({
+        // We need to run on a copy, because we might add more boxes during the migration
+        boxGraph.boxes().slice().forEach(box => box.accept<BoxVisitor>({
             visitZeitgeistDeviceBox: (box: ZeitgeistDeviceBox) => {
                 if (box.groove.targetAddress.isEmpty()) {
                     console.debug("Migrate 'ZeitgeistDeviceBox' to GrooveShuffleBox")
@@ -62,16 +65,16 @@ export class ProjectMigration {
                 }
             },
             visitAudioUnitBox: (box: AudioUnitBox): void => {
-                if (isEnumValue(AudioUnitContentType, box.contentType.getValue())) {return}
+                if (box.type.getValue() !== AudioUnitType.Instrument || box.capture.nonEmpty()) {return}
                 boxGraph.beginTransaction()
-                box.contentType.setValue(
-                    box.input.pointerHub.incoming().at(0)?.box
-                        .accept<BoxVisitor<AudioUnitContentType>>({
-                            visitVaporisateurDeviceBox: () => AudioUnitContentType.Notes,
-                            visitNanoDeviceBox: () => AudioUnitContentType.Notes,
-                            visitPlayfieldDeviceBox: () => AudioUnitContentType.Notes,
-                            visitTapeDeviceBox: () => AudioUnitContentType.Audio
-                        }) ?? AudioUnitContentType.None)
+                const captureBox = asDefined(box.input.pointerHub.incoming().at(0)?.box
+                    .accept<BoxVisitor<CaptureAudioBox | CaptureMidiBox>>({
+                        visitVaporisateurDeviceBox: () => CaptureMidiBox.create(boxGraph, UUID.generate()),
+                        visitNanoDeviceBox: () => CaptureMidiBox.create(boxGraph, UUID.generate()),
+                        visitPlayfieldDeviceBox: () => CaptureMidiBox.create(boxGraph, UUID.generate()),
+                        visitTapeDeviceBox: () => CaptureAudioBox.create(boxGraph, UUID.generate())
+                    }))
+                box.capture.refer(captureBox)
                 boxGraph.endTransaction()
             }
         }))

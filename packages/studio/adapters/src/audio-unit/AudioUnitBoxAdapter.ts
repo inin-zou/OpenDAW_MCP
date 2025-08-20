@@ -1,7 +1,7 @@
-import {AudioUnitBox} from "@opendaw/studio-boxes"
-import {assert, int, isEnumValue, Option, StringMapping, Terminator, UUID, ValueMapping} from "@opendaw/lib-std"
+import {AudioUnitBox, CaptureAudioBox, CaptureMidiBox} from "@opendaw/studio-boxes"
+import {assert, int, Option, StringMapping, Terminator, UUID, ValueMapping} from "@opendaw/lib-std"
 import {Address, BooleanField, Field, Int32Field} from "@opendaw/lib-box"
-import {AudioUnitContentType, AudioUnitType, Pointers} from "@opendaw/studio-enums"
+import {AudioUnitType, Pointers} from "@opendaw/studio-enums"
 import {AudioEffectDeviceAdapter, DeviceHost, Devices, MidiEffectDeviceAdapter} from "../DeviceAdapter"
 import {AudioUnitTracks} from "./AudioUnitTracks"
 import {AudioUnitInput} from "./AudioUnitInput"
@@ -47,8 +47,8 @@ export class AudioUnitBoxAdapter implements DeviceHost, BoxAdapter {
         this.#output = this.#terminator.own(new AudioUnitOutput(this.#box.output, this.#context.boxAdapters))
         this.namedParameter = this.#wrapParameters(box)
 
-        assert(isEnumValue(AudioUnitType, box.type.getValue()), "Not a AudioUnitType")
-        assert(isEnumValue(AudioUnitContentType, box.contentType.getValue()), "Not a AudioUnitContentType")
+        assert(this.type !== AudioUnitType.Instrument || this.#box.capture.targetAddress.nonEmpty(),
+            `AudioUnit '${this.address.toString()}' must have a capture. AudioUnit is typed ${this.type} and has input ${this.#box.input.pointerHub.incoming().at(0)?.box.name}, but capture is ${this.#box.capture.targetAddress.unwrapOrUndefined()}`)
     }
 
     get box(): AudioUnitBox {return this.#box}
@@ -56,7 +56,7 @@ export class AudioUnitBoxAdapter implements DeviceHost, BoxAdapter {
     get address(): Address {return this.#box.address}
     get indexField(): Int32Field {return this.#box.index}
     get type(): AudioUnitType {return this.#box.type.getValue() as AudioUnitType}
-    get contentType(): AudioUnitContentType {return this.#box.contentType.getValue() as AudioUnitContentType}
+    get captureBox(): Option<CaptureAudioBox | CaptureMidiBox> {return this.#box.capture.targetVertex as Option<CaptureAudioBox | CaptureMidiBox>}
     get tracks(): AudioUnitTracks {return this.#tracks}
     get input(): AudioUnitInput {return this.#input}
     get midiEffects(): IndexedBoxAdapterCollection<MidiEffectDeviceAdapter, Pointers.MidiEffectHost> {return this.#midiEffects}

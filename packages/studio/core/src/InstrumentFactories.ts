@@ -12,7 +12,7 @@ import {BoxGraph, Field} from "@opendaw/lib-box"
 import {IconSymbol, TrackType} from "@opendaw/studio-adapters"
 
 import {InstrumentFactory} from "./InstrumentFactory"
-import {AudioUnitContentType, Pointers} from "@opendaw/studio-enums"
+import {Pointers} from "@opendaw/studio-enums"
 
 export namespace InstrumentFactories {
     export const Tape: InstrumentFactory = {
@@ -20,7 +20,6 @@ export namespace InstrumentFactories {
         defaultIcon: IconSymbol.Tape,
         description: "Plays audio regions & clips",
         trackType: TrackType.Audio,
-        contentType: AudioUnitContentType.Audio,
         create: (boxGraph: BoxGraph, host: Field<Pointers.InstrumentHost | Pointers.AudioOutput>, name: string, icon: IconSymbol): TapeDeviceBox =>
             TapeDeviceBox.create(boxGraph, UUID.generate(), box => {
                 box.label.setValue(name)
@@ -38,7 +37,6 @@ export namespace InstrumentFactories {
         defaultIcon: IconSymbol.NanoWave,
         description: "Simple sampler",
         trackType: TrackType.Notes,
-        contentType: AudioUnitContentType.Notes,
         create: (boxGraph: BoxGraph, host: Field<Pointers.InstrumentHost | Pointers.AudioOutput>, name: string, icon: IconSymbol): NanoDeviceBox => {
             const fileUUID = UUID.parse("c1678daa-4a47-4cba-b88f-4f4e384663c3")
             const audioFileBox: AudioFileBox = boxGraph.findBox<AudioFileBox>(fileUUID)
@@ -59,7 +57,6 @@ export namespace InstrumentFactories {
         defaultIcon: IconSymbol.Playfield,
         description: "Drum computer",
         trackType: TrackType.Notes,
-        contentType: AudioUnitContentType.Notes,
         create: (boxGraph: BoxGraph, host: Field<Pointers.InstrumentHost | Pointers.AudioOutput>, name: string, icon: IconSymbol): PlayfieldDeviceBox => {
             const deviceBox = PlayfieldDeviceBox.create(boxGraph, UUID.generate(), box => {
                 box.label.setValue(name)
@@ -95,7 +92,6 @@ export namespace InstrumentFactories {
         defaultIcon: IconSymbol.Piano,
         description: "Classic subtractive synthesizer",
         trackType: TrackType.Notes,
-        contentType: AudioUnitContentType.Notes,
         create: (boxGraph: BoxGraph, host: Field<Pointers.InstrumentHost | Pointers.AudioOutput>, name: string, icon: IconSymbol): VaporisateurDeviceBox =>
             VaporisateurDeviceBox.create(boxGraph, UUID.generate(), box => {
                 box.label.setValue(name)

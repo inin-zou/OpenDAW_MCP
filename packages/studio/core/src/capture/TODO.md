@@ -2,7 +2,7 @@
 
 ## Bugs
 
-* Template Liquid timing issue because of CaptureManager
+* Template "Liquid" and "Release" timing issue because of CaptureManager
 
 ## Next
 
