@@ -4,6 +4,7 @@
 
 ## Next
 
+* Refactor MIDI learning for the new capture system
 * Fully implement capture
     * List all devices
     * If MIDI, select all channels or specific channel
