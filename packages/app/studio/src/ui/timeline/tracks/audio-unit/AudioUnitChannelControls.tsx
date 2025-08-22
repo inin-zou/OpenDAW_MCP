@@ -80,7 +80,7 @@ export const AudioUnitChannelControls = ({lifecycle, project, midiDevices, adapt
                 {muteControl}
                 {soloControl}
             </div>
-            {adapter.captureBox.match({
+            {false && adapter.captureBox.match({
                 none: () => <div/>,
                 some: box => (
                     <Checkbox lifecycle={lifecycle}
