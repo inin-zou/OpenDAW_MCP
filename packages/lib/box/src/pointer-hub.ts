@@ -80,8 +80,8 @@ export class PointerHub {
         const issue: Option<string> = PointerHub.validate(pointerField, this.#vertex)
         if (issue.nonEmpty()) {return panic(issue.unwrap())}
         if (this.#inTransaction.isEmpty()) {
-            this.#vertex.graph.subscribeEndTransaction(this.#onEndTransaction)
             this.#inTransaction = Option.wrap([{type: "add", pointerField}])
+            this.#vertex.graph.subscribeEndTransaction(this.#onEndTransaction)
         } else {
             this.#inTransaction.unwrap().push({type: "add", pointerField})
         }
@@ -90,8 +90,8 @@ export class PointerHub {
 
     onRemoved(pointerField: PointerField): void {
         if (this.#inTransaction.isEmpty()) {
-            this.#vertex.graph.subscribeEndTransaction(this.#onEndTransaction)
             this.#inTransaction = Option.wrap([{type: "remove", pointerField}])
+            this.#vertex.graph.subscribeEndTransaction(this.#onEndTransaction)
         } else {
             this.#inTransaction.unwrap().push({type: "remove", pointerField})
         }

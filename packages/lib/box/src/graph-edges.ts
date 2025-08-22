@@ -81,6 +81,7 @@ export class GraphEdges {
 
     validateRequirements(): void {
         this.#requiresTarget.forEach(pointer => {
+            assert(pointer.isAttached(), `Pointer ${pointer.address.toString()} is not attached`)
             if (pointer.isEmpty()) {
                 if (pointer.mandatory) {
                     return panic(`Pointer ${pointer.toString()} requires an edge.`)
@@ -90,6 +91,7 @@ export class GraphEdges {
             }
         })
         this.#requiresPointer.forEach(target => {
+            assert(target.isAttached(), `Target ${target.address.toString()} is not attached`)
             if (target.pointerHub.isEmpty()) {
                 if (target.pointerRules.mandatory) {
                     return panic(`Target ${target.toString()} requires an edge.`)
@@ -98,13 +100,6 @@ export class GraphEdges {
                 }
             }
         })
-    }
-
-    verifyPointers(): void {
-        this.#requiresTarget.forEach(pointer => assert(pointer.isAttached(),
-            `${pointer.address.toString()} is not attached`))
-        this.#requiresPointer.forEach(vertex => assert(vertex.isAttached(),
-            `${vertex.address.toString()} is not attached`))
     }
 
     #collectSameBox<T>(set: SortedSet<Address, T>, id: UUID.Format, map: Func<T, UUID.Format>): ReadonlyArray<T> {

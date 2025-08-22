@@ -27,6 +27,7 @@
 
 ## Done
 
+* ~~Severe bug in undo~~
 * ~~Store capture filters in boxes~~
 * ~~Template "Liquid" and "Release" timing issue because of CaptureManager~~
 * ~~We need a flag to identify audio-unit's main content (audio or MIDI)~~

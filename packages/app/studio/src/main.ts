@@ -69,14 +69,13 @@ requestAnimationFrame(async () => {
             config: (surface: Surface) => {
                 surface.ownAll(
                     Events.subscribe(surface.owner, "keydown", event => {
-                        if (event.defaultPrevented) {return}
                         if (Keyboard.isControlKey(event) && event.key.toLowerCase() === "z") {
                             if (event.shiftKey) {
                                 service.runIfProject(project => project.editing.redo())
                             } else {
                                 service.runIfProject(project => project.editing.undo())
                             }
-                        }
+                        } else if (event.defaultPrevented) {return}
                     }),
                     ContextMenu.install(surface.owner),
                     Spotlight.install(surface, service)

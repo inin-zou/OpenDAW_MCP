@@ -2,17 +2,21 @@ import {BoxGraph} from "./graph"
 import {Arrays, assert, int, Nullish, Option, Provider} from "@opendaw/lib-std"
 import {Update} from "./updates"
 
-class EditingStep {
-    constructor(readonly updates: ReadonlyArray<Update>) {}
-    undo(graph: BoxGraph): void {
-        for (const update of this.updates.toReversed()) {
-            update.inverse(graph)
-        }
+class Modification {
+    readonly #updates: ReadonlyArray<Update>
+
+    constructor(updates: ReadonlyArray<Update>) {this.#updates = updates}
+
+    inverse(graph: BoxGraph): void {
+        graph.beginTransaction()
+        this.#updates.toReversed().forEach(update => update.inverse(graph))
+        graph.endTransaction()
     }
-    redo(graph: BoxGraph): void {
-        for (const update of this.updates) {
-            update.forward(graph)
-        }
+
+    forward(graph: BoxGraph): void {
+        graph.beginTransaction()
+        this.#updates.forEach(update => update.forward(graph))
+        graph.endTransaction()
     }
 }
 
@@ -23,8 +27,8 @@ export interface ModificationProcess {
 
 export class Editing {
     readonly #graph: BoxGraph
-    readonly #pending: Array<Update> = []
-    readonly #history: Array<EditingStep> = []
+    readonly #pending: Array<Modification> = []
+    readonly #marked: Array<ReadonlyArray<Modification>> = []
 
     #modifying: boolean = false
 
@@ -36,35 +40,31 @@ export class Editing {
 
     get graph(): BoxGraph {return this.#graph}
 
-    isEmpty(): boolean {return this.#history.length === 0 && this.#pending.length === 0}
+    isEmpty(): boolean {return this.#marked.length === 0 && this.#pending.length === 0}
 
     clear(): void {
         assert(!this.#modifying, "Already modifying")
         Arrays.clear(this.#pending)
-        Arrays.clear(this.#history)
+        Arrays.clear(this.#marked)
         this.#historyIndex = 0
     }
 
     undo(): boolean {
         if (this.#pending.length > 0) {this.mark()}
         if (this.#historyIndex === 0) {return false}
-        this.#graph.beginTransaction()
-        const editingStep = this.#history[--this.#historyIndex]
-        editingStep.undo(this.#graph)
-        this.#graph.endTransaction()
+        const modifications = this.#marked[--this.#historyIndex]
+        modifications.toReversed().forEach(step => step.inverse(this.#graph))
         this.#graph.edges().validateRequirements()
         return true
     }
 
     redo(): boolean {
-        if (this.#historyIndex === this.#history.length) {return false}
+        if (this.#historyIndex === this.#marked.length) {return false}
         if (this.#pending.length > 0) {
             console.warn("redo while having pending updates?")
             return false
         }
-        this.#graph.beginTransaction()
-        this.#history[this.#historyIndex++].redo(this.#graph)
-        this.#graph.endTransaction()
+        this.#marked[this.#historyIndex++].forEach(step => step.forward(this.#graph))
         this.#graph.edges().validateRequirements()
         return true
     }
@@ -75,7 +75,7 @@ export class Editing {
 
     modify<R>(modifier: Provider<Nullish<R>>, mark: boolean = true): Option<R> {
         if (this.#modifying) {
-            // we just keep adding new updates to the running modifier
+            // we just keep adding new pending updates
             return Option.wrap(modifier())
         }
         if (mark && this.#pending.length > 0) {this.mark()}
@@ -87,17 +87,13 @@ export class Editing {
     beginModification(): ModificationProcess {
         this.#graph.beginTransaction()
         this.#modifying = true
-        const subscription = this.#graph.subscribeToAllUpdates({
-            onUpdate: (update: Update) => this.#pending.push(update)
-        })
         const complete = () => {
-            this.#graph.endTransaction()
-            subscription.terminate()
             this.#modifying = false
+            this.#graph.endTransaction()
             this.#graph.edges().validateRequirements()
         }
         return {
-            approve: () => {complete()},
+            approve: complete,
             revert: () => {
                 this.clearPending()
                 complete()
@@ -108,12 +104,14 @@ export class Editing {
     #modify<R>(modifier: Provider<Nullish<R>>): Nullish<R> {
         assert(!this.#modifying, "Already modifying")
         this.#modifying = true
-        const subscription = this.#graph.subscribeToAllUpdates({
-            onUpdate: (update: Update) => this.#pending.push(update)
-        })
+        const updates: Array<Update> = []
+        const subscription = this.#graph.subscribeToAllUpdates({onUpdate: (update: Update) => {updates.push(update)}})
         this.#graph.beginTransaction()
         const result = modifier()
         this.#graph.endTransaction()
+        if (updates.length > 0) {
+            this.#pending.push(new Modification(updates))
+        }
         subscription.terminate()
         this.#modifying = false
         this.#graph.edges().validateRequirements()
@@ -122,14 +120,14 @@ export class Editing {
 
     mark(): void {
         if (this.#pending.length === 0) {return}
-        if (this.#history.length - this.#historyIndex > 0) {this.#history.splice(this.#historyIndex)}
-        this.#history.push(new EditingStep(this.#pending.splice(0)))
-        this.#historyIndex = this.#history.length
+        if (this.#marked.length - this.#historyIndex > 0) {this.#marked.splice(this.#historyIndex)}
+        this.#marked.push(this.#pending.splice(0))
+        this.#historyIndex = this.#marked.length
     }
 
     clearPending(): void {
         if (this.#pending.length === 0) {return}
-        this.#pending.reverse().forEach(update => update.inverse(this.#graph))
+        this.#pending.reverse().forEach(modification => modification.inverse(this.#graph))
         this.#pending.length = 0
     }
 }

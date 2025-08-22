@@ -32,7 +32,7 @@ export class VertexSelection implements Selection<SelectableVertex> {
 
     #target: Option<Field> = Option.None
 
-    constructor(readonly editing: Editing, readonly owner: BoxGraph) {
+    constructor(readonly editing: Editing, readonly boxGraph: BoxGraph) {
         this.#lifeTime = new Terminator()
         this.#entityMap = UUID.newSet(entry => entry.box.address.uuid)
         this.#selectableMap = Address.newSet(entry => entry.selectable.address)
@@ -71,7 +71,7 @@ export class VertexSelection implements Selection<SelectableVertex> {
             const selection = this.#target.unwrap()
             for (const selectable of selectables) {
                 if (!this.#selectableMap.hasKey(selectable.address)) {
-                    SelectionBox.create(this.owner, UUID.generate(), box => {
+                    SelectionBox.create(this.boxGraph, UUID.generate(), box => {
                         box.selectable.refer(selectable)
                         box.selection.refer(selection)
                     })
@@ -118,10 +118,13 @@ export class VertexSelection implements Selection<SelectableVertex> {
     }
 
     #watch(target: Field): Subscription {
-        const listener: PointerListener = {
+        return target.pointerHub.catchupAndSubscribeTransactual({
             onAdd: (pointer: PointerField) => {
                 const box = asInstanceOf(pointer.box, SelectionBox)
-                const selectable = box.selectable.targetVertex.unwrap() as SelectableVertex
+                assert(box.isAttached(), "SelectionBox is not attached")
+                const selectable = box.selectable.targetVertex
+                    .unwrap(() => `SelectionBox has no target (${box.selectable.targetAddress.unwrapOrUndefined()
+                        ?.toString() ?? "No address"})`) as SelectableVertex
                 const entry: SelectionEntry = {box, selectable}
                 this.#listeners.proxy.onSelected(selectable)
                 assert(this.#entityMap.add(entry), "Could not add to entityMap")
@@ -135,8 +138,6 @@ export class VertexSelection implements Selection<SelectableVertex> {
                 this.#listeners.proxy.onDeselected(selectable)
                 this.#selectableMap.removeByKey(selectable.address)
             }
-        }
-        target.pointerHub.filter(Pointers.Selection).forEach(pointer => listener.onAdd(pointer))
-        return target.pointerHub.subscribeTransactual(listener, Pointers.Selection)
+        }, Pointers.Selection)
     }
 }

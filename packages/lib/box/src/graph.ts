@@ -226,10 +226,7 @@ export class BoxGraph<BoxMap = any> {
     }
 
     verifyPointers(): { count: int } {
-        console.debug("validate requirements")
         this.#edges.validateRequirements()
-        this.#edges.verifyPointers()
-        console.debug("verify pointers")
         let count = 0 | 0
         const verify = (vertex: Vertex) => {
             for (const field of vertex.fields()) {
