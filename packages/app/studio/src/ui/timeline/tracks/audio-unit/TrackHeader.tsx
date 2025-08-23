@@ -22,21 +22,21 @@ type Construct = {
 
 export const TrackHeader = ({lifecycle, service, trackBoxAdapter, audioUnitBoxAdapter}: Construct) => {
     const nameLabel = Inject.value("Untitled")
-    const channelStrip: HTMLElement = <Group/>
+    const channelControls: HTMLElement = <Group/>
     const {project} = service
     lifecycle.ownAll(
         audioUnitBoxAdapter.input.catchupAndSubscribeLabelChange(option => nameLabel.value = option.unwrapOrElse("No Input")),
         trackBoxAdapter.indexField.catchupAndSubscribe(owner => {
-            Html.empty(channelStrip)
+            Html.empty(channelControls)
             if (owner.getValue() === 0) {
-                replaceChildren(channelStrip, (
+                replaceChildren(channelControls, (
                     <AudioUnitChannelControls lifecycle={lifecycle}
                                               project={project}
                                               midiDevices={service.midiLearning}
                                               adapter={audioUnitBoxAdapter}/>
                 ))
             } else {
-                replaceChildren(channelStrip, <div/>)
+                replaceChildren(channelControls, <div/>)
             }
         }),
         trackBoxAdapter.catchupAndSubscribePath(option =>
@@ -50,7 +50,7 @@ export const TrackHeader = ({lifecycle, service, trackBoxAdapter, audioUnitBoxAd
             <div className="info">
                 <h5 style={{color: Colors.dark}}>{nameLabel}</h5>
             </div>
-            {channelStrip}
+            {channelControls}
             <MenuButton root={MenuItem.root()
                 .setRuntimeChildrenProcedure(installTrackHeaderMenu(service, audioUnitBoxAdapter, trackBoxAdapter))}
                         style={{minWidth: "0", justifySelf: "end"}}

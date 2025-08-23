@@ -80,17 +80,15 @@ export const AudioUnitChannelControls = ({lifecycle, project, midiDevices, adapt
                 {muteControl}
                 {soloControl}
             </div>
-            {false && adapter.captureBox.match({
-                none: () => <div/>,
-                some: box => (
+            <div className="channel-capture">
+                {adapter.captureBox.ifSome(box => (
                     <Checkbox lifecycle={lifecycle}
                               model={EditWrapper.forValue(editing, box.armed)}
-                              style={{fontSize: "0.75em"}}
-                              appearance={{activeColor: Colors.red, landscape: false}}>
+                              appearance={{activeColor: Colors.red}}>
                         <Icon symbol={IconSymbol.Record}/>
                     </Checkbox>
-                )
-            })}
+                ))}
+            </div>
         </div>
     )
 }

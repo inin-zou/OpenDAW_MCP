@@ -1,7 +1,7 @@
 component
   display: flex
   align-items: center
-  column-gap: 0.5em
+  column-gap: 0.25em
   color: var(--color-dark)
 
   > div.channel-mix
@@ -12,6 +12,13 @@ component
     color: var(--color-bright)
 
   > div.channel-isolation
+    display: flex
+    flex-direction: row
+    font-size: 0.5em
+    column-gap: 0.5em
+
+  > div.channel-capture
+    width: 2em
     display: flex
     flex-direction: row
     font-size: 0.5em
