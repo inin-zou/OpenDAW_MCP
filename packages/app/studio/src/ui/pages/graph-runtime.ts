@@ -1,8 +1,13 @@
 // graph-runtime.ts
 import ForceGraph from "force-graph"
 import * as d3 from "d3-force"
+import {SimulationNodeDatum} from "d3-force"
+import {isUndefined, unitValue} from "@opendaw/lib-std"
 
-type Node = { id: string; label?: string, root?: boolean }
+type Node = {
+    id: string; label?: string, root?: boolean, fx?: number, fy?: number
+} & SimulationNodeDatum
+
 type Edge = { source: string; target: string }
 
 export type GraphData = {
@@ -19,30 +24,18 @@ export type CreateGraphPanel =
 export const GRAPH_INTERACTION_HINT =
     "Drag nodes to reposition. Scroll to zoom. Drag background to pan. Hover a node to see its name."
 
+const stringToUnit = (value: string): unitValue =>
+    Array.from(value).reduce((h, char) => (h * 31 + char.charCodeAt(0)) >>> 0, 0) / 0xffffffff
+
 export const createGraphPanel: CreateGraphPanel = (canvas, data, opts = {}) => {
     const dark = !!opts.dark
 
-    // ---- Convert to force-graph data shape ----
     const nodes = data.nodes
     const links = data.edges
 
-    // ---- Degree map for sizing & heatmap coloring ----
-    const degree = new Map<string, number>()
-    for (const n of nodes) degree.set(n.id, 0)
-    for (const l of links) {
-        degree.set(l.source, (degree.get(l.source) || 0) + 1)
-        degree.set(l.target, (degree.get(l.target) || 0) + 1)
-    }
-    const degVals = Array.from(degree.values())
-    const minDeg = degVals.length ? Math.min(...degVals) : 0
-    const maxDeg = degVals.length ? Math.max(...degVals) : 1
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-
-    // Hover state
     let hovered: any = null
 
-    // ---- Init ForceGraph ----
-    const fg = new ForceGraph(canvas)
+    const graph = new ForceGraph<Node, Edge>(canvas)
         .graphData({nodes, links})
         .backgroundColor(dark ? "#0e0f12" : "#ffffff")
         .nodeId("id")
@@ -53,14 +46,10 @@ export const createGraphPanel: CreateGraphPanel = (canvas, data, opts = {}) => {
         .autoPauseRedraw(false)
         .linkColor(() => (dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.25)"))
         .linkWidth(1)
-        // size by degree (capped so hubs don’t get giant)
-        .nodeVal(({root, id}: any) => root ? 48 : Math.min(18, 4 + (degree.get(id) || 0) * 2))
-        // heatmap color by degree: blue (low) → red (high)
-        .nodeColor((n: any) => {
-            const d = degree.get(n.id) ?? 0
-            const t = (d - minDeg) / Math.max(1, maxDeg - minDeg)
-            const hue = lerp(240, 0, t) // 240=blue → 0=red
-            return `hsl(${hue}, 100%, 50%)`
+        .nodeVal(({root}: Node) => root ? 48 : 3)
+        .nodeColor((n: Node) => {
+            const hue = stringToUnit(n.label ?? "")
+            return `hsl(${hue * 360}, 75%, 50%)`
         })
         // draw labels ourselves on top:
         .nodeCanvasObjectMode(() => "after")
@@ -70,9 +59,8 @@ export const createGraphPanel: CreateGraphPanel = (canvas, data, opts = {}) => {
         // update hover state
         .onNodeHover((node: any) => hovered = node || null)
 
-    // ---- Draw labels centered & on top, with zoom-based visibility + hover always ----
-    fg.onRenderFramePost((ctx: CanvasRenderingContext2D) => {
-        const zoom: number = fg.zoom?.()
+    graph.onRenderFramePost((ctx: CanvasRenderingContext2D) => {
+        const zoom: number = graph.zoom?.()
         const threshold = 1.2
 
         const drawPill = (x: number, y: number, text: string) => {
@@ -108,50 +96,42 @@ export const createGraphPanel: CreateGraphPanel = (canvas, data, opts = {}) => {
         ctx.textBaseline = "middle"
         ctx.fillStyle = "#ffffff"
 
-        const g = fg.graphData() as { nodes: Array<any> }
+        const g = graph.graphData() as { nodes: Array<Node> }
 
-        // Show labels for all nodes only when zoomed in enough
         if (zoom >= threshold) {
-            for (const n of g.nodes) {
-                if (typeof n.x !== "number" || typeof n.y !== "number") continue
-                const label = n.label as string | undefined
-                if (!label) continue
-                ctx.fillText(label, n.x, n.y)
+            for (const node of g.nodes) {
+                if (isUndefined(node.label) || isUndefined(node.x) || isUndefined(node.y)) {continue}
+                ctx.fillText(node.label, node.x, node.y)
             }
         }
-
-        // Always show hovered node label (with a pill), regardless of zoom
         if (hovered && typeof hovered.x === "number" && typeof hovered.y === "number") {
             const text = hovered.label ?? hovered.id
             drawPill(hovered.x, hovered.y - 18 / zoom, text)
         }
-
         ctx.restore()
     })
 
-    // ---- Forces: avoid “pile”, get nice islands ----
-    fg.d3Force("charge", d3.forceManyBody().strength(-150))
-    fg.d3Force("link", d3.forceLink<any, any>()
-        .id((n: any) => n.id)
-        .distance(70)
-        .strength(0.8)
-    )
-    fg.d3Force("center", d3.forceCenter(0, 0))
+    graph
+        .d3Force("charge", d3.forceManyBody().strength(-150))
+        .d3Force("link", d3.forceLink<Node, Edge>()
+            .id((n: Node) => n.id)
+            .distance(70)
+            .strength(0.8)
+        )
+        .d3Force("center", d3.forceCenter(0, 0))
 
-    // ---- Resize handling ----
     const applySize = () => {
-        const rect = canvas.getBoundingClientRect()
-        if (rect.width && rect.height) fg.width(rect.width).height(rect.height)
+        const {width, height} = canvas.getBoundingClientRect()
+        graph.width(width).height(height)
     }
-    const ro = new ResizeObserver(applySize)
-    ro.observe(canvas)
+    const resizeObserver = new ResizeObserver(applySize)
+    resizeObserver.observe(canvas)
     applySize()
-
     return {
         terminate(): void {
-            try { ro.disconnect() } catch {}
-            try { fg.graphData({nodes: [], links: []}) } catch {}
-            fg._destructor()
+            try { resizeObserver.disconnect() } catch {}
+            try { graph.graphData({nodes: [], links: []}) } catch {}
+            graph._destructor()
         },
         resize(): void {
             applySize()

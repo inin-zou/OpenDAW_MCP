@@ -42,7 +42,7 @@ export const GraphPage: PageFactory<StudioService> = ({lifecycle, service}: Page
                                        target: UUID.toString(address.uuid)
                                    })))
                                }
-                               const container = <div className="wrapper"/>
+                               const container = (<div className="wrapper"/>)
                                const controller = createGraphPanel(container, data, {dark: true})
                                lifecycle.own(controller)
                                lifecycle.own(Html.watchResize(element, () => controller.resize()))
