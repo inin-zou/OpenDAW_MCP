@@ -13,6 +13,8 @@ import {ControlIndicator} from "@/ui/components/ControlIndicator"
 import {Html} from "@opendaw/lib-dom"
 import {MIDILearning} from "@/midi/devices/MIDILearning"
 import {Colors, Project} from "@opendaw/studio-core"
+import {PeakVolumeSlider} from "@/ui/components/PeakVolumeSlider"
+import {gainToDb} from "@opendaw/lib-dsp"
 
 const className = Html.adoptStyleSheet(css, "AudioUnitChannelControls")
 
@@ -64,31 +66,38 @@ export const AudioUnitChannelControls = ({lifecycle, project, midiDevices, adapt
             </Checkbox>
         </ControlIndicator>
     )
+    const peaksInDb = new Float32Array(2)
     lifecycle.ownAll(
         attachParameterContextMenu(editing, midiDevices, adapter.tracks, volume, volumeControl),
         attachParameterContextMenu(editing, midiDevices, adapter.tracks, panning, panningControl),
         attachParameterContextMenu(editing, midiDevices, adapter.tracks, mute, muteControl),
-        attachParameterContextMenu(editing, midiDevices, adapter.tracks, solo, soloControl)
+        attachParameterContextMenu(editing, midiDevices, adapter.tracks, solo, soloControl),
+        project.liveStreamReceiver.subscribeFloats(adapter.address, values => {
+            peaksInDb[0] = gainToDb(values[0])
+            peaksInDb[1] = gainToDb(values[1])
+        })
     )
     return (
         <div className={className}>
-            <div className="channel-mix">
-                {volumeControl}
-                {panningControl}
-            </div>
-            <div className="channel-isolation">
-                {muteControl}
-                {soloControl}
-            </div>
-            <div className="channel-capture">
-                {adapter.captureBox.ifSome(box => (
-                    <Checkbox lifecycle={lifecycle}
-                              model={EditWrapper.forValue(editing, box.armed)}
-                              appearance={{activeColor: Colors.red}}>
-                        <Icon symbol={IconSymbol.Record}/>
-                    </Checkbox>
-                ))}
-            </div>
+            <header>
+                <div className="channel-mix">
+                    {panningControl}
+                </div>
+                <div className="channel-isolation">
+                    {muteControl}
+                    {soloControl}
+                </div>
+                <div className="channel-capture">
+                    {adapter.captureBox.ifSome(box => (
+                        <Checkbox lifecycle={lifecycle}
+                                  model={EditWrapper.forValue(editing, box.armed)}
+                                  appearance={{activeColor: Colors.red, framed: true}}>
+                            <Icon symbol={IconSymbol.Record}/>
+                        </Checkbox>
+                    ))}
+                </div>
+            </header>
+            <PeakVolumeSlider lifecycle={lifecycle} peaks={peaksInDb}/>
         </div>
     )
 }

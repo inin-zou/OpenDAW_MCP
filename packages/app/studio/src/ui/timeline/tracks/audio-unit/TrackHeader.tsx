@@ -47,9 +47,7 @@ export const TrackHeader = ({lifecycle, service, trackBoxAdapter, audioUnitBoxAd
     const element: HTMLElement = (
         <div className={Html.buildClassList(className, "is-primary")} tabindex={-1}>
             <Icon symbol={TrackType.toIconSymbol(trackBoxAdapter.type)} style={{color}}/>
-            <div className="info">
-                <h5 style={{color: Colors.dark}}>{nameLabel}</h5>
-            </div>
+            <h5 style={{color: Colors.dark}}>{nameLabel}</h5>
             {channelControls}
             <MenuButton root={MenuItem.root()
                 .setRuntimeChildrenProcedure(installTrackHeaderMenu(service, audioUnitBoxAdapter, trackBoxAdapter))}
