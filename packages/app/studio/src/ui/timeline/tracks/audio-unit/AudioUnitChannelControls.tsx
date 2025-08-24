@@ -1,5 +1,5 @@
 import css from "./AudioUnitChannelControls.sass?inline"
-import {Lifecycle} from "@opendaw/lib-std"
+import {Arrays, Lifecycle} from "@opendaw/lib-std"
 import {RelativeUnitValueDragging} from "@/ui/wrapper/RelativeUnitValueDragging.tsx"
 import {SnapCenter, SnapCommonDecibel} from "@/ui/configs.ts"
 import {Knob} from "@/ui/components/Knob.tsx"
@@ -13,7 +13,7 @@ import {ControlIndicator} from "@/ui/components/ControlIndicator"
 import {Html} from "@opendaw/lib-dom"
 import {MIDILearning} from "@/midi/devices/MIDILearning"
 import {Colors, Project} from "@opendaw/studio-core"
-import {PeakVolumeSlider} from "@/ui/components/PeakVolumeSlider"
+import {TrackPeakMeter} from "@/ui/components/TrackPeakMeter"
 import {gainToDb} from "@opendaw/lib-dsp"
 
 const className = Html.adoptStyleSheet(css, "AudioUnitChannelControls")
@@ -66,7 +66,7 @@ export const AudioUnitChannelControls = ({lifecycle, project, midiDevices, adapt
             </Checkbox>
         </ControlIndicator>
     )
-    const peaksInDb = new Float32Array(2)
+    const peaksInDb = new Float32Array(Arrays.create(() => Number.NEGATIVE_INFINITY, 2))
     lifecycle.ownAll(
         attachParameterContextMenu(editing, midiDevices, adapter.tracks, volume, volumeControl),
         attachParameterContextMenu(editing, midiDevices, adapter.tracks, panning, panningControl),
@@ -81,6 +81,7 @@ export const AudioUnitChannelControls = ({lifecycle, project, midiDevices, adapt
         <div className={className}>
             <header>
                 <div className="channel-mix">
+                    {volumeControl}
                     {panningControl}
                 </div>
                 <div className="channel-isolation">
@@ -97,7 +98,7 @@ export const AudioUnitChannelControls = ({lifecycle, project, midiDevices, adapt
                     ))}
                 </div>
             </header>
-            <PeakVolumeSlider lifecycle={lifecycle} peaks={peaksInDb}/>
+            <TrackPeakMeter lifecycle={lifecycle} peaksInDb={peaksInDb}/>
         </div>
     )
 }
