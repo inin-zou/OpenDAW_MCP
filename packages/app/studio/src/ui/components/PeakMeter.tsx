@@ -68,7 +68,7 @@ export const PeakMeter = ({lifecycle, peaks, channelWidthInEm, channelOffsetInEm
                         <stop offset={s0} stop-color={Colors.green}/>
                         <stop offset={s0} stop-color={Colors.yellow}/>
                         <stop offset={s1} stop-color={Colors.yellow}/>
-                        <stop offset={s1} stop-color={Colors.orange}/>
+                        <stop offset={s1} stop-color={Colors.red}/>
                     </linearGradient>
                 </defs>
                 <rect

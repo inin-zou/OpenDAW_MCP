@@ -24,14 +24,18 @@ export const PeakVolumeSlider = ({lifecycle, peaks}: Construct) => {
         gradient.addColorStop(s0, Colors.green)
         gradient.addColorStop(s0, Colors.yellow)
         gradient.addColorStop(s1, Colors.yellow)
-        gradient.addColorStop(s1, Colors.orange)
+        gradient.addColorStop(s1, Colors.red)
         context.fillStyle = gradient
-        console.debug(peaks.length)
+        // peaks[0] = peaks[1] = 9.0
         peaks.forEach((peak, index) => {
-            const h = actualHeight / peaks.length
-            context.fillRect(0, index * (h + 0.5), actualWidth * mapping.x(peak), h - 1)
+            const h = Math.floor(actualHeight / peaks.length)
+            context.fillRect(0, index * (h + 1), actualWidth * mapping.x(peak), h - 1)
         })
     })
+    const knob: HTMLDivElement = (<div className="knob"/>)
+    const showValue = () => {
+    }
+    showValue()
     lifecycle.ownAll(
         peakPainter,
         AnimationFrame.add(peakPainter.requestUpdate)
@@ -39,6 +43,7 @@ export const PeakVolumeSlider = ({lifecycle, peaks}: Construct) => {
     return (
         <div className={className}>
             {canvas}
+            {knob}
         </div>
     )
 }

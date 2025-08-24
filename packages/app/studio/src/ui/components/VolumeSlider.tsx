@@ -73,7 +73,7 @@ export const VolumeSlider = ({lifecycle, editing, parameter}: Construct) => {
         return <line x1={length === MarkerLength.Long ? 0 : "25%"}
                      y1={y}
                      y2={y}
-                     stroke={decibel === 0 && Colors.orange}/>
+                     stroke={decibel === 0 && Colors.red}/>
     })
     const lineContainer: SVGSVGElement = <svg y="1em"
                                               overflow="visible"
