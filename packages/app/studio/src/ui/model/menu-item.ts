@@ -18,9 +18,15 @@ export type DefaultMenuData = {
     icon?: IconSymbol
 }
 
+export type HeaderMenuData = {
+    type: "header"
+    label: string
+    icon?: IconSymbol
+}
+
 export type MenuRootData = typeof Root
 
-export type MenuData = (DefaultMenuData & MenuItemOptions) | MenuRootData
+export type MenuData = (DefaultMenuData & MenuItemOptions) | MenuRootData | HeaderMenuData
 
 export interface MenuCollector {
     addItems(...items: MenuItem[]): void
@@ -31,6 +37,10 @@ export class MenuItem<DATA extends MenuData = MenuData> {
 
     static default(properties: Omit<DefaultMenuData, "type"> & MenuItemOptions) {
         return this.#create({type: "default", ...properties}, properties)
+    }
+
+    static header(properties: Omit<HeaderMenuData, "type"> & MenuItemOptions) {
+        return this.#create({type: "header", ...properties}, properties)
     }
 
     static #create<D extends MenuData>(data: D, options?: MenuItemOptions): MenuItem<D> {

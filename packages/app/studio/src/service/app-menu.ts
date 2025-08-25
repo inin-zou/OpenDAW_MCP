@@ -6,12 +6,14 @@ import {isDefined, panic} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {AudioInputDevices} from "@opendaw/studio-core"
 import {SyncLogService} from "@/service/SyncLogService"
+import {IconSymbol} from "@opendaw/studio-adapters"
 
 export const initAppMenu = (service: StudioService) => {
     return MenuItem.root()
         .setRuntimeChildrenProcedure(parent => {
                 const canRequestPermission = AudioInputDevices.available.length === 0
                 parent.addMenuItem(
+                    MenuItem.header({label: "openDAW", icon: IconSymbol.OpenDAW}),
                     MenuItem.default({
                         label: "Request permission 🔊",
                         hidden: !canRequestPermission

@@ -261,6 +261,10 @@ export class StudioService implements ProjectEnv {
 
     startRecording(countIn: boolean): void {
         if (!this.hasProjectSession) {return}
+        if (this.project.rootBox.audioUnits.pointerHub.isEmpty()) {
+            // TODO filter output and busses and create a TapeDeviceBox. This condition above does not work.
+            console.debug("No audio units in project, skipping recording.")
+        }
         Recording.start({
             sampleManager: this.sampleManager,
             project: this.project,

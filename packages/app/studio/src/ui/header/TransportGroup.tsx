@@ -20,17 +20,6 @@ type Construct = {
 
 export const TransportGroup = ({lifecycle, service}: Construct) => {
     const {engine, transport} = service
-    const playButton: HTMLElement = (
-        <Button lifecycle={lifecycle}
-                appearance={{activeColor: "hsl(120, 50%, 60%)", tooltip: "Play"}}
-                onClick={() => {
-                    if (engine.isPlaying.getValue()) {
-                        engine.stop()
-                    } else {
-                        engine.play()
-                    }
-                }}><Icon symbol={IconSymbol.Play}/></Button>
-    )
     const recordButton: HTMLElement = (
         <Button lifecycle={lifecycle}
                 appearance={{
@@ -44,6 +33,17 @@ export const TransportGroup = ({lifecycle, service}: Construct) => {
                         service.startRecording(!event.shiftKey)
                     }
                 }}><Icon symbol={IconSymbol.Record}/></Button>)
+    const playButton: HTMLElement = (
+        <Button lifecycle={lifecycle}
+                appearance={{activeColor: "hsl(120, 50%, 60%)", tooltip: "Play"}}
+                onClick={() => {
+                    if (engine.isPlaying.getValue()) {
+                        engine.stop()
+                    } else {
+                        engine.play()
+                    }
+                }}><Icon symbol={IconSymbol.Play}/></Button>
+    )
     const element: HTMLElement = (
         <div className={className}>
             {recordButton}

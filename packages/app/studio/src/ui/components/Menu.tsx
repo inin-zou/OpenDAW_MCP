@@ -1,5 +1,5 @@
 import css from "./Menu.sass?inline"
-import {DefaultMenuData, MenuItem} from "@/ui/model/menu-item.ts"
+import {DefaultMenuData, HeaderMenuData, MenuItem} from "@/ui/model/menu-item.ts"
 import {createElement, Frag} from "@opendaw/lib-jsx"
 import {int, isDefined, Lifecycle, Nullable, Option, panic, Terminable, Terminator} from "@opendaw/lib-std"
 import {Icon} from "@/ui/components/Icon.tsx"
@@ -8,6 +8,15 @@ import {IconSymbol} from "@opendaw/studio-adapters"
 import {AnimationFrame, Events, Html} from "@opendaw/lib-dom"
 
 const className = Html.adoptStyleSheet(css, "menu")
+
+export const HeaderMenuDataElement = ({data}: { data: HeaderMenuData }) => (
+    <div className={Html.buildClassList("header")}>
+        <div className="icon-space"/>
+        {data.icon && <Icon symbol={data.icon} style={{margin: "0 0.25em", fontSize: "1.25em"}}/>}
+        <div className="label">{data.label}</div>
+        <div className="shortcut"/>
+    </div>
+)
 
 export const DefaultMenuDataElement = ({data}: { data: DefaultMenuData }) => (
     <div className={Html.buildClassList("default", data.checked && "checked")}>
@@ -199,6 +208,8 @@ export class Menu implements Terminable, Lifecycle {
                                 {(() => {
                                     if (item.data === undefined) {
                                         return panic("")
+                                    } else if (item.data.type === "header") {
+                                        return <HeaderMenuDataElement data={item.data}/>
                                     } else if (item.data.type === "default") {
                                         return <DefaultMenuDataElement data={item.data}/>
                                     }

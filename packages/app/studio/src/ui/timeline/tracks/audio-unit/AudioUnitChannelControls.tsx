@@ -133,10 +133,14 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
                                 if (!isInstanceOf(capture, CaptureAudio)) {return}
                                 collector.addItems(MenuItem.default({label: "Devices"})
                                     .setRuntimeChildrenProcedure(parent => {
+                                        parent.addMenuItem(MenuItem.header({
+                                            label: "Audio Inputs",
+                                            icon: IconSymbol.AudioDevice
+                                        }))
                                         const devices = AudioInputDevices.available
                                         if (devices.length === 0) {
                                             parent.addMenuItem(
-                                                MenuItem.default({label: "Click for permissions to access devices..."})
+                                                MenuItem.default({label: "Click to access devices..."})
                                                     .setTriggerProcedure(() => AudioInputDevices.requestPermission()))
                                         } else {
                                             parent.addMenuItem(...devices

@@ -42,7 +42,6 @@ component
     > div.item
       flex: 1 0 2.25em
       display: flex
-      padding: 0 0.5em
       pointer-events: inherit
 
       &.selected > div.default
@@ -63,11 +62,26 @@ component
         color: var(--color-dark)
         pointer-events: none
 
+      > div.header
+        width: 100%
+        display: flex
+        align-items: center
+        padding: 0
+        white-space: nowrap
+        color: var(--color-dark)
+        background-color: var(--color-black)
+
+        > div.icon-space
+          pointer-events: none
+          width: 1em
+          height: 1em
+
       > div.default
         width: 100%
         display: flex
         align-items: center
         border-radius: 0.25em
+        margin: 0 0.5em
         padding: 0 0.5em 0 0.25em
         white-space: nowrap
 
