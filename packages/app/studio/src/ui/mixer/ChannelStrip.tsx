@@ -81,7 +81,7 @@ export const ChannelStrip = ({lifecycle, service, adapter, compact}: Construct) 
             <Checkbox lifecycle={lifecycle}
                       model={muteModel}
                       className="mute"
-                      appearance={{activeColor: Colors.red, framed: true}}>
+                      appearance={{activeColor: Colors.orange, framed: true}}>
                 <Icon symbol={IconSymbol.Mute}/>
             </Checkbox>
         </ControlIndicator>

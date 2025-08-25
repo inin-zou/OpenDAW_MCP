@@ -1,5 +1,5 @@
 import css from "./TrackHeader.sass?inline"
-import {Lifecycle} from "@opendaw/lib-std"
+import {Lifecycle, Terminator} from "@opendaw/lib-std"
 import {createElement, Group, Inject, replaceChildren} from "@opendaw/lib-jsx"
 import {Icon} from "@/ui/components/Icon.tsx"
 import {MenuButton} from "@/ui/components/MenuButton.tsx"
@@ -24,15 +24,16 @@ export const TrackHeader = ({lifecycle, service, trackBoxAdapter, audioUnitBoxAd
     const nameLabel = Inject.value("Untitled")
     const channelControls: HTMLElement = <Group/>
     const {project} = service
+    const channelLifeCycle = lifecycle.own(new Terminator())
     lifecycle.ownAll(
         audioUnitBoxAdapter.input.catchupAndSubscribeLabelChange(option => nameLabel.value = option.unwrapOrElse("No Input")),
         trackBoxAdapter.indexField.catchupAndSubscribe(owner => {
+            channelLifeCycle.terminate()
             Html.empty(channelControls)
             if (owner.getValue() === 0) {
                 replaceChildren(channelControls, (
-                    <AudioUnitChannelControls lifecycle={lifecycle}
-                                              project={project}
-                                              midiDevices={service.midiLearning}
+                    <AudioUnitChannelControls lifecycle={channelLifeCycle}
+                                              service={service}
                                               adapter={audioUnitBoxAdapter}/>
                 ))
             } else {

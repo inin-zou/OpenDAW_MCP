@@ -187,7 +187,6 @@ export class EngineWorklet extends AudioWorkletNode implements Engine {
     scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void {
         this.#notifyClipNotification.notify({type: "waiting", clips: clipIds})
         this.#commands.scheduleClipPlay(clipIds)
-        this.#isPlaying.setValue(true) // must be second, since they might be executed in different blocks
     }
     scheduleClipStop(trackIds: ReadonlyArray<UUID.Format>): void {
         this.#commands.scheduleClipStop(trackIds)

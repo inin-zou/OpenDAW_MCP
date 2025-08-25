@@ -27,6 +27,7 @@
 
 ## Done
 
+* ~~Play global transport when starting a clip~~
 * ~~Severe bug in undo~~
 * ~~Store capture filters in boxes~~
 * ~~Template "Liquid" and "Release" timing issue because of CaptureManager~~

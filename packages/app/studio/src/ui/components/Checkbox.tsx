@@ -22,9 +22,7 @@ export const Checkbox = ({lifecycle, model, style, className, appearance}: Const
                }}
                checked={model.getValue()}/>
     )
-    lifecycle.own(model.subscribe(model => {
-        input.checked = model.getValue()
-    }))
+    lifecycle.own(model.subscribe(model => input.checked = model.getValue()))
     return (
         <ButtonCheckboxRadio lifecycle={lifecycle}
                              style={style}

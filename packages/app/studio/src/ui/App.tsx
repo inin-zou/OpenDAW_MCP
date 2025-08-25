@@ -10,7 +10,6 @@ import {Footer} from "@/ui/Footer"
 import {ManualPage} from "@/ui/pages/ManualPage"
 import {ColorsPage} from "@/ui/pages/ColorsPage"
 import {Header} from "@/ui/header/Header"
-import {AudioInputDevicesPage} from "./pages/AudioInputDevicesPage"
 import {ErrorsPage} from "@/ui/pages/ErrorsPage.tsx"
 import {ImprintPage} from "@/ui/pages/ImprintPage.tsx"
 import {GraphPage} from "@/ui/pages/GraphPage"
@@ -37,7 +36,6 @@ export const App = (service: StudioService) => {
                     {path: "/automation", factory: AutomationPage},
                     {path: "/errors", factory: ErrorsPage},
                     {path: "/upload", factory: SampleUploadPage},
-                    {path: "/audio-input", factory: AudioInputDevicesPage},
                     {path: "/colors", factory: ColorsPage},
                     {path: "/graph", factory: GraphPage}
                 ]}

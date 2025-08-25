@@ -5,14 +5,15 @@ import {AudioUnitBox, CaptureMidiBox} from "@opendaw/studio-boxes"
 import {Capture} from "./Capture"
 import {RecordMidi} from "./RecordMidi"
 import {RecordingContext} from "./RecordingContext"
+import {CaptureManager} from "./CaptureManager"
 
 export class CaptureMidi extends Capture<CaptureMidiBox> {
     #midiAccess: Option<MIDIAccess> = Option.None
 
     #filterChannel: Option<byte> = Option.None
 
-    constructor(audioUnitBox: AudioUnitBox, captureMidiBox: CaptureMidiBox) {
-        super(audioUnitBox, captureMidiBox)
+    constructor(manager: CaptureManager, audioUnitBox: AudioUnitBox, captureMidiBox: CaptureMidiBox) {
+        super(manager, audioUnitBox, captureMidiBox)
 
         this.ownAll(
             captureMidiBox.channel.catchupAndSubscribe(owner => {
@@ -25,9 +26,10 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
     async prepareRecording({requestMIDIAccess}: RecordingContext): Promise<void> {
         return requestMIDIAccess()
             .then(midiAccess => {
-                if (this.filterDeviceId.nonEmpty()) {
+                const option = this.deviceId.getValue()
+                if (option.nonEmpty()) {
                     const captureDevices = Array.from(midiAccess.inputs.values())
-                    const id = this.filterDeviceId.unwrap()
+                    const id = option.unwrap()
                     if (isUndefined(captureDevices.find(device => id === device.id))) {
                         return panic(`Could not find MIDI device with id: '${id}'`)
                     }
@@ -41,7 +43,7 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
         const midiAccess = this.#midiAccess.unwrap()
         const notifier = new Notifier<MIDIMessageEvent>()
         const captureDevices = Array.from(midiAccess.inputs.values())
-        this.filterDeviceId.ifSome(id => captureDevices.filter(device => id === device.id))
+        this.deviceId.getValue().ifSome(id => captureDevices.filter(device => id === device.id))
         return Terminable.many(
             Terminable.many(
                 ...captureDevices.map(input => Events.subscribe(input, "midimessage",
@@ -60,4 +62,6 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
             })
         )
     }
+
+    get deviceLabel(): Option<string> {return Option.None}
 }

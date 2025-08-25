@@ -208,6 +208,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
                 noteOff: (uuid: UUID.Format, pitch: byte) =>
                     this.optAudioUnit(uuid).ifSome(unit => unit.midiDeviceChain.noteSequencer.pushRawNoteOff(pitch)),
                 scheduleClipPlay: (clipIds: ReadonlyArray<UUID.Format>) => {
+                    // TODO What to do when recording is in progress?
                     clipIds.forEach(clipId => {
                         const optClipBox = this.#boxGraph.findBox(clipId)
                         if (optClipBox.isEmpty()) {
@@ -217,6 +218,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
                             this.#clipSequencing.schedulePlay(clipAdapter)
                         }
                     })
+                    this.#timeInfo.transporting = true
                 },
                 scheduleClipStop: (trackIds: ReadonlyArray<UUID.Format>) => {
                     trackIds.forEach(trackId => {

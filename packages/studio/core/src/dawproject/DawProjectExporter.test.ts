@@ -17,6 +17,7 @@ describe("DawProjectExport", () => {
         const buffer = fs.readFileSync(path.join(__dirname, projectPath))
         const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
         const project = Project.load({
+            sampleRate: 44100,
             sampleManager: new class implements SampleManager {
                 record(loader: SampleLoader & { uuid: UUID.Format }): void {
                     throw new Error("Method not implemented.")

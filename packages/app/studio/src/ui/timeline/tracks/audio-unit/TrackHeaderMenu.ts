@@ -12,7 +12,7 @@ export const installTrackHeaderMenu = (service: StudioService,
     parent => {
         const inputAdapter = audioUnitBoxAdapter.input.getValue()
         if (inputAdapter.isEmpty()) {return parent}
-        const accepts: DeviceAccepts = inputAdapter.unwrap().accepts
+        const accepts: DeviceAccepts = inputAdapter.unwrap("Cannot unwrap input adapter").accepts
         const acceptMidi = audioUnitBoxAdapter.captureBox.mapOr(box => isInstanceOf(box, CaptureMidiBox), false)
         const trackType = DeviceAccepts.toTrackType(accepts)
         const {project, engine, midiLearning} = service
@@ -42,8 +42,7 @@ export const installTrackHeaderMenu = (service: StudioService,
                     MenuItem.default({
                         label: "AudioUnit 1 Up",
                         selectable: audioUnitBoxAdapter.indexField.getValue() > 0 && false
-                    })
-                        .setTriggerProcedure(() => editing.modify(() => audioUnitBoxAdapter.move(-1))),
+                    }).setTriggerProcedure(() => editing.modify(() => audioUnitBoxAdapter.move(-1))),
                     MenuItem.default({
                         label: "AudioUnit 1 Down",
                         selectable: audioUnitBoxAdapter.indexField.getValue() < project.rootBoxAdapter.audioUnits.adapters()

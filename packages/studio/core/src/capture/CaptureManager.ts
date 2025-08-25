@@ -1,29 +1,35 @@
-import {asInstanceOf, isDefined, Nullish, SortedSet, Subscription, Terminable, UUID} from "@opendaw/lib-std"
+import {asInstanceOf, isDefined, Nullish, Option, SortedSet, Subscription, Terminable, UUID} from "@opendaw/lib-std"
 import {AudioUnitBox, BoxVisitor, CaptureAudioBox, CaptureMidiBox} from "@opendaw/studio-boxes"
-import {Capture} from "./Capture"
 import {Project} from "../Project"
+import {Capture} from "./Capture"
 import {CaptureMidi} from "./CaptureMidi"
 import {CaptureAudio} from "./CaptureAudio"
 
 export class CaptureManager implements Terminable {
+    readonly #project: Project
     readonly #subscription: Subscription
     readonly #captures: SortedSet<UUID.Format, Capture>
 
-    constructor({rootBox}: Project) {
+    constructor(project: Project) {
+        this.#project = project
         this.#captures = UUID.newSet<Capture>(unit => unit.uuid)
-        this.#subscription = rootBox.audioUnits.pointerHub.catchupAndSubscribeTransactual({
+        this.#subscription = this.#project.rootBox.audioUnits.pointerHub.catchupAndSubscribeTransactual({
             onAdd: ({box}) => {
                 const audioUnitBox = asInstanceOf(box, AudioUnitBox)
                 const capture: Nullish<Capture> = audioUnitBox.capture.targetVertex
                     .ifSome(({box}) => box.accept<BoxVisitor<Capture>>({
-                        visitCaptureMidiBox: (box: CaptureMidiBox) => new CaptureMidi(audioUnitBox, box),
-                        visitCaptureAudioBox: (box: CaptureAudioBox) => new CaptureAudio(audioUnitBox, box)
+                        visitCaptureMidiBox: (box: CaptureMidiBox) => new CaptureMidi(this, audioUnitBox, box),
+                        visitCaptureAudioBox: (box: CaptureAudioBox) => new CaptureAudio(this, audioUnitBox, box)
                     }))
                 if (isDefined(capture)) {this.#captures.add(capture)}
             },
             onRemove: ({box: {address: {uuid}}}) => this.#captures.removeByKeyIfExist(uuid)?.terminate()
         })
     }
+
+    get project(): Project {return this.#project}
+
+    get(uuid: UUID.Format): Option<Capture> {return this.#captures.opt(uuid)}
 
     filterArmed(): ReadonlyArray<Capture> {
         return this.#captures.values()

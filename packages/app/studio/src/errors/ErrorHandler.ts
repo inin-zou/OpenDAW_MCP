@@ -1,11 +1,11 @@
-import {Terminable, Terminator} from "@opendaw/lib-std"
+import {EmptyExec, Terminable, Terminator, Warning} from "@opendaw/lib-std"
 import {AnimationFrame, Browser, Events} from "@opendaw/lib-dom"
 import {LogBuffer} from "@/errors/LogBuffer.ts"
 import {ErrorLog} from "@/errors/ErrorLog.ts"
 import {ErrorInfo} from "@/errors/ErrorInfo.ts"
 import {Surface} from "@/ui/surface/Surface.tsx"
 import {StudioService} from "@/service/StudioService.ts"
-import {showErrorDialog} from "@/ui/components/dialogs.tsx"
+import {showErrorDialog, showInfoDialog} from "@/ui/components/dialogs.tsx"
 
 export class ErrorHandler {
     readonly terminator = new Terminator()
@@ -15,9 +15,13 @@ export class ErrorHandler {
 
     constructor(service: StudioService) {this.#service = service}
 
-    processError(scope: string, event: Event) {
+    processError(scope: string, event: Event): boolean {
+        if ("reason" in event && event.reason instanceof Warning) {
+            showInfoDialog({headline: "Warning", message: event.reason.message}).then(EmptyExec)
+            return false
+        }
         console.debug("processError", scope, event)
-        if (this.#errorThrown) {return}
+        if (this.#errorThrown) {return false}
         this.#errorThrown = true
         AnimationFrame.terminate()
         const error = ErrorInfo.extract(event)
@@ -52,6 +56,7 @@ export class ErrorHandler {
         } else {
             alert(`Boot Error in '${scope}': ${error.name}`)
         }
+        return true
     }
 
     install(owner: WindowProxy | Worker | AudioWorkletNode, scope: string): Terminable {
@@ -59,24 +64,19 @@ export class ErrorHandler {
         const lifetime = this.terminator.own(new Terminator())
         lifetime.ownAll(
             Events.subscribe(owner, "error", event => {
-                lifetime.terminate()
-                this.processError(scope, event)
+                if (this.processError(scope, event)) {lifetime.terminate()}
             }),
             Events.subscribe(owner, "unhandledrejection", event => {
-                lifetime.terminate()
-                this.processError(scope, event)
+                if (this.processError(scope, event)) {lifetime.terminate()}
             }),
             Events.subscribe(owner, "messageerror", event => {
-                lifetime.terminate()
-                this.processError(scope, event)
+                if (this.processError(scope, event)) {lifetime.terminate()}
             }),
             Events.subscribe(owner, "processorerror" as any, event => {
-                lifetime.terminate()
-                this.processError(scope, event)
+                if (this.processError(scope, event)) {lifetime.terminate()}
             }),
             Events.subscribe(owner, "securitypolicyviolation", (event: SecurityPolicyViolationEvent) => {
-                lifetime.terminate()
-                this.processError(scope, event)
+                if (this.processError(scope, event)) {lifetime.terminate()}
             })
         )
         return lifetime

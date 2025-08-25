@@ -139,6 +139,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
     ownAll<T extends Terminable>(...terminables: Array<T>): void {return this.#terminator.ownAll<T>(...terminables)}
     spawn(): Terminator {return this.#terminator.spawn()}
 
+    get env(): ProjectEnv {return this.#env}
     get bpm(): number {return this.timelineBox.bpm.getValue()}
     get rootBoxAdapter(): RootBoxAdapter {return this.boxAdapters.adapterFor(this.rootBox, RootBoxAdapter)}
     get timelineBoxAdapter(): TimelineBoxAdapter {return this.boxAdapters.adapterFor(this.timelineBox, TimelineBoxAdapter)}

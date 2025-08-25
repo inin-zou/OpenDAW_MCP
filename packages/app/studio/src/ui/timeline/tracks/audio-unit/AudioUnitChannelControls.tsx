@@ -1,5 +1,5 @@
 import css from "./AudioUnitChannelControls.sass?inline"
-import {Arrays, Lifecycle} from "@opendaw/lib-std"
+import {Arrays, isInstanceOf, Lifecycle, Option, Terminable, Terminator} from "@opendaw/lib-std"
 import {RelativeUnitValueDragging} from "@/ui/wrapper/RelativeUnitValueDragging.tsx"
 import {SnapCenter, SnapCommonDecibel} from "@/ui/configs.ts"
 import {Knob} from "@/ui/components/Knob.tsx"
@@ -11,23 +11,26 @@ import {AudioUnitBoxAdapter, IconSymbol} from "@opendaw/studio-adapters"
 import {attachParameterContextMenu} from "@/ui/menu/automation.ts"
 import {ControlIndicator} from "@/ui/components/ControlIndicator"
 import {Html} from "@opendaw/lib-dom"
-import {MIDILearning} from "@/midi/devices/MIDILearning"
-import {Colors, Project} from "@opendaw/studio-core"
+import {AudioInputDevices, CaptureAudio, Colors} from "@opendaw/studio-core"
 import {TrackPeakMeter} from "@/ui/components/TrackPeakMeter"
 import {gainToDb} from "@opendaw/lib-dsp"
+import {StudioService} from "@/service/StudioService"
+import {ContextMenu} from "@/ui/ContextMenu"
+import {MenuItem} from "@/ui/model/menu-item"
+import {TextTooltip} from "@/ui/surface/TextTooltip"
 
 const className = Html.adoptStyleSheet(css, "AudioUnitChannelControls")
 
 type Construct = {
     lifecycle: Lifecycle
-    project: Project
-    midiDevices: MIDILearning
+    service: StudioService
     adapter: AudioUnitBoxAdapter
 }
 
-export const AudioUnitChannelControls = ({lifecycle, project, midiDevices, adapter}: Construct) => {
+export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construct) => {
+    const {project, midiLearning, context} = service
+    const {captureManager, editing} = project
     const {volume, panning, mute, solo} = adapter.namedParameter
-    const {editing} = project
     const volumeControl = (
         <RelativeUnitValueDragging lifecycle={lifecycle}
                                    editing={project.editing}
@@ -52,7 +55,7 @@ export const AudioUnitChannelControls = ({lifecycle, project, midiDevices, adapt
         <ControlIndicator lifecycle={lifecycle} parameter={mute}>
             <Checkbox lifecycle={lifecycle}
                       model={EditWrapper.forAutomatableParameter(editing, mute)}
-                      appearance={{activeColor: Colors.red, framed: true}}>
+                      appearance={{activeColor: Colors.orange, framed: true}}>
                 <Icon symbol={IconSymbol.Mute}/>
             </Checkbox>
         </ControlIndicator>
@@ -67,14 +70,42 @@ export const AudioUnitChannelControls = ({lifecycle, project, midiDevices, adapt
         </ControlIndicator>
     )
     const peaksInDb = new Float32Array(Arrays.create(() => Number.NEGATIVE_INFINITY, 2))
+    let streamRunning = false
+    const captureOption = captureManager.get(adapter.uuid)
     lifecycle.ownAll(
-        attachParameterContextMenu(editing, midiDevices, adapter.tracks, volume, volumeControl),
-        attachParameterContextMenu(editing, midiDevices, adapter.tracks, panning, panningControl),
-        attachParameterContextMenu(editing, midiDevices, adapter.tracks, mute, muteControl),
-        attachParameterContextMenu(editing, midiDevices, adapter.tracks, solo, soloControl),
+        attachParameterContextMenu(editing, midiLearning, adapter.tracks, volume, volumeControl),
+        attachParameterContextMenu(editing, midiLearning, adapter.tracks, panning, panningControl),
+        attachParameterContextMenu(editing, midiLearning, adapter.tracks, mute, muteControl),
+        attachParameterContextMenu(editing, midiLearning, adapter.tracks, solo, soloControl),
+        captureOption.ifSome(capture => {
+            if (!isInstanceOf(capture, CaptureAudio)) {return}
+            const streamLifeCycle = lifecycle.own(new Terminator())
+            capture.stream.subscribe(owner => owner.getValue().match({
+                none: () => {
+                    streamLifeCycle.terminate()
+                    streamRunning = false
+                },
+                some: stream => {
+                    const numberOfChannels = stream.getAudioTracks().at(0)?.getSettings().channelCount ?? 2
+                    const meterWorklet = service.worklets.createMeter(numberOfChannels)
+                    const streamSource = context.createMediaStreamSource(stream)
+                    streamSource.connect(meterWorklet)
+                    streamRunning = true
+                    streamLifeCycle.ownAll(
+                        Terminable.create(() => streamSource.disconnect()),
+                        meterWorklet.subscribe(({peak}) => {
+                            peaksInDb[0] = gainToDb(peak[0])
+                            peaksInDb[1] = gainToDb(peak[1] ?? peak[0])
+                        }),
+                        meterWorklet
+                    )
+                }
+            }))
+        }) ?? Terminable.Empty,
         project.liveStreamReceiver.subscribeFloats(adapter.address, values => {
+            if (streamRunning) {return}
             peaksInDb[0] = gainToDb(values[0])
-            peaksInDb[1] = gainToDb(values[1])
+            peaksInDb[1] = gainToDb(values[1] ?? values[0])
         })
     )
     return (
@@ -89,13 +120,39 @@ export const AudioUnitChannelControls = ({lifecycle, project, midiDevices, adapt
                     {soloControl}
                 </div>
                 <div className="channel-capture">
-                    {adapter.captureBox.ifSome(box => (
-                        <Checkbox lifecycle={lifecycle}
-                                  model={EditWrapper.forValue(editing, box.armed)}
-                                  appearance={{activeColor: Colors.red, framed: true}}>
-                            <Icon symbol={IconSymbol.Record}/>
-                        </Checkbox>
-                    ))}
+                    {captureOption.ifSome(capture => {
+                        const checkbox: HTMLElement = (
+                            <Checkbox lifecycle={lifecycle}
+                                      model={capture.armed}
+                                      appearance={{activeColor: Colors.red, framed: true}}>
+                                <Icon symbol={IconSymbol.Record}/>
+                            </Checkbox>)
+                        lifecycle.ownAll(
+                            TextTooltip.default(checkbox, () => capture.deviceLabel.unwrapOrElse("No device")),
+                            ContextMenu.subscribe(checkbox, collector => {
+                                if (!isInstanceOf(capture, CaptureAudio)) {return}
+                                collector.addItems(MenuItem.default({label: "Devices"})
+                                    .setRuntimeChildrenProcedure(parent => {
+                                        const devices = AudioInputDevices.available
+                                        if (devices.length === 0) {
+                                            parent.addMenuItem(
+                                                MenuItem.default({label: "Click for permissions to access devices..."})
+                                                    .setTriggerProcedure(() => AudioInputDevices.requestPermission()))
+                                        } else {
+                                            parent.addMenuItem(...devices
+                                                .map(device => MenuItem.default({
+                                                    label: device.label,
+                                                    checked: capture.streamDeviceId.contains(device.deviceId)
+                                                }).setTriggerProcedure(() => {
+                                                    editing.modify(() =>
+                                                        capture.deviceId.setValue(Option.wrap(device.deviceId)), false)
+                                                    capture.armed.setValue(true)
+                                                })))
+                                        }
+                                    }))
+                            }))
+                        return checkbox
+                    })}
                 </div>
             </header>
             <TrackPeakMeter lifecycle={lifecycle} peaksInDb={peaksInDb}/>

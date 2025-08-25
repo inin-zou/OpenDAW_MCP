@@ -229,6 +229,8 @@ export class StudioService implements ProjectEnv {
         }, EmptyExec)
     }
 
+    get sampleRate(): number {return this.context.sampleRate}
+
     get midi(): Option<MidiDeviceAccess> {return this.#midi}
 
     panicEngine(): void {this.engine.panic()}

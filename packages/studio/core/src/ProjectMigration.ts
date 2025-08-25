@@ -11,6 +11,7 @@ import {
 } from "@opendaw/studio-boxes"
 import {asDefined, asInstanceOf, UUID} from "@opendaw/lib-std"
 import {AudioUnitType} from "@opendaw/studio-enums"
+import {Capture} from "./capture/Capture"
 
 export class ProjectMigration {
     static migrate({boxGraph, mandatoryBoxes}: ProjectDecoder.Skeleton): void {
@@ -65,7 +66,9 @@ export class ProjectMigration {
                 }
             },
             visitAudioUnitBox: (box: AudioUnitBox): void => {
-                if (box.type.getValue() !== AudioUnitType.Instrument || box.capture.nonEmpty()) {return}
+                if (box.type.getValue() !== AudioUnitType.Instrument || box.capture.nonEmpty()) {
+                    return
+                }
                 boxGraph.beginTransaction()
                 const captureBox = asDefined(box.input.pointerHub.incoming().at(0)?.box
                     .accept<BoxVisitor<CaptureAudioBox | CaptureMidiBox>>({

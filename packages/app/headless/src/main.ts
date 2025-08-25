@@ -44,9 +44,10 @@ import {createExampleProject} from "./ExampleProject"
         }, context)
 
         const loadProject = false
+        const env = {sampleManager, sampleRate: context.sampleRate}
         const project = loadProject
-            ? Project.load({sampleManager}, await fetch("subset.od").then(x => x.arrayBuffer()))
-            : createExampleProject({sampleManager})
+            ? Project.load(env, await fetch("subset.od").then(x => x.arrayBuffer()))
+            : createExampleProject(env)
         const worklet = Worklets.get(context).createEngine(project)
         await worklet.isReady()
         while (!await worklet.queryLoadingComplete()) {}

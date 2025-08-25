@@ -1,6 +1,7 @@
 import {Procedure} from "./lang"
 import {Subscription, Terminable} from "./terminable"
 import {Option} from "./option"
+import {Bijective} from "./bijective"
 
 export type Observer<VALUE> = Procedure<VALUE>
 
@@ -70,6 +71,35 @@ export namespace MutableObservableValue {
                 return this.subscribe(observer)
             }
         }
+}
+
+export class MappedMutableObservableValue<SOURCE, TARGET> implements MutableObservableValue<TARGET>, Terminable {
+    readonly #source: MutableObservableValue<SOURCE>
+    readonly #mapping: Bijective<SOURCE, TARGET>
+    readonly #notifier: Notifier<TARGET>
+    readonly #subscription: Subscription
+
+    constructor(source: MutableObservableValue<SOURCE>, mapping: Bijective<SOURCE, TARGET>) {
+        this.#source = source
+        this.#mapping = mapping
+
+        this.#notifier = new Notifier()
+        this.#subscription = this.#source.catchupAndSubscribe(() => this.#notifier.notify(this.getValue()))
+    }
+
+    catchupAndSubscribe(observer: Observer<ObservableValue<TARGET>>): Subscription {
+        observer(this)
+        return this.subscribe(observer)
+    }
+
+    getValue(): TARGET {return this.#mapping.fx(this.#source.getValue())}
+    setValue(value: TARGET): void {this.#source.setValue(this.#mapping.fy(value))}
+
+    subscribe(observer: Observer<ObservableValue<TARGET>>): Subscription {
+        return this.#notifier.subscribe(() => observer(this))
+    }
+
+    terminate(): void {this.#subscription.terminate()}
 }
 
 export interface ValueGuard<T> {
