@@ -1,4 +1,4 @@
-import {assert, DefaultObservableValue, isUndefined, ObservableValue, Option, Terminable, warn} from "@opendaw/lib-std"
+import {assert, isUndefined, ObservableOption, Option, Terminable, warn} from "@opendaw/lib-std"
 import {AudioUnitBox, CaptureAudioBox} from "@opendaw/studio-boxes"
 import {Capture} from "./Capture"
 import {RecordAudio} from "./RecordAudio"
@@ -7,7 +7,7 @@ import {CaptureManager} from "./CaptureManager"
 import {AudioInputDevices} from "../AudioInputDevices"
 
 export class CaptureAudio extends Capture<CaptureAudioBox> {
-    readonly #stream: DefaultObservableValue<Option<MediaStream>>
+    readonly #stream: ObservableOption<MediaStream>
 
     #requestChannels: Option<1 | 2> = Option.None
     #gainDb: number = 0.0
@@ -15,7 +15,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
     constructor(manager: CaptureManager, audioUnitBox: AudioUnitBox, captureBox: CaptureAudioBox) {
         super(manager, audioUnitBox, captureBox)
 
-        this.#stream = new DefaultObservableValue(Option.None)
+        this.#stream = new ObservableOption<MediaStream>()
 
         this.ownAll(
             captureBox.requestChannels.catchupAndSubscribe(owner => {
@@ -39,7 +39,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         )
     }
 
-    get stream(): ObservableValue<Option<MediaStream>> {return this.#stream}
+    get stream(): ObservableOption<MediaStream> {return this.#stream}
 
     get streamDeviceId(): Option<string> {
         return this.streamMediaTrack.map(settings => settings.getSettings().deviceId ?? "")
@@ -50,21 +50,22 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
     }
 
     get streamMediaTrack(): Option<MediaStreamTrack> {
-        return this.#stream.getValue()
-            .flatMap(stream => Option.wrap(stream.getAudioTracks().at(0)))
+        return this.#stream.flatMap(stream => Option.wrap(stream.getAudioTracks().at(0)))
     }
 
     async prepareRecording({}: RecordingContext): Promise<void> {
-        return this.#stream.getValue().match({none: () => this.#updateStream(), some: () => Promise.resolve()})
+        return this.#stream.match({none: () => this.#updateStream(), some: () => Promise.resolve()})
     }
 
     startRecording({audioContext, worklets, project, engine, sampleManager}: RecordingContext): Terminable {
-        const streamOption = this.#stream.getValue()
+        const streamOption = this.#stream
         assert(streamOption.nonEmpty(), "Stream not prepared.")
         const mediaStream = streamOption.unwrap()
+        const channelCount = mediaStream.getAudioTracks().at(0)?.getSettings().channelCount ?? 2
+        const numChunks = 128
         return Terminable.many(
             RecordAudio.start({
-                recordingWorklet: worklets.createRecording(2, 128, audioContext.outputLatency),
+                recordingWorklet: worklets.createRecording(channelCount, numChunks, audioContext.outputLatency),
                 mediaStream,
                 sampleManager,
                 audioContext,
@@ -96,7 +97,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
             const gotDeviceId = settings?.deviceId
             console.debug("got", gotDeviceId, settings?.channelCount)
             if (isUndefined(deviceId) || deviceId === gotDeviceId) {
-                this.#stream.setValue(Option.wrap(stream))
+                this.#stream.wrap(stream)
             } else {
                 this.#stopStream()
                 return warn(`Could not find audio device with id: '${deviceId} in ${gotDeviceId}'`)
@@ -105,7 +106,6 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
     }
 
     #stopStream(): void {
-        this.#stream.getValue().ifSome(stream => stream.getAudioTracks().forEach(track => track.stop()))
-        this.#stream.setValue(Option.None)
+        this.#stream.clear(stream => stream.getAudioTracks().forEach(track => track.stop()))
     }
 }

@@ -1,9 +1,11 @@
-import {Notifier, Observable, ObservableValue, Observer} from "./observers"
+import {Observer} from "./observers"
 import {Subscription, Terminable} from "./terminable"
 import {Primitive, unitValue} from "./lang"
 import {ValueMapping} from "./value-mapping"
 import {StringMapping, StringResult} from "./string-mapping"
 import {clamp} from "./math"
+import {Notifier} from "./notifier"
+import {Observable, ObservableValue} from "./observables"
 
 export interface ObservableUnitValue extends Observable<ObservableUnitValue> {
     setUnitValue: (value: unitValue) => void

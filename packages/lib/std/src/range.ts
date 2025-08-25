@@ -1,6 +1,8 @@
-import {Notifier, Observable, Observer} from "./observers"
+import {Observer} from "./observers"
 import {Subscription} from "./terminable"
 import {unitValue} from "./lang"
+import {Notifier} from "./notifier"
+import {Observable} from "./observables"
 
 export type RangeOptions = {
     padding?: number

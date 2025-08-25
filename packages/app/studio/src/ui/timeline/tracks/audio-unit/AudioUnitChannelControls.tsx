@@ -80,7 +80,7 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
         captureOption.ifSome(capture => {
             if (!isInstanceOf(capture, CaptureAudio)) {return}
             const streamLifeCycle = lifecycle.own(new Terminator())
-            capture.stream.subscribe(owner => owner.getValue().match({
+            capture.stream.subscribe(optStream => optStream.match({
                 none: () => {
                     streamLifeCycle.terminate()
                     streamRunning = false

@@ -1,7 +1,9 @@
 import {beforeEach, describe, expect, it} from "vitest"
 import {Option} from "./option"
 import {CascadingSubscriptions, Subscription, Terminable, Terminator} from "./terminable"
-import {Notifier, Observable, Observer} from "./observers"
+import {Observer} from "./observers"
+import {Notifier} from "./notifier"
+import {Observable} from "./observables"
 
 class TestObservable<T> implements Observable<T> {
     readonly #notifier: Notifier<T>
