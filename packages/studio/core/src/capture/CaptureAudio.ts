@@ -5,7 +5,6 @@ import {RecordAudio} from "./RecordAudio"
 import {RecordingContext} from "./RecordingContext"
 import {CaptureManager} from "./CaptureManager"
 import {AudioInputDevices} from "../AudioInputDevices"
-import * as console from "node:console"
 
 export class CaptureAudio extends Capture<CaptureAudioBox> {
     readonly #stream: DefaultObservableValue<Option<MediaStream>>
