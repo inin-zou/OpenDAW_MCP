@@ -1,14 +1,14 @@
-import {assert, Func, isDefined, isUndefined, ObservableOption, Option, Terminable, warn} from "@opendaw/lib-std"
+import {assert, Func, isDefined, isUndefined, MutableObservableOption, Option, Terminable, warn} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioUnitBox, CaptureAudioBox} from "@opendaw/studio-boxes"
 import {Capture} from "./Capture"
 import {CaptureManager} from "./CaptureManager"
 import {RecordAudio} from "./RecordAudio"
 import {RecordingContext} from "./RecordingContext"
-import {AudioInputDevices} from "../AudioInputDevices"
+import {AudioDevices} from "../AudioDevices"
 
 export class CaptureAudio extends Capture<CaptureAudioBox> {
-    readonly #stream: ObservableOption<MediaStream>
+    readonly #stream: MutableObservableOption<MediaStream>
 
     readonly #streamGenerator: Func<void, Promise<void>>
 
@@ -18,7 +18,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
     constructor(manager: CaptureManager, audioUnitBox: AudioUnitBox, captureBox: CaptureAudioBox) {
         super(manager, audioUnitBox, captureBox)
 
-        this.#stream = new ObservableOption<MediaStream>()
+        this.#stream = new MutableObservableOption<MediaStream>()
         this.#streamGenerator = Promises.sequential(() => this.#updateStream())
 
         this.ownAll(
@@ -45,7 +45,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
 
     get gainDb(): number {return this.#gainDb}
 
-    get stream(): ObservableOption<MediaStream> {return this.#stream}
+    get stream(): MutableObservableOption<MediaStream> {return this.#stream}
 
     get streamDeviceId(): Option<string> {
         return this.streamMediaTrack.map(settings => settings.getSettings().deviceId ?? "")
@@ -99,7 +99,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         this.#stopStream()
         const deviceId = this.deviceId.getValue().unwrapOrUndefined()
         const channelCount = this.#requestChannels.unwrapOrElse(1) // as of today, browsers cap MediaStream audio to stereo.
-        return AudioInputDevices.requestStream({
+        return AudioDevices.requestStream({
             deviceId: {exact: deviceId},
             sampleRate: this.manager.project.env.sampleRate,
             sampleSize: 32,

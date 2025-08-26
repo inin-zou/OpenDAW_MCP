@@ -10,10 +10,9 @@ import {StudioService} from "@/service/StudioService"
 import {MenuButton} from "@/ui/components/MenuButton.tsx"
 import {Workspace} from "@/ui/workspace/Workspace.ts"
 import {IconSymbol} from "@opendaw/studio-adapters"
-import {MidiDeviceAccess} from "@/midi/devices/MidiDeviceAccess"
 import {Html} from "@opendaw/lib-dom"
 import {MenuItem} from "@/ui/model/menu-item"
-import {Colors} from "@opendaw/studio-core"
+import {Colors, MidiDevices} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "Header")
 
@@ -32,7 +31,7 @@ export const Header = ({lifecycle, service}: Construct) => {
             <hr/>
             <div style={{display: "flex"}}>
                 <Checkbox lifecycle={lifecycle}
-                          model={MidiDeviceAccess.available()}
+                          model={MidiDevices.available()}
                           appearance={{activeColor: Colors.orange, tooltip: "Midi Access", cursor: "pointer"}}>
                     <Icon symbol={IconSymbol.Midi}/>
                 </Checkbox>

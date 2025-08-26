@@ -1,5 +1,5 @@
 import css from "./Cover.sass?inline"
-import {EmptyExec, isDefined, Lifecycle, ObservableOption, panic} from "@opendaw/lib-std"
+import {EmptyExec, isDefined, Lifecycle, MutableObservableOption, panic} from "@opendaw/lib-std"
 import {createElement} from "@opendaw/lib-jsx"
 import {Icon} from "../components/Icon"
 import {IconSymbol} from "@opendaw/studio-adapters"
@@ -11,7 +11,7 @@ const className = Html.adoptStyleSheet(css, "Cover")
 
 type Construct = {
     lifecycle: Lifecycle
-    model: ObservableOption<ArrayBuffer>
+    model: MutableObservableOption<ArrayBuffer>
 }
 
 export const Cover = ({lifecycle, model}: Construct) => {

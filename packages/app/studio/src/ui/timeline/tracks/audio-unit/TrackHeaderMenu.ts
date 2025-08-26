@@ -5,7 +5,7 @@ import {DebugMenus} from "@/ui/menu/debug"
 import {MidiImport} from "@/ui/timeline/MidiImport.ts"
 import {CaptureAudioBox, CaptureMidiBox, TrackBox} from "@opendaw/studio-boxes"
 import {StudioService} from "@/service/StudioService"
-import {AudioInputDevices, Capture, CaptureAudio, CaptureMidi} from "@opendaw/studio-core"
+import {AudioDevices, Capture, CaptureAudio, CaptureMidi, MidiDevices} from "@opendaw/studio-core"
 
 export const installTrackHeaderMenu = (service: StudioService,
                                        audioUnitBoxAdapter: AudioUnitBoxAdapter,
@@ -46,11 +46,11 @@ export const installTrackHeaderMenu = (service: StudioService,
                         label: "Audio Inputs",
                         icon: IconSymbol.AudioDevice
                     }))
-                    const devices = AudioInputDevices.available
+                    const devices = AudioDevices.inputs
                     if (devices.length === 0) {
                         parent.addMenuItem(
                             MenuItem.default({label: "Click to access devices..."})
-                                .setTriggerProcedure(() => AudioInputDevices.requestPermission()))
+                                .setTriggerProcedure(() => AudioDevices.requestPermission()))
                     } else {
                         parent.addMenuItem(...devices
                             .map(device => MenuItem.default({
@@ -63,10 +63,24 @@ export const installTrackHeaderMenu = (service: StudioService,
                             })))
                     }
                 } else if (isInstanceOf(capture, CaptureMidi)) {
-                    parent.addMenuItem(MenuItem.header({
-                        label: "Devices",
-                        icon: IconSymbol.Midi
-                    }), MenuItem.default({label: "Coming soon..."}))
+                    parent.addMenuItem(MenuItem.header({label: "Devices", icon: IconSymbol.Midi}))
+                    MidiDevices.inputs().match({
+                        none: () => {
+                            parent.addMenuItem(
+                                MenuItem.default({label: "Click to access devices..."})
+                                    .setTriggerProcedure(() => MidiDevices.requestPermission()))
+                        }, some: inputs => {
+                            if (inputs.length === 0) {
+                                parent.addMenuItem(MenuItem.default({label: "No devices found", selectable: false}))
+                            } else {
+                                parent.addMenuItem(...inputs.map(device => MenuItem.default({label: device.name ?? "Unknown"})
+                                    .setTriggerProcedure(() => {
+                                        editing.modify(() => capture.deviceId.setValue(Option.wrap(device.id)), false)
+                                        capture.armed.setValue(true)
+                                    })))
+                            }
+                        }
+                    })
                 }
             }),
             MenuItem.default({label: "Move", separatorBefore: true})

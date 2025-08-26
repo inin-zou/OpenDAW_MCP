@@ -1,5 +1,5 @@
 import css from "./ProjectInfo.sass?inline"
-import {Lifecycle, ObservableOption} from "@opendaw/lib-std"
+import {Lifecycle, MutableObservableOption} from "@opendaw/lib-std"
 import {createElement} from "@opendaw/lib-jsx"
 import {StudioService} from "@/service/StudioService.ts"
 import {Cover} from "./Cover"
@@ -31,7 +31,7 @@ export const ProjectInfo = ({lifecycle, service}: Construct) => {
                   placeholder="Type in your's project description"
                   value={meta.description}/>
     )
-    const coverModel = new ObservableOption<ArrayBuffer>(cover.unwrapOrUndefined())
+    const coverModel = new MutableObservableOption<ArrayBuffer>(cover.unwrapOrUndefined())
     const form: HTMLElement = (
         <div className="form">
             <div className="label">Name</div>

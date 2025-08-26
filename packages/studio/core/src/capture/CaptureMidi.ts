@@ -1,4 +1,15 @@
-import {assert, byte, isDefined, isUndefined, Notifier, Option, Terminable, warn} from "@opendaw/lib-std"
+import {
+    assert,
+    byte,
+    Func,
+    isDefined,
+    isUndefined,
+    Notifier,
+    Option,
+    Subscription,
+    Terminable,
+    warn
+} from "@opendaw/lib-std"
 import {Events} from "@opendaw/lib-dom"
 import {MidiData} from "@opendaw/lib-midi"
 import {AudioUnitBox, CaptureMidiBox} from "@opendaw/studio-boxes"
@@ -6,66 +17,113 @@ import {Capture} from "./Capture"
 import {RecordMidi} from "./RecordMidi"
 import {RecordingContext} from "./RecordingContext"
 import {CaptureManager} from "./CaptureManager"
+import {MidiDevices} from "../MidiDevices"
+import {Promises} from "@opendaw/lib-runtime"
 
 export class CaptureMidi extends Capture<CaptureMidiBox> {
-    #midiAccess: Option<MIDIAccess> = Option.None
+    readonly #streamGenerator: Func<void, Promise<void>>
+    readonly #notifier = new Notifier<MIDIMessageEvent>()
 
     #filterChannel: Option<byte> = Option.None
+
+    #streaming: Option<Subscription> = Option.None
 
     constructor(manager: CaptureManager, audioUnitBox: AudioUnitBox, captureMidiBox: CaptureMidiBox) {
         super(manager, audioUnitBox, captureMidiBox)
 
+        this.#streamGenerator = Promises.sequential(() => this.#updateStream())
+
         this.ownAll(
-            captureMidiBox.channel.catchupAndSubscribe(owner => {
+            captureMidiBox.channel.subscribe(async owner => {
                 const channel = owner.getValue()
                 this.#filterChannel = channel >= 0 ? Option.wrap(channel) : Option.None
+                await this.#streamGenerator()
+            }),
+            this.armed.catchupAndSubscribe(async owner => {
+                const armed = owner.getValue()
+                if (armed) {
+                    await this.#streamGenerator()
+                } else {
+                    this.#stopStream()
+                }
+            }),
+            this.#notifier.subscribe(event => {
+                console.debug(event)
+                // TODO How do we get an engine reference here???
             })
         )
     }
 
     get deviceLabel(): Option<string> {return Option.wrap("MIDI coming soon.")}
 
-    async prepareRecording({requestMIDIAccess}: RecordingContext): Promise<void> {
-        return requestMIDIAccess()
-            .then(midiAccess => {
-                const option = this.deviceId.getValue()
-                if (option.nonEmpty()) {
-                    const captureDevices = Array.from(midiAccess.inputs.values())
-                    const id = option.unwrap()
-                    if (isUndefined(captureDevices.find(device => id === device.id))) {
-                        return warn(`Could not find MIDI device with id: '${id}'`)
-                    }
-                }
-                this.#midiAccess = Option.wrap(midiAccess)
-            })
+    async prepareRecording({}: RecordingContext): Promise<void> {
+        const availableMidiDevices = MidiDevices.get()
+        if (availableMidiDevices.isEmpty()) {
+            return Promise.reject("MIDI has not been requested")
+        }
+        const option = this.deviceId.getValue()
+        if (option.nonEmpty()) {
+            const {inputs} = availableMidiDevices.unwrap()
+            const captureDevices = Array.from(inputs.values())
+            const deviceId = option.unwrap()
+            if (isUndefined(captureDevices.find(device => deviceId === device.id))) {
+                return warn(`Could not find MIDI device with id: '${deviceId}'`)
+            }
+        }
     }
 
     startRecording({project, engine}: RecordingContext): Terminable {
-        assert(this.#midiAccess.nonEmpty(), "Stream not prepared.")
-        const midiAccess = this.#midiAccess.unwrap()
-        const notifier = new Notifier<MIDIMessageEvent>()
-        const captureDevices = Array.from(midiAccess.inputs.values())
-        this.deviceId.getValue().ifSome(id => captureDevices.filter(device => id === device.id))
-        return Terminable.many(
-            Terminable.many(
-                ...captureDevices.map(input => Events.subscribe(input, "midimessage",
-                    (event: MIDIMessageEvent) => {
-                        const data = event.data
-                        if (isDefined(data) &&
-                            this.#filterChannel.mapOr(channel => MidiData.readChannel(data) === channel, true)) {
-                            notifier.notify(event)
-                        }
-                    }))),
-            RecordMidi.start({
-                notifier,
-                engine,
-                project,
-                capture: this
-            })
-        )
+        const availableMidiDevices = MidiDevices.inputs()
+        assert(availableMidiDevices.nonEmpty(), "No MIDI input devices found")
+        return RecordMidi.start({
+            notifier: this.#notifier,
+            engine,
+            project,
+            capture: this
+        })
     }
 
-    async #startCapturing() {
-        // TODO
+    async #updateStream() {
+        // TODO Check if the requirements have been changed (are different than the current stream setup)
+        if (MidiDevices.get().isEmpty()) {
+            await MidiDevices.requestPermission()
+        }
+        const availableMidiDevices = MidiDevices.inputs()
+        const inputs = availableMidiDevices.unwrap()
+        const captureDevices = this.deviceId.getValue().match({
+            none: () => inputs,
+            some: id => inputs.filter(device => id === device.id)
+        })
+        const activeNotes = new Int8Array(128)
+        this.#streaming.ifSome(terminable => terminable.terminate())
+        this.#streaming = Option.wrap(Terminable.many(
+            ...captureDevices.map(input => Events.subscribe(input, "midimessage",
+                (event: MIDIMessageEvent) => {
+                    const data = event.data
+                    if (isDefined(data) &&
+                        this.#filterChannel.mapOr(channel => MidiData.readChannel(data) === channel, true)) {
+                        if (MidiData.isNoteOn(data)) {
+                            activeNotes[MidiData.readParam1(data)]++
+                            this.#notifier.notify(event)
+                        } else if (MidiData.isNoteOff(data)) {
+                            activeNotes[MidiData.readParam1(data)]--
+                            this.#notifier.notify(event)
+                        }
+                    }
+                })), Terminable.create(() => activeNotes.forEach((count, index) => {
+                if (count > 0) {
+                    const event = new MessageEvent("midimessage", {data: MidiData.noteOff(index, count)})
+                    captureDevices.forEach(input => {
+                        for (let i = 0; i < count; i++) {
+                            input.dispatchEvent(event)
+                        }
+                    })
+                }
+            }))))
+    }
+
+    #stopStream(): void {
+        this.#streaming.ifSome(terminable => terminable.terminate())
+        this.#streaming = Option.None
     }
 }

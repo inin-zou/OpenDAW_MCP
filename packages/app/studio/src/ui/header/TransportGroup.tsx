@@ -26,11 +26,11 @@ export const TransportGroup = ({lifecycle, service}: Construct) => {
                     activeColor: "hsl(0, 50%, 60%)",
                     tooltip: "Start Recording (Shift-Click to suppress count-in)"
                 }}
-                onClick={_event => {
+                onClick={event => {
                     if (service.isRecording()) {
                         service.stopRecording()
                     } else {
-                        // service.startRecording(!event.shiftKey)
+                        service.startRecording(!event.shiftKey)
                     }
                 }}><Icon symbol={IconSymbol.Record}/></Button>)
     const playButton: HTMLElement = (

@@ -53,7 +53,9 @@ export namespace MutableObservableValue {
         }
 }
 
-export class ObservableOption<T> implements Option<T>, Observable<Option<T>>, Terminable {
+export interface ObservableOption<T> extends Option<T>, Observable<Option<T>>, Terminable {}
+
+export class MutableObservableOption<T> implements ObservableOption<T> {
     readonly #notifier: Notifier<Option<T>>
 
     #option: Option<T> = Option.None
