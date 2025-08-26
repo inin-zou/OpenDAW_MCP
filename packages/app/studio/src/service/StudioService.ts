@@ -1,4 +1,5 @@
 import {
+    asInstanceOf,
     assert,
     DefaultObservableValue,
     EmptyExec,
@@ -43,16 +44,19 @@ import {PPQN} from "@opendaw/lib-dsp"
 import {Browser, ConsoleCommands, Errors, Files} from "@opendaw/lib-dom"
 import {Promises} from "@opendaw/lib-runtime"
 import {ExportStemsConfiguration, Sample} from "@opendaw/studio-adapters"
-import {ProjectDialogs} from "@/project/ProjectDialogs"
-import {AudioImporter} from "@/audio/AudioImport"
+import {Xml} from "@opendaw/lib-xml"
 import {Address} from "@opendaw/lib-box"
+import {MetaDataSchema} from "@opendaw/lib-dawproject"
 import {Recovery} from "@/Recovery.ts"
 import {MIDILearning} from "@/midi/devices/MIDILearning"
+import {AudioUnitType} from "@opendaw/studio-enums"
+import {AudioUnitBox} from "@opendaw/studio-boxes"
 import {
     DawProject,
     DawProjectImport,
     EngineFacade,
     EngineWorklet,
+    InstrumentFactories,
     MainThreadSampleManager,
     Project,
     ProjectEnv,
@@ -60,9 +64,9 @@ import {
     Worklets
 } from "@opendaw/studio-core"
 import {AudioOfflineRenderer} from "@/audio/AudioOfflineRenderer"
+import {ProjectDialogs} from "@/project/ProjectDialogs"
+import {AudioImporter} from "@/audio/AudioImport"
 import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes"
-import {Xml} from "@opendaw/lib-xml"
-import {MetaDataSchema} from "@opendaw/lib-dawproject"
 
 /**
  * I am just piling stuff after stuff in here to boot the environment.
@@ -261,9 +265,16 @@ export class StudioService implements ProjectEnv {
 
     startRecording(countIn: boolean): void {
         if (!this.hasProjectSession) {return}
-        if (this.project.rootBox.audioUnits.pointerHub.isEmpty()) {
-            // TODO filter output and busses and create a TapeDeviceBox. This condition above does not work.
-            console.debug("No audio units in project, skipping recording.")
+        const {api, rootBox, editing, captureManager} = this.project
+        if (rootBox.audioUnits.pointerHub.incoming()
+            .map(({box}) => asInstanceOf(box, AudioUnitBox))
+            .filter(box => box.type.getValue() === AudioUnitType.Instrument).length === 0) {
+            const {audioUnitBox} = editing
+                .modify(() => api.createInstrument(InstrumentFactories.Tape))
+                .unwrap("Could not create Tape")
+            captureManager.get(audioUnitBox.address.uuid)
+                .unwrap("Could not unwrap capture")
+                .armed.setValue(true)
         }
         Recording.start({
             sampleManager: this.sampleManager,

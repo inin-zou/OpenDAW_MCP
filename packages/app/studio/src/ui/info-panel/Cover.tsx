@@ -1,5 +1,5 @@
 import css from "./Cover.sass?inline"
-import {DefaultObservableValue, EmptyExec, isDefined, Lifecycle, Option, panic} from "@opendaw/lib-std"
+import {EmptyExec, isDefined, Lifecycle, ObservableOption, panic} from "@opendaw/lib-std"
 import {createElement} from "@opendaw/lib-jsx"
 import {Icon} from "../components/Icon"
 import {IconSymbol} from "@opendaw/studio-adapters"
@@ -11,7 +11,7 @@ const className = Html.adoptStyleSheet(css, "Cover")
 
 type Construct = {
     lifecycle: Lifecycle
-    model: DefaultObservableValue<Option<ArrayBuffer>>
+    model: ObservableOption<ArrayBuffer>
 }
 
 export const Cover = ({lifecycle, model}: Construct) => {
@@ -20,7 +20,7 @@ export const Cover = ({lifecycle, model}: Construct) => {
     const image: HTMLImageElement = (<img src={placeholder} alt="Cover"/>)
     lifecycle.ownAll(
         model.catchupAndSubscribe(owner => {
-            image.src = owner.getValue().match({
+            image.src = owner.match({
                 none: () => placeholder,
                 some: buffer => buffer.byteLength === 0 ? placeholder : URL.createObjectURL(new Blob([buffer]))
             })
@@ -43,7 +43,7 @@ export const Cover = ({lifecycle, model}: Construct) => {
                 image.src = fallback
                 showInfoDialog({headline: "Cover", message: `Unknown image format (${file.type}).`}).catch(EmptyExec)
             }
-            model.setValue(Option.wrap(await file.arrayBuffer()))
+            model.wrap(await file.arrayBuffer())
         })
     )
     return (

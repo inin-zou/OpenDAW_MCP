@@ -1,5 +1,5 @@
 import css from "./ProjectInfo.sass?inline"
-import {DefaultObservableValue, Lifecycle} from "@opendaw/lib-std"
+import {Lifecycle, ObservableOption} from "@opendaw/lib-std"
 import {createElement} from "@opendaw/lib-jsx"
 import {StudioService} from "@/service/StudioService.ts"
 import {Cover} from "./Cover"
@@ -31,7 +31,7 @@ export const ProjectInfo = ({lifecycle, service}: Construct) => {
                   placeholder="Type in your's project description"
                   value={meta.description}/>
     )
-    const coverModel = new DefaultObservableValue(cover)
+    const coverModel = new ObservableOption<ArrayBuffer>(cover.unwrapOrUndefined())
     const form: HTMLElement = (
         <div className="form">
             <div className="label">Name</div>
@@ -56,7 +56,7 @@ export const ProjectInfo = ({lifecycle, service}: Construct) => {
             () => session.updateMetaData("tags", inputTags.value.split(",").map(x => x.trim()))),
         Events.subscribe(inputName, "input", () => Html.limitChars(inputDescription, "value", 128)),
         Events.subscribe(inputDescription, "input", () => Html.limitChars(inputDescription, "value", 512)),
-        coverModel.subscribe(owner => session.updateCover(owner.getValue()))
+        coverModel.subscribe(owner => session.updateCover(owner))
     )
     return (
         <div className={className}>
