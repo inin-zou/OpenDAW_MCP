@@ -1,6 +1,6 @@
 import JSZip from "jszip"
 import {Xml} from "@opendaw/lib-xml"
-import {asDefined, panic, UUID} from "@opendaw/lib-std"
+import {asDefined, isDefined, panic, UUID} from "@opendaw/lib-std"
 import {FileReferenceSchema, MetaDataSchema, ProjectSchema} from "@opendaw/lib-dawproject"
 import {Project} from "../Project"
 import {DawProjectExporter} from "./DawProjectExporter"
@@ -19,10 +19,9 @@ export namespace DawProject {
         resources: ResourceProvider
     }> => {
         const zip = await JSZip.loadAsync(buffer)
-        const metaData = Xml.parse(asDefined(await zip.file("metadata.xml")
-            ?.async("string"), "No metadata.xml found"), MetaDataSchema)
-        const projectXml = asDefined(await zip.file("project.xml")
-            ?.async("string"), "No project.xml found")
+        const metaDataXml = await zip.file("metadata.xml")?.async("string")
+        const metaData = isDefined(metaDataXml) ? Xml.parse(metaDataXml, MetaDataSchema) : Xml.element({}, MetaDataSchema)
+        const projectXml = asDefined(await zip.file("project.xml")?.async("string"), "No project.xml found")
         console.debug(projectXml)
         const project = Xml.parse(projectXml, ProjectSchema)
         const resourceFiles = Object.entries(zip.files).filter(([_, file]) =>

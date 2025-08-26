@@ -42,9 +42,9 @@ export abstract class Capture<BOX extends CaptureBox = CaptureBox> implements Te
         )
     }
 
+    abstract get deviceLabel(): Option<string>
     abstract prepareRecording(context: RecordingContext): Promise<void>
     abstract startRecording(context: RecordingContext): Terminable
-    abstract get deviceLabel(): Option<string>
 
     get uuid(): UUID.Format {return this.#audioUnitBox.address.uuid}
     get manager(): CaptureManager {return this.#manager}

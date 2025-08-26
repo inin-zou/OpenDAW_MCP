@@ -1,4 +1,4 @@
-import {assert, byte, isDefined, isUndefined, Notifier, Option, panic, Terminable} from "@opendaw/lib-std"
+import {assert, byte, isDefined, isUndefined, Notifier, Option, Terminable, warn} from "@opendaw/lib-std"
 import {Events} from "@opendaw/lib-dom"
 import {MidiData} from "@opendaw/lib-midi"
 import {AudioUnitBox, CaptureMidiBox} from "@opendaw/studio-boxes"
@@ -23,6 +23,8 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
         )
     }
 
+    get deviceLabel(): Option<string> {return Option.None}
+
     async prepareRecording({requestMIDIAccess}: RecordingContext): Promise<void> {
         return requestMIDIAccess()
             .then(midiAccess => {
@@ -31,7 +33,7 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
                     const captureDevices = Array.from(midiAccess.inputs.values())
                     const id = option.unwrap()
                     if (isUndefined(captureDevices.find(device => id === device.id))) {
-                        return panic(`Could not find MIDI device with id: '${id}'`)
+                        return warn(`Could not find MIDI device with id: '${id}'`)
                     }
                 }
                 this.#midiAccess = Option.wrap(midiAccess)
@@ -63,5 +65,7 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
         )
     }
 
-    get deviceLabel(): Option<string> {return Option.None}
+    async #startCapturing() {
+        // TODO
+    }
 }
