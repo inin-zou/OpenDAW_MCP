@@ -21,7 +21,7 @@ export type DefaultMenuData = {
 export type HeaderMenuData = {
     type: "header"
     label: string
-    icon?: IconSymbol
+    icon: IconSymbol
 }
 
 export type MenuRootData = typeof Root

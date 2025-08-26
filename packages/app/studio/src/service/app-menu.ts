@@ -78,6 +78,7 @@ export const initAppMenu = (service: StudioService) => {
                     MenuItem.default({label: "Debug", separatorBefore: true})
                         .setRuntimeChildrenProcedure(parent => {
                             return parent.addMenuItem(
+                                MenuItem.header({label: "Debugging", icon: IconSymbol.System}),
                                 MenuItem.default({
                                     label: "New SyncLog...",
                                     selectable: isDefined(window.showSaveFilePicker)
@@ -90,8 +91,7 @@ export const initAppMenu = (service: StudioService) => {
                                     label: "Show Boxes...",
                                     selectable: service.hasProjectSession,
                                     separatorBefore: true
-                                })
-                                    .setTriggerProcedure(() => showDebugBoxesDialog(service.project.boxGraph)),
+                                }).setTriggerProcedure(() => showDebugBoxesDialog(service.project.boxGraph)),
                                 MenuItem.default({label: "Validate Project...", selectable: service.hasProjectSession})
                                     .setTriggerProcedure(() => service.verifyProject()),
                                 MenuItem.default({
@@ -102,7 +102,7 @@ export const initAppMenu = (service: StudioService) => {
                                     label: "Save file...",
                                     selectable: service.hasProjectSession
                                 }).setTriggerProcedure(() => service.saveFile()),
-                                MenuItem.default({label: "Pages", selectable: false, separatorBefore: true}),
+                                MenuItem.header({label: "Pages", icon: IconSymbol.Box}),
                                 MenuItem.default({label: "・ Icons"})
                                     .setTriggerProcedure(() => RouteLocation.get().navigateTo("/icons")),
                                 MenuItem.default({label: "・ Components"})
@@ -121,8 +121,7 @@ export const initAppMenu = (service: StudioService) => {
                                 MenuItem.default({
                                     label: "Throw an error in audio-worklet 💣",
                                     hidden: !Browser.isLocalHost()
-                                })
-                                    .setTriggerProcedure(() => service.panicEngine())
+                                }).setTriggerProcedure(() => service.panicEngine())
                             )
                         }),
                     MenuItem.default({label: "Imprint", separatorBefore: true})
