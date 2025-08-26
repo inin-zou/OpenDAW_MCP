@@ -1,5 +1,5 @@
 import css from "./AudioUnitChannelControls.sass?inline"
-import {Arrays, isInstanceOf, Lifecycle, Option, Terminable, Terminator} from "@opendaw/lib-std"
+import {Arrays, isInstanceOf, Lifecycle, Terminable, Terminator} from "@opendaw/lib-std"
 import {RelativeUnitValueDragging} from "@/ui/wrapper/RelativeUnitValueDragging.tsx"
 import {SnapCenter, SnapCommonDecibel} from "@/ui/configs.ts"
 import {Knob} from "@/ui/components/Knob.tsx"
@@ -11,12 +11,10 @@ import {AudioUnitBoxAdapter, IconSymbol} from "@opendaw/studio-adapters"
 import {attachParameterContextMenu} from "@/ui/menu/automation.ts"
 import {ControlIndicator} from "@/ui/components/ControlIndicator"
 import {Html} from "@opendaw/lib-dom"
-import {AudioInputDevices, CaptureAudio, Colors} from "@opendaw/studio-core"
+import {CaptureAudio, Colors} from "@opendaw/studio-core"
 import {TrackPeakMeter} from "@/ui/components/TrackPeakMeter"
 import {gainToDb} from "@opendaw/lib-dsp"
 import {StudioService} from "@/service/StudioService"
-import {ContextMenu} from "@/ui/ContextMenu"
-import {MenuItem} from "@/ui/model/menu-item"
 import {TextTooltip} from "@/ui/surface/TextTooltip"
 
 const className = Html.adoptStyleSheet(css, "AudioUnitChannelControls")
@@ -81,7 +79,6 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
             if (!isInstanceOf(capture, CaptureAudio)) {return}
             const streamLifeCycle = lifecycle.own(new Terminator())
             capture.stream.catchupAndSubscribe(optStream => {
-                console.debug("new stream", optStream.nonEmpty())
                 streamRunning = false
                 streamLifeCycle.terminate()
                 return optStream.ifSome(stream => {
@@ -126,34 +123,8 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
                                       appearance={{activeColor: Colors.red, framed: true}}>
                                 <Icon symbol={IconSymbol.Record}/>
                             </Checkbox>)
-                        lifecycle.ownAll(
-                            TextTooltip.default(checkbox, () => capture.deviceLabel.unwrapOrElse("No device")),
-                            ContextMenu.subscribe(checkbox, collector => {
-                                if (!isInstanceOf(capture, CaptureAudio)) {return}
-                                collector.addItems(MenuItem.default({label: "Devices"})
-                                    .setRuntimeChildrenProcedure(parent => {
-                                        parent.addMenuItem(MenuItem.header({
-                                            label: "Audio Inputs",
-                                            icon: IconSymbol.AudioDevice
-                                        }))
-                                        const devices = AudioInputDevices.available
-                                        if (devices.length === 0) {
-                                            parent.addMenuItem(
-                                                MenuItem.default({label: "Click to access devices..."})
-                                                    .setTriggerProcedure(() => AudioInputDevices.requestPermission()))
-                                        } else {
-                                            parent.addMenuItem(...devices
-                                                .map(device => MenuItem.default({
-                                                    label: device.label,
-                                                    checked: capture.streamDeviceId.contains(device.deviceId)
-                                                }).setTriggerProcedure(() => {
-                                                    editing.modify(() =>
-                                                        capture.deviceId.setValue(Option.wrap(device.deviceId)), false)
-                                                    capture.armed.setValue(true)
-                                                })))
-                                        }
-                                    }))
-                            }))
+                        lifecycle.own(TextTooltip.default(checkbox,
+                            () => capture.deviceLabel.unwrapOrElse("No device")))
                         return checkbox
                     })}
                 </div>

@@ -106,7 +106,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
             echoCancellation: false,
             noiseSuppression: false,
             autoGainControl: false,
-            channelCount: {exact: channelCount}
+            channelCount
         }).then(stream => {
             const tracks = stream.getAudioTracks()
             const settings = tracks.at(0)?.getSettings()

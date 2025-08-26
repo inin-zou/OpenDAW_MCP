@@ -1,10 +1,11 @@
 import {MenuItem} from "@/ui/model/menu-item"
-import {isInstanceOf, Procedure, UUID} from "@opendaw/lib-std"
-import {AudioUnitBoxAdapter, DeviceAccepts, TrackBoxAdapter, TrackType} from "@opendaw/studio-adapters"
+import {isInstanceOf, Option, Procedure, UUID} from "@opendaw/lib-std"
+import {AudioUnitBoxAdapter, DeviceAccepts, IconSymbol, TrackBoxAdapter, TrackType} from "@opendaw/studio-adapters"
 import {DebugMenus} from "@/ui/menu/debug"
 import {MidiImport} from "@/ui/timeline/MidiImport.ts"
-import {CaptureMidiBox, TrackBox} from "@opendaw/studio-boxes"
+import {CaptureAudioBox, CaptureMidiBox, TrackBox} from "@opendaw/studio-boxes"
 import {StudioService} from "@/service/StudioService"
+import {AudioInputDevices, Capture, CaptureAudio, CaptureMidi} from "@opendaw/studio-core"
 
 export const installTrackHeaderMenu = (service: StudioService,
                                        audioUnitBoxAdapter: AudioUnitBoxAdapter,
@@ -15,8 +16,9 @@ export const installTrackHeaderMenu = (service: StudioService,
         const accepts: DeviceAccepts = inputAdapter.unwrap("Cannot unwrap input adapter").accepts
         const acceptMidi = audioUnitBoxAdapter.captureBox.mapOr(box => isInstanceOf(box, CaptureMidiBox), false)
         const trackType = DeviceAccepts.toTrackType(accepts)
-        const {project, engine, midiLearning} = service
-        const {editing, selection} = project
+        const {project} = service
+        const {captureManager, editing, selection} = project
+        const captureOption = captureManager.get(audioUnitBoxAdapter.uuid)
         return parent.addMenuItem(
             MenuItem.default({label: "Enabled", checked: trackBoxAdapter.enabled.getValue()})
                 .setTriggerProcedure(() => editing.modify(() => trackBoxAdapter.enabled.toggle())),
@@ -31,7 +33,43 @@ export const installTrackHeaderMenu = (service: StudioService,
                     box.target.refer(audioUnitBoxAdapter.box)
                 })
             })),
-            MenuItem.default({label: "Move"})
+            MenuItem.default({
+                label: audioUnitBoxAdapter.captureBox
+                    .mapOr(box => isInstanceOf(box, CaptureAudioBox) ? "Capture Audio" : "Capture MIDI", ""),
+                hidden: trackBoxAdapter.indexField.getValue() !== 0 || captureOption.isEmpty(),
+                separatorBefore: true
+            }).setRuntimeChildrenProcedure(parent => {
+                if (captureOption.isEmpty()) {return}
+                const capture: Capture = captureOption.unwrap()
+                if (isInstanceOf(capture, CaptureAudio)) {
+                    parent.addMenuItem(MenuItem.header({
+                        label: "Audio Inputs",
+                        icon: IconSymbol.AudioDevice
+                    }))
+                    const devices = AudioInputDevices.available
+                    if (devices.length === 0) {
+                        parent.addMenuItem(
+                            MenuItem.default({label: "Click to access devices..."})
+                                .setTriggerProcedure(() => AudioInputDevices.requestPermission()))
+                    } else {
+                        parent.addMenuItem(...devices
+                            .map(device => MenuItem.default({
+                                label: device.label,
+                                checked: capture.streamDeviceId.contains(device.deviceId)
+                            }).setTriggerProcedure(() => {
+                                editing.modify(() =>
+                                    capture.deviceId.setValue(Option.wrap(device.deviceId)), false)
+                                capture.armed.setValue(true)
+                            })))
+                    }
+                } else if (isInstanceOf(capture, CaptureMidi)) {
+                    parent.addMenuItem(MenuItem.header({
+                        label: "Devices",
+                        icon: IconSymbol.Midi
+                    }), MenuItem.default({label: "Coming soon..."}))
+                }
+            }),
+            MenuItem.default({label: "Move", separatorBefore: true})
                 .setRuntimeChildrenProcedure(parent => parent.addMenuItem(
                     MenuItem.default({label: "Track 1 Up", selectable: trackBoxAdapter.indexField.getValue() > 0})
                         .setTriggerProcedure(() => editing.modify(() => audioUnitBoxAdapter.moveTrack(trackBoxAdapter, -1))),
@@ -57,18 +95,9 @@ export const installTrackHeaderMenu = (service: StudioService,
                     .forEach(region => selection.select(region.box))),
             MenuItem.default({
                 label: "Import Midi...",
-                hidden: !acceptMidi
+                hidden: !acceptMidi,
+                separatorBefore: true
             }).setTriggerProcedure(() => MidiImport.toTracks(project, audioUnitBoxAdapter)),
-            MenuItem.default({
-                label: midiLearning.hasMidiConnection(audioUnitBoxAdapter.address) ? "Forget Midi" : "Learn Midi...",
-                selectable: inputAdapter.mapOr(x => x.accepts === "midi", false)
-            }).setTriggerProcedure(() => {
-                if (midiLearning.hasMidiConnection(audioUnitBoxAdapter.address)) {
-                    midiLearning.forgetMidiConnection(audioUnitBoxAdapter.address)
-                } else {
-                    midiLearning.learnMidiKeys(engine, audioUnitBoxAdapter)
-                }
-            }),
             MenuItem.default({
                 label: "Delete Track",
                 selectable: !audioUnitBoxAdapter.isOutput,

@@ -23,7 +23,7 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
         )
     }
 
-    get deviceLabel(): Option<string> {return Option.None}
+    get deviceLabel(): Option<string> {return Option.wrap("MIDI coming soon.")}
 
     async prepareRecording({requestMIDIAccess}: RecordingContext): Promise<void> {
         return requestMIDIAccess()
