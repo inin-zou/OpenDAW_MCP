@@ -10,6 +10,7 @@ if ((globalThis as any)[key]) {
 export * from "./browser"
 export * from "./compression"
 export * from "./console-commands"
+export * from "./constraint"
 export * from "./context-2d"
 export * from "./css-utils"
 export * from "./dragging"
