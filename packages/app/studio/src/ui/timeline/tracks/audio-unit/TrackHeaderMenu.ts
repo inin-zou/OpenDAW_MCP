@@ -69,7 +69,8 @@ export const installTrackHeaderMenu = (service: StudioService,
                             parent.addMenuItem(
                                 MenuItem.default({label: "Click to access devices..."})
                                     .setTriggerProcedure(() => MidiDevices.requestPermission()))
-                        }, some: inputs => {
+                        },
+                        some: inputs => {
                             if (inputs.length === 0) {
                                 parent.addMenuItem(MenuItem.default({label: "No devices found", selectable: false}))
                             } else {
