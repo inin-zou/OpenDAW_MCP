@@ -12,7 +12,7 @@ export const CaptureAudioBox: BoxSchema<Pointers> = {
     class: {
         name: "CaptureAudioBox",
         fields: mergeFields(CaptureAttributes, {
-            10: {type: "int32", name: "request-channels", value: 2},
+            10: {type: "int32", name: "request-channels", value: 1},
             11: {type: "float32", name: "gain-db", value: 0.0}
         })
     }, pointerRules: {accepts: [Pointers.Capture], mandatory: true}

@@ -80,12 +80,11 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
         captureOption.ifSome(capture => {
             if (!isInstanceOf(capture, CaptureAudio)) {return}
             const streamLifeCycle = lifecycle.own(new Terminator())
-            capture.stream.subscribe(optStream => optStream.match({
-                none: () => {
-                    streamLifeCycle.terminate()
-                    streamRunning = false
-                },
-                some: stream => {
+            capture.stream.catchupAndSubscribe(optStream => {
+                console.debug("new stream", optStream.nonEmpty())
+                streamRunning = false
+                streamLifeCycle.terminate()
+                return optStream.ifSome(stream => {
                     const numberOfChannels = stream.getAudioTracks().at(0)?.getSettings().channelCount ?? 2
                     const meterWorklet = service.worklets.createMeter(numberOfChannels)
                     const streamSource = context.createMediaStreamSource(stream)
@@ -99,8 +98,8 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
                         }),
                         meterWorklet
                     )
-                }
-            }))
+                })
+            })
         }) ?? Terminable.Empty,
         project.liveStreamReceiver.subscribeFloats(adapter.address, values => {
             if (streamRunning) {return}

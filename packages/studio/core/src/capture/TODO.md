@@ -15,8 +15,6 @@
 
 ## Level #1
 
-* If the project is empty, ask if the user wants to record audio or midi
-* If tracks, use the first available audio-unit to record
 * Stop (start) recording at quantized positions
 * Inform the user if there is no outputLatency (Chrome only)
 * Find a way to overlay, replace, mix on existing regions
@@ -27,6 +25,8 @@
 
 ## Done
 
+* ~~If tracks, use the first available audio-unit to record~~
+* ~~If the project is empty, ask if the user wants to record audio or midi~~
 * ~~Play global transport when starting a clip~~
 * ~~Severe bug in undo~~
 * ~~Store capture filters in boxes~~

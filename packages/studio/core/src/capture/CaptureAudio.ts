@@ -1,13 +1,16 @@
-import {assert, isUndefined, ObservableOption, Option, Terminable, warn} from "@opendaw/lib-std"
+import {assert, Func, isDefined, isUndefined, ObservableOption, Option, Terminable, warn} from "@opendaw/lib-std"
+import {Promises} from "@opendaw/lib-runtime"
 import {AudioUnitBox, CaptureAudioBox} from "@opendaw/studio-boxes"
 import {Capture} from "./Capture"
+import {CaptureManager} from "./CaptureManager"
 import {RecordAudio} from "./RecordAudio"
 import {RecordingContext} from "./RecordingContext"
-import {CaptureManager} from "./CaptureManager"
 import {AudioInputDevices} from "../AudioInputDevices"
 
 export class CaptureAudio extends Capture<CaptureAudioBox> {
     readonly #stream: ObservableOption<MediaStream>
+
+    readonly #streamGenerator: Func<void, Promise<void>>
 
     #requestChannels: Option<1 | 2> = Option.None
     #gainDb: number = 0.0
@@ -16,6 +19,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         super(manager, audioUnitBox, captureBox)
 
         this.#stream = new ObservableOption<MediaStream>()
+        this.#streamGenerator = Promises.sequential(() => this.#updateStream())
 
         this.ownAll(
             captureBox.requestChannels.catchupAndSubscribe(owner => {
@@ -25,19 +29,21 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
             captureBox.gainDb.catchupAndSubscribe(owner => this.#gainDb = owner.getValue()),
             captureBox.deviceId.catchupAndSubscribe(async () => {
                 if (this.armed.getValue()) {
-                    await this.#updateStream()
+                    await this.#streamGenerator()
                 }
             }),
-            this.armed.subscribe(async owner => {
+            this.armed.catchupAndSubscribe(async owner => {
                 const armed = owner.getValue()
                 if (armed) {
-                    await this.#updateStream()
+                    await this.#streamGenerator()
                 } else {
                     this.#stopStream()
                 }
             })
         )
     }
+
+    get gainDb(): number {return this.#gainDb}
 
     get stream(): ObservableOption<MediaStream> {return this.#stream}
 
@@ -54,35 +60,45 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
     }
 
     async prepareRecording({}: RecordingContext): Promise<void> {
-        return this.#stream.match({none: () => this.#updateStream(), some: () => Promise.resolve()})
+        return this.#streamGenerator()
     }
 
     startRecording({audioContext, worklets, project, engine, sampleManager}: RecordingContext): Terminable {
         const streamOption = this.#stream
         assert(streamOption.nonEmpty(), "Stream not prepared.")
         const mediaStream = streamOption.unwrap()
-        const channelCount = mediaStream.getAudioTracks().at(0)?.getSettings().channelCount ?? 2
+        const channelCount = mediaStream.getAudioTracks().at(0)?.getSettings().channelCount ?? 1
         const numChunks = 128
-        return Terminable.many(
-            RecordAudio.start({
-                recordingWorklet: worklets.createRecording(channelCount, numChunks, audioContext.outputLatency),
-                mediaStream,
-                sampleManager,
-                audioContext,
-                engine,
-                project,
-                capture: this,
-                gainDb: this.#gainDb
-            }),
-            Terminable.create(() => mediaStream.getTracks().forEach(track => track.stop()))
-        )
+        return RecordAudio.start({
+            recordingWorklet: worklets.createRecording(channelCount, numChunks, audioContext.outputLatency),
+            mediaStream,
+            sampleManager,
+            audioContext,
+            engine,
+            project,
+            capture: this,
+            gainDb: this.#gainDb
+        })
     }
 
     async #updateStream(): Promise<void> {
+        if (this.#stream.nonEmpty()) {
+            const stream = this.#stream.unwrap()
+            const settings = stream.getAudioTracks().at(0)?.getSettings()
+            console.debug(stream.getAudioTracks())
+            if (isDefined(settings)) {
+                const deviceId = this.deviceId.getValue().unwrapOrUndefined()
+                const channelCount = this.#requestChannels.unwrapOrElse(1)
+                const satisfyChannelCount = settings.channelCount === channelCount
+                const satisfiedDeviceId = isUndefined(deviceId) || deviceId === settings.deviceId
+                if (satisfiedDeviceId && satisfyChannelCount) {
+                    return Promise.resolve()
+                }
+            }
+        }
         this.#stopStream()
         const deviceId = this.deviceId.getValue().unwrapOrUndefined()
-        const channelCount = this.#requestChannels.unwrapOrElse(2) // as of today, browsers cap MediaStream audio to stereo.
-        console.debug("request", deviceId, channelCount)
+        const channelCount = this.#requestChannels.unwrapOrElse(1) // as of today, browsers cap MediaStream audio to stereo.
         return AudioInputDevices.requestStream({
             deviceId: {exact: deviceId},
             sampleRate: this.manager.project.env.sampleRate,
@@ -90,16 +106,16 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
             echoCancellation: false,
             noiseSuppression: false,
             autoGainControl: false,
-            channelCount
+            channelCount: {exact: channelCount}
         }).then(stream => {
             const tracks = stream.getAudioTracks()
             const settings = tracks.at(0)?.getSettings()
             const gotDeviceId = settings?.deviceId
-            console.debug("got", gotDeviceId, settings?.channelCount)
+            console.debug(`new stream id: ${stream.id}, device: ${gotDeviceId ?? "Default"}`)
             if (isUndefined(deviceId) || deviceId === gotDeviceId) {
                 this.#stream.wrap(stream)
             } else {
-                this.#stopStream()
+                stream.getAudioTracks().forEach(track => track.stop())
                 return warn(`Could not find audio device with id: '${deviceId} in ${gotDeviceId}'`)
             }
         })

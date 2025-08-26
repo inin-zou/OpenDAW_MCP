@@ -61,9 +61,12 @@ export const TransportGroup = ({lifecycle, service}: Construct) => {
         </div>
     )
     const countInLifecycle = lifecycle.own(new Terminator())
+    const recordingObserver = () => recordButton.classList.toggle("active",
+        engine.isCountingIn.getValue() || engine.isRecording.getValue())
     lifecycle.ownAll(
         engine.isPlaying.subscribe(owner => playButton.classList.toggle("active", owner.getValue())),
-        engine.isRecording.subscribe(owner => recordButton.classList.toggle("active", owner.getValue())),
+        engine.isCountingIn.subscribe(recordingObserver),
+        engine.isRecording.subscribe(recordingObserver),
         engine.isCountingIn.subscribe(owner => {
             if (owner.getValue()) {
                 Surface.get(recordButton).body.appendChild(CountIn({lifecycle: countInLifecycle, engine}))

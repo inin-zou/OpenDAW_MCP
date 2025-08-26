@@ -25,7 +25,6 @@ export namespace RecordAudio {
         {
             recordingWorklet, mediaStream, sampleManager, audioContext, engine, project, capture, gainDb
         }: RecordAudioContext): Terminable => {
-        console.debug("RecordAudio.start", audioContext)
         const terminator = new Terminator()
         const beats = PPQN.fromSignature(1, project.timelineBox.signature.denominator.getValue())
         const {editing, boxGraph} = project

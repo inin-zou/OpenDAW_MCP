@@ -1,5 +1,4 @@
 import {
-    asInstanceOf,
     assert,
     DefaultObservableValue,
     EmptyExec,
@@ -49,14 +48,11 @@ import {Address} from "@opendaw/lib-box"
 import {MetaDataSchema} from "@opendaw/lib-dawproject"
 import {Recovery} from "@/Recovery.ts"
 import {MIDILearning} from "@/midi/devices/MIDILearning"
-import {AudioUnitType} from "@opendaw/studio-enums"
-import {AudioUnitBox} from "@opendaw/studio-boxes"
 import {
     DawProject,
     DawProjectImport,
     EngineFacade,
     EngineWorklet,
-    InstrumentFactories,
     MainThreadSampleManager,
     Project,
     ProjectEnv,
@@ -264,18 +260,7 @@ export class StudioService implements ProjectEnv {
     }
 
     startRecording(countIn: boolean): void {
-        if (!this.hasProjectSession) {return}
-        const {api, rootBox, editing, captureManager} = this.project
-        if (rootBox.audioUnits.pointerHub.incoming()
-            .map(({box}) => asInstanceOf(box, AudioUnitBox))
-            .filter(box => box.type.getValue() === AudioUnitType.Instrument).length === 0) {
-            const {audioUnitBox} = editing
-                .modify(() => api.createInstrument(InstrumentFactories.Tape))
-                .unwrap("Could not create Tape")
-            captureManager.get(audioUnitBox.address.uuid)
-                .unwrap("Could not unwrap capture")
-                .armed.setValue(true)
-        }
+        if (!this.hasProjectSession || Recording.isRecording) {return}
         Recording.start({
             sampleManager: this.sampleManager,
             project: this.project,

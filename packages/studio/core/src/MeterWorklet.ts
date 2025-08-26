@@ -6,7 +6,7 @@ export type PeakSchema = { peak: Float32Array, rms: Float32Array }
 
 export class MeterWorklet extends AudioWorkletNode implements Terminable {
     readonly #terminator: Terminator = new Terminator()
-    readonly #notifier: Notifier<PeakSchema> = new Notifier<PeakSchema>()
+    readonly #notifier: Notifier<PeakSchema> = this.#terminator.own(new Notifier<PeakSchema>())
 
     constructor(context: BaseAudioContext, numberOfChannels: int) {
         const receiver = SyncStream.reader(Schema.createBuilder({
@@ -24,10 +24,11 @@ export class MeterWorklet extends AudioWorkletNode implements Terminable {
                 valueDecay: 0.200
             } satisfies PeakMeterProcessorOptions
         })
-        this.#terminator.own(AnimationFrame.add(() => receiver.tryRead()))
+        this.#terminator.ownAll(
+            AnimationFrame.add(() => receiver.tryRead())
+        )
     }
 
     subscribe(observer: Observer<PeakSchema>): Subscription {return this.#notifier.subscribe(observer)}
-
     terminate(): void {this.#terminator.terminate()}
 }

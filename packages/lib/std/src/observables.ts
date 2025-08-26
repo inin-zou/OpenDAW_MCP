@@ -72,11 +72,10 @@ export class ObservableOption<T> implements Option<T>, Observable<Option<T>>, Te
     }
 
     clear(procedure?: Procedure<T>): void {
-        if (this.#option.nonEmpty()) {
-            if (isDefined(procedure)) {procedure(this.#option.unwrap())}
-            this.#option = Option.None
-            this.#notifier.notify(this)
-        }
+        if (this.#option.isEmpty()) {return}
+        if (isDefined(procedure)) {procedure(this.#option.unwrap())}
+        this.#option = Option.None
+        this.#notifier.notify(this)
     }
 
     assert(fail?: ValueOrProvider<string>): this {
