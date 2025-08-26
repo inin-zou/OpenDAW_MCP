@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.20](https://github.com/andremichelle/openDAW/compare/@opendaw/studio-forge-boxes@0.0.19...@opendaw/studio-forge-boxes@0.0.20) (2025-08-26)
+
+**Note:** Version bump only for package @opendaw/studio-forge-boxes
+
 ## [0.0.19](https://github.com/andremichelle/openDAW/compare/@opendaw/studio-forge-boxes@0.0.18...@opendaw/studio-forge-boxes@0.0.19) (2025-07-25)
 
 **Note:** Version bump only for package @opendaw/studio-forge-boxes
