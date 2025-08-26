@@ -22,6 +22,7 @@ type Entry = {
     error_message: string
     error_stack: string
     logs: string
+    fixed: number
 }
 
 export const ErrorsPage: PageFactory<StudioService> = ({}: PageContext<StudioService>) => {
@@ -45,33 +46,34 @@ export const ErrorsPage: PageFactory<StudioService> = ({}: PageContext<StudioSer
                                <h4>Browser</h4>
                                <h4>Stack</h4>
                                <h4>Logs</h4>
+                               <h4>Fixed</h4>
                            </Group>
-                           {json.map((log) => {
+                           {json.map((entry: Entry) => {
                                    const nowTime = new Date().getTime()
-                                   const errorTime = new Date(log.date).getTime()
+                                   const errorTime = new Date(entry.date).getTime()
                                    const errorTimeString = TimeSpan.millis(errorTime - nowTime).toUnitString()
-                                   const buildTimeString = TimeSpan.millis(new Date(log.build_date).getTime() - nowTime).toUnitString()
-                                   const userAgent = log.user_agent.replace(/^Mozilla\/[\d.]+\s*/, "")
-                                   const errorMessage = Strings.fallback(log.error_message, "No message")
+                                   const buildTimeString = TimeSpan.millis(new Date(entry.build_date).getTime() - nowTime).toUnitString()
+                                   const userAgent = entry.user_agent.replace(/^Mozilla\/[\d.]+\s*/, "")
+                                   const errorMessage = Strings.fallback(entry.error_message, "No message")
                                    return (
-                                       <Group>
-                                           <div>{log.id}</div>
+                                       <div className={Html.buildClassList("row", entry.fixed === 1 && "fixed")}>
+                                           <div>{entry.id}</div>
                                            <div>{errorTimeString}</div>
                                            <div>{buildTimeString}</div>
-                                           <div>{log.error_name}</div>
+                                           <div>{entry.error_name}</div>
                                            <div className="error-message" title={errorMessage}>{errorMessage}</div>
-                                           <div>{log.script_tags}</div>
+                                           <div>{entry.script_tags}</div>
                                            <div className="browser" title={userAgent}>{userAgent}</div>
                                            <div style={{cursor: "pointer"}}
                                                 onclick={() => showDialog({
                                                     headline: "Error Stack",
-                                                    content: (<Stack stack={log.error_stack}/>)
+                                                    content: (<Stack stack={entry.error_stack}/>)
                                                 }).catch(EmptyExec)}>
                                                📂
                                            </div>
                                            <div style={{cursor: "pointer"}}
                                                 onclick={() => {
-                                                    const entries = JSON.parse(log.logs) as Array<LogBuffer.Entry>
+                                                    const entries = JSON.parse(entry.logs) as Array<LogBuffer.Entry>
                                                     return showDialog({
                                                         headline: "Logs",
                                                         content: (
@@ -82,7 +84,8 @@ export const ErrorsPage: PageFactory<StudioService> = ({}: PageContext<StudioSer
                                                 }}>
                                                📂
                                            </div>
-                                       </Group>
+                                           <div>{entry.fixed ? "Yes 👍" : "No 🙄"}</div>
+                                       </div>
                                    )
                                }
                            )}

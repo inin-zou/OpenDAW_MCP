@@ -18,24 +18,33 @@ component
 
   div.list
     display: grid
-    grid-template-columns: repeat(9, auto)
+    grid-template-columns: repeat(10, auto)
     column-gap: 1em
     align-content: start
     justify-content: start
     overflow: hidden scroll
     font-size: 0.75rem
 
-    div
-      white-space: nowrap
-      user-select: text
-      -webkit-user-select: text
+    div.row
+      display: grid
+      grid-template-columns: subgrid
+      grid-column: 1 / -1
+      color: var(--color-orange)
 
-    div.error-message, div.browser
-      max-width: 20rem
-      overflow: hidden
-      white-space: nowrap
-      text-overflow: ellipsis
+      &.fixed
+        color: var(--color-green)
 
-    h4
-      margin-bottom: 0.125rem
-      color: var(--color-blue)
+      div
+        white-space: nowrap
+        user-select: text
+        -webkit-user-select: text
+
+      div.error-message, div.browser
+        max-width: 20rem
+        overflow: hidden
+        white-space: nowrap
+        text-overflow: ellipsis
+
+      h4
+        margin-bottom: 0.125rem
+        color: var(--color-blue)
