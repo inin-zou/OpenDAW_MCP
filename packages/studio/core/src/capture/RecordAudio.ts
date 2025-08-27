@@ -20,9 +20,8 @@ export namespace RecordAudio {
     }
 
     export const start = (
-        {
-            recordingWorklet, mediaStream, sampleManager, audioContext, project, capture, gainDb
-        }: RecordAudioContext): Terminable => {
+        {recordingWorklet, mediaStream, sampleManager, audioContext, project, capture, gainDb}: RecordAudioContext)
+        : Terminable => {
         const terminator = new Terminator()
         const beats = PPQN.fromSignature(1, project.timelineBox.signature.denominator.getValue())
         const {editing, engine, boxGraph} = project
@@ -44,6 +43,9 @@ export namespace RecordAudio {
                         recordingWorklet.numberOfFrames, project.timelineBox.bpm.getValue(), audioContext.sampleRate))
                     duration.setValue(newDuration)
                     loopDuration.setValue(newDuration)
+                } else {
+                    terminator.terminate()
+                    writing = Option.None
                 }
             }, false)
         }

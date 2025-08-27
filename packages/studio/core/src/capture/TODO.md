@@ -8,21 +8,21 @@
     * ~~List all devices~~
     * ~~If MIDI, select all channels or specific channel~~
     * If Audio, let the user select the number of channels (max and default is 2)
-* Implement monitor
-    * ~~If audio, show peak-meter~~
 
 ## Level #1
 
-* Stop (start) recording at quantized positions
+* Stop (~~start~~) recording at quantized positions
 * Inform the user if there is no outputLatency (Chrome only)
 * Find a way to overlay, replace, mix on existing regions
 * Find a way to handle loops/jumps while recording
 * Respect zero-crossing
-* Handle external changes to the project (deletion of audio-units, tracks, regions, etc. while recording)
 * Sample editor
 
 ## Done
 
+* ~~Implement monitor~~
+    * ~~If audio, show peak-meter~~
+* ~~Handle external changes to the project (deletion of audio-units, tracks, regions, etc. while recording)~~
 * ~~Ignore just recorded midi data while recording~~
 * ~~Refactor MIDI learning for the new capture system~~
 * ~~If tracks, use the first available audio-unit to record~~
