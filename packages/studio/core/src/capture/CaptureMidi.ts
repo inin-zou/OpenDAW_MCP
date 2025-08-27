@@ -13,13 +13,13 @@ import {
 } from "@opendaw/lib-std"
 import {Events} from "@opendaw/lib-dom"
 import {MidiData} from "@opendaw/lib-midi"
+import {Promises} from "@opendaw/lib-runtime"
 import {AudioUnitBox, CaptureMidiBox} from "@opendaw/studio-boxes"
+import {MidiDevices} from "../MidiDevices"
 import {Capture} from "./Capture"
+import {CaptureManager} from "./CaptureManager"
 import {RecordMidi} from "./RecordMidi"
 import {RecordingContext} from "./RecordingContext"
-import {CaptureManager} from "./CaptureManager"
-import {MidiDevices} from "../MidiDevices"
-import {Promises} from "@opendaw/lib-runtime"
 
 export class CaptureMidi extends Capture<CaptureMidiBox> {
     readonly #streamGenerator: Func<void, Promise<void>>
@@ -34,12 +34,14 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
         this.#streamGenerator = Promises.sequential(() => this.#updateStream())
 
         this.ownAll(
-            captureMidiBox.channel.subscribe(async owner => {
+            captureMidiBox.channel.catchupAndSubscribe(async owner => {
                 const channel = owner.getValue()
                 this.#filterChannel = channel >= 0 ? Option.wrap(channel) : Option.None
-                await this.#streamGenerator()
+                if (this.armed.getValue()) {
+                    await this.#streamGenerator()
+                }
             }),
-            captureMidiBox.deviceId.catchupAndSubscribe(async () => {
+            captureMidiBox.deviceId.subscribe(async () => {
                 if (this.armed.getValue()) {
                     await this.#streamGenerator()
                 }
@@ -108,7 +110,6 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
     }
 
     async #updateStream() {
-        // TODO Check if the requirements have been changed (are different than the current stream setup)
         if (MidiDevices.get().isEmpty()) {await MidiDevices.requestPermission()}
         const availableMidiDevices = MidiDevices.inputs()
         const available = availableMidiDevices.unwrap()
