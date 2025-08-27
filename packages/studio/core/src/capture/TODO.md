@@ -11,7 +11,6 @@
     * If Audio, let the user select the number of channels (max and default is 2)
 * Implement monitor
     * ~~If audio, show peak-meter~~ and allow monitoring
-    * If MIDI, show incoming midi notes and merge with MIDI learning
 
 ## Level #1
 

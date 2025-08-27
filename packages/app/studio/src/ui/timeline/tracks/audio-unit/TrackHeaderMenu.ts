@@ -52,6 +52,7 @@ export const installTrackHeaderMenu = (service: StudioService,
                             MenuItem.default({label: "Click to access devices..."})
                                 .setTriggerProcedure(() => AudioDevices.requestPermission()))
                     } else {
+                        // TODO check and add item for "listening to all devices"
                         parent.addMenuItem(...devices
                             .map(device => MenuItem.default({
                                 label: device.label,

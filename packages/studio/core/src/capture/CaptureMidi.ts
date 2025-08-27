@@ -1,4 +1,5 @@
 import {
+    asDefined,
     assert,
     byte,
     Func,
@@ -39,6 +40,11 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
                 this.#filterChannel = channel >= 0 ? Option.wrap(channel) : Option.None
                 await this.#streamGenerator()
             }),
+            captureMidiBox.deviceId.catchupAndSubscribe(async () => {
+                if (this.armed.getValue()) {
+                    await this.#streamGenerator()
+                }
+            }),
             this.armed.catchupAndSubscribe(async owner => {
                 const armed = owner.getValue()
                 if (armed) {
@@ -48,8 +54,15 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
                 }
             }),
             this.#notifier.subscribe(event => {
-                console.debug(event)
-                // TODO How do we get an engine reference here???
+                console.debug(MidiData.debug(event.data))
+                const data = asDefined(event.data)
+                const engine = manager.project.engine
+                const isNoteOn = MidiData.isNoteOn(data)
+                if (MidiData.isNoteOff(data) || (isNoteOn && MidiData.readVelocity(data) === 0)) {
+                    engine.noteOff(this.uuid, MidiData.readPitch(data))
+                } else if (isNoteOn) {
+                    engine.noteOn(this.uuid, MidiData.readPitch(data), MidiData.readVelocity(data))
+                }
             })
         )
     }
@@ -59,7 +72,7 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
     async prepareRecording({}: RecordingContext): Promise<void> {
         const availableMidiDevices = MidiDevices.get()
         if (availableMidiDevices.isEmpty()) {
-            return Promise.reject("MIDI has not been requested")
+            return Promise.reject("MIDI is not available")
         }
         const option = this.deviceId.getValue()
         if (option.nonEmpty()) {
@@ -96,21 +109,20 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
                     if (isDefined(data) &&
                         this.#filterChannel.mapOr(channel => MidiData.readChannel(data) === channel, true)) {
                         if (MidiData.isNoteOn(data)) {
-                            activeNotes[MidiData.readParam1(data)]++
+                            activeNotes[MidiData.readPitch(data)]++
                             this.#notifier.notify(event)
                         } else if (MidiData.isNoteOff(data)) {
-                            activeNotes[MidiData.readParam1(data)]--
+                            activeNotes[MidiData.readPitch(data)]--
                             this.#notifier.notify(event)
                         }
                     }
                 })), Terminable.create(() => activeNotes.forEach((count, index) => {
                 if (count > 0) {
+                    // TODO respect channel!
                     const event = new MessageEvent("midimessage", {data: MidiData.noteOff(index, count)})
-                    captureDevices.forEach(input => {
-                        for (let i = 0; i < count; i++) {
-                            input.dispatchEvent(event)
-                        }
-                    })
+                    for (let i = 0; i < count; i++) {
+                        this.#notifier.notify(event)
+                    }
                 }
             }))))
     }

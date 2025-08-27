@@ -15,19 +15,19 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
     #requestChannels: Option<1 | 2> = Option.None
     #gainDb: number = 0.0
 
-    constructor(manager: CaptureManager, audioUnitBox: AudioUnitBox, captureBox: CaptureAudioBox) {
-        super(manager, audioUnitBox, captureBox)
+    constructor(manager: CaptureManager, audioUnitBox: AudioUnitBox, captureAudioBox: CaptureAudioBox) {
+        super(manager, audioUnitBox, captureAudioBox)
 
         this.#stream = new MutableObservableOption<MediaStream>()
         this.#streamGenerator = Promises.sequential(() => this.#updateStream())
 
         this.ownAll(
-            captureBox.requestChannels.catchupAndSubscribe(owner => {
+            captureAudioBox.requestChannels.catchupAndSubscribe(owner => {
                 const channels = owner.getValue()
                 this.#requestChannels = channels === 1 || channels === 2 ? Option.wrap(channels) : Option.None
             }),
-            captureBox.gainDb.catchupAndSubscribe(owner => this.#gainDb = owner.getValue()),
-            captureBox.deviceId.catchupAndSubscribe(async () => {
+            captureAudioBox.gainDb.catchupAndSubscribe(owner => this.#gainDb = owner.getValue()),
+            captureAudioBox.deviceId.catchupAndSubscribe(async () => {
                 if (this.armed.getValue()) {
                     await this.#streamGenerator()
                 }
@@ -101,7 +101,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         const channelCount = this.#requestChannels.unwrapOrElse(1) // as of today, browsers cap MediaStream audio to stereo.
         return AudioDevices.requestStream({
             deviceId: {exact: deviceId},
-            sampleRate: this.manager.project.env.sampleRate,
+            sampleRate: this.manager.project.engine.sampleRate(),
             sampleSize: 32,
             echoCancellation: false,
             noiseSuppression: false,
