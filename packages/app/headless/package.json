@@ -1,7 +1,7 @@
 {
   "name": "@opendaw/app-headless",
   "private": true,
-  "version": "0.0.20",
+  "version": "0.0.21",
   "type": "module",
   "license": "LGPL-3.0-or-later",
   "scripts": {
@@ -11,15 +11,15 @@
     "lint": "eslint \"src/**/*.ts\""
   },
   "dependencies": {
-    "@opendaw/lib-box": "^0.0.20",
-    "@opendaw/lib-dom": "^0.0.20",
-    "@opendaw/lib-dsp": "^0.0.20",
-    "@opendaw/lib-jsx": "^0.0.20",
-    "@opendaw/lib-runtime": "^0.0.20",
-    "@opendaw/lib-std": "^0.0.20",
-    "@opendaw/studio-adapters": "^0.0.20",
-    "@opendaw/studio-boxes": "^0.0.20",
-    "@opendaw/studio-core": "^0.0.20",
+    "@opendaw/lib-box": "^0.0.21",
+    "@opendaw/lib-dom": "^0.0.21",
+    "@opendaw/lib-dsp": "^0.0.21",
+    "@opendaw/lib-jsx": "^0.0.21",
+    "@opendaw/lib-runtime": "^0.0.21",
+    "@opendaw/lib-std": "^0.0.21",
+    "@opendaw/studio-adapters": "^0.0.21",
+    "@opendaw/studio-boxes": "^0.0.21",
+    "@opendaw/studio-core": "^0.0.21",
     "@opendaw/studio-enums": "^0.0.20",
     "@types/markdown-it": "^14.1.2",
     "markdown-it": "^14.1.0"
