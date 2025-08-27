@@ -7,20 +7,21 @@ export namespace MidiData {
     export const readChannel = (data: Uint8Array) => data[0] & 0x0F
     export const readParam1 = (data: Uint8Array) => 1 < data.length ? data[1] & 0xFF : 0
     export const readParam2 = (data: Uint8Array) => 2 < data.length ? data[2] & 0xFF : 0
-    export const isNoteOn = (data: Uint8Array) => MidiData.readCommand(data) === Command.NoteOn
     export const readPitch = (data: Uint8Array) => data[1]
     export const readVelocity = (data: Uint8Array) => data[2] / 127.0
-    export const isNoteOff = (data: Uint8Array) => MidiData.readCommand(data) === Command.NoteOff
-    export const isPitchWheel = (data: Uint8Array) => MidiData.readCommand(data) === Command.PitchBend
+    export const isNoteOn = (data: Uint8Array) => readCommand(data) === Command.NoteOn && readVelocity(data) > 0
+    export const isNoteOff = (data: Uint8Array) =>
+        readCommand(data) === Command.NoteOff || (readCommand(data) === Command.NoteOn && readVelocity(data) === 0)
+    export const isPitchWheel = (data: Uint8Array) => readCommand(data) === Command.PitchBend
     export const asPitchBend = (data: Uint8Array) => {
-        const p1 = MidiData.readParam1(data) & 0x7F
-        const p2 = MidiData.readParam2(data) & 0x7F
+        const p1 = readParam1(data) & 0x7F
+        const p2 = readParam2(data) & 0x7F
         const value = p1 | p2 << 7
         return 8192 >= value ? value / 8192.0 - 1.0 : (value - 8191) / 8192.0
     }
-    export const isController = (data: Uint8Array): boolean => MidiData.readCommand(data) === Command.Controller
+    export const isController = (data: Uint8Array): boolean => readCommand(data) === Command.Controller
     export const asValue = (data: Uint8Array) => {
-        const value = MidiData.readParam2(data)
+        const value = readParam2(data)
         if (64 < value) {
             return 0.5 + (value - 63) / 128
         } else if (64 > value) {

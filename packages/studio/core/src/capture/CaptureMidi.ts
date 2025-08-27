@@ -57,11 +57,10 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
                 console.debug(MidiData.debug(event.data))
                 const data = asDefined(event.data)
                 const engine = manager.project.engine
-                const isNoteOn = MidiData.isNoteOn(data)
-                if (MidiData.isNoteOff(data) || (isNoteOn && MidiData.readVelocity(data) === 0)) {
-                    engine.noteOff(this.uuid, MidiData.readPitch(data))
-                } else if (isNoteOn) {
+                if (MidiData.isNoteOn(data)) {
                     engine.noteOn(this.uuid, MidiData.readPitch(data), MidiData.readVelocity(data))
+                } else if (MidiData.isNoteOff(data)) {
+                    engine.noteOff(this.uuid, MidiData.readPitch(data))
                 }
             })
         )
