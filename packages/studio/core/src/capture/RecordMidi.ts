@@ -52,6 +52,7 @@ export namespace RecordMidi {
                         }
                     }
                 } else {
+                    terminator.terminate()
                     writing = Option.None
                 }
             }, false)
@@ -60,7 +61,7 @@ export namespace RecordMidi {
             if (!isRecording.getValue()) {return}
             const data = event.data
             if (isUndefined(data)) {return}
-            const position = project.engine.position.getValue()
+            const ppqn = position.getValue()
             if (MidiData.isNoteOn(data)) {
                 const pitch = MidiData.readParam1(data)
                 if (writing.isEmpty()) {
@@ -69,7 +70,7 @@ export namespace RecordMidi {
                         const region = NoteRegionBox.create(boxGraph, UUID.generate(), box => {
                             box.regions.refer(trackBox.regions)
                             box.events.refer(collection.owners)
-                            box.position.setValue(quantizeFloor(position, beats))
+                            box.position.setValue(quantizeFloor(ppqn, beats))
                             box.hue.setValue(ColorCodes.forTrackType(TrackType.Notes))
                         })
                         engine.ignoreNoteRegion(region.address.uuid)
@@ -79,7 +80,7 @@ export namespace RecordMidi {
                 const {collection} = writing.unwrap()
                 editing.modify(() => {
                     activeNotes.set(pitch, NoteEventBox.create(boxGraph, UUID.generate(), box => {
-                        box.position.setValue(position)
+                        box.position.setValue(ppqn)
                         box.duration.setValue(1.0)
                         box.pitch.setValue(pitch)
                         box.velocity.setValue(MidiData.readParam2(data) / 127.0)
