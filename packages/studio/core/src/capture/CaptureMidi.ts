@@ -67,7 +67,18 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
         )
     }
 
-    get deviceLabel(): Option<string> {return Option.wrap("MIDI coming soon.")}
+    get label(): string {
+        return MidiDevices.get().mapOr(midiAccess => this.deviceId.getValue().match({
+            none: () => this.armed.getValue() ? "Listening to all MIDI devices" : "Arm to listen to MIDI device...",
+            some: value => `Listening to ${midiAccess.inputs.get(value)?.name}`
+        }), "MIDI not available")
+    }
+
+    get deviceLabel(): Option<string> {
+        return this.deviceId.getValue()
+            .flatMap(deviceId => MidiDevices.inputs()
+                .map(inputs => inputs.find(input => input.id === deviceId)?.name))
+    }
 
     async prepareRecording({}: RecordingContext): Promise<void> {
         const availableMidiDevices = MidiDevices.get()

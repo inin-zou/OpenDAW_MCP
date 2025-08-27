@@ -22,7 +22,7 @@ export interface Option<T> {
     contains(value: T): boolean
     isEmpty(): boolean
     nonEmpty(): boolean
-    map<U>(func: Func<T, U>): Option<U>
+    map<U>(func: Func<T, Nullish<U>>): Option<U>
     mapOr<U>(func: Func<T, U>, or: ValueOrProvider<U>): U
     flatMap<U>(func: Func<T, Option<U>>): Option<U>
     equals(other: Option<T>): boolean
@@ -57,7 +57,7 @@ export namespace Option {
         ifSome<R extends undefined>(run: Func<T, R>): R {return run(this.#value)}
         isEmpty(): boolean { return false }
         nonEmpty(): boolean { return true }
-        map<U>(callback: (value: T) => Nullable<U>): Option<U> {return Option.wrap(callback(this.#value))}
+        map<U>(callback: (value: T) => Nullish<U>): Option<U> {return Option.wrap(callback(this.#value))}
         mapOr<U>(func: Func<T, U>, _or: U | Provider<U>): U {return func(this.#value)}
         flatMap<U>(callback: (value: T) => Option<U>): Option<U> {return callback(this.#value)}
         equals(other: Option<T>): boolean {return this.unwrapOrNull() === other.unwrapOrNull()}
@@ -76,7 +76,7 @@ export namespace Option {
         readonly ifSome = (_: Procedure<never>): undefined => {}
         readonly isEmpty = (): boolean => true
         readonly nonEmpty = (): boolean => false
-        readonly map = <U>(_: (_: never) => U): Option<U> => None
+        readonly map = <U>(_: (_: never) => Nullish<U>): Option<U> => None
         readonly mapOr = <U>(_: Func<never, U>, or: ValueOrProvider<U>): U => getOrProvide(or)
         readonly flatMap = (_: (_: never) => Option<never>): Option<never> => None
         readonly equals = (other: Option<any>): boolean => other.isEmpty()

@@ -123,8 +123,7 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
                                       appearance={{activeColor: Colors.red, framed: true}}>
                                 <Icon symbol={IconSymbol.Record}/>
                             </Checkbox>)
-                        lifecycle.own(TextTooltip.default(checkbox,
-                            () => capture.deviceLabel.unwrapOrElse("No device")))
+                        lifecycle.own(TextTooltip.default(checkbox, () => capture.label))
                         return checkbox
                     })}
                 </div>

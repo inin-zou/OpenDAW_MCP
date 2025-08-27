@@ -42,6 +42,7 @@ export abstract class Capture<BOX extends CaptureBox = CaptureBox> implements Te
         )
     }
 
+    abstract get label(): string
     abstract get deviceLabel(): Option<string>
     abstract prepareRecording(context: RecordingContext): Promise<void>
     abstract startRecording(context: RecordingContext): Terminable

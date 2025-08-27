@@ -51,17 +51,15 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         return this.streamMediaTrack.map(settings => settings.getSettings().deviceId ?? "")
     }
 
-    get deviceLabel(): Option<string> {
-        return this.streamMediaTrack.map(track => track.label ?? "")
-    }
+    get label(): string {return this.streamMediaTrack.mapOr(track => track.label, "Default")}
+
+    get deviceLabel(): Option<string> {return this.streamMediaTrack.map(track => track.label ?? "")}
 
     get streamMediaTrack(): Option<MediaStreamTrack> {
         return this.#stream.flatMap(stream => Option.wrap(stream.getAudioTracks().at(0)))
     }
 
-    async prepareRecording({}: RecordingContext): Promise<void> {
-        return this.#streamGenerator()
-    }
+    async prepareRecording({}: RecordingContext): Promise<void> {return this.#streamGenerator()}
 
     startRecording({audioContext, worklets, project, sampleManager}: RecordingContext): Terminable {
         const streamOption = this.#stream
