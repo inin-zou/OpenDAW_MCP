@@ -4,13 +4,13 @@
 
 ## Next
 
-* Refactor MIDI learning for the new capture system
+* Ignore just recorded midi data while recording
 * Fully implement capture
-    * List all devices
-    * If MIDI, select all channels or specific channel
+    * ~~List all devices~~
+    * ~~If MIDI, select all channels or specific channel~~
     * If Audio, let the user select the number of channels (max and default is 2)
 * Implement monitor
-    * ~~If audio, show peak-meter~~ and allow monitoring
+    * ~~If audio, show peak-meter~~
 
 ## Level #1
 
@@ -18,12 +18,13 @@
 * Inform the user if there is no outputLatency (Chrome only)
 * Find a way to overlay, replace, mix on existing regions
 * Find a way to handle loops/jumps while recording
-* Audio editor
 * Respect zero-crossing
 * Handle external changes to the project (deletion of audio-units, tracks, regions, etc. while recording)
+* Sample editor
 
 ## Done
 
+* ~~Refactor MIDI learning for the new capture system~~
 * ~~If tracks, use the first available audio-unit to record~~
 * ~~If the project is empty, ask if the user wants to record audio or midi~~
 * ~~Play global transport when starting a clip~~

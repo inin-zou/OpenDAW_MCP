@@ -1,7 +1,7 @@
 {
   "name": "@opendaw/app-headless",
   "private": true,
-  "version": "0.0.22",
+  "version": "0.0.23",
   "type": "module",
   "license": "LGPL-3.0-or-later",
   "scripts": {
@@ -19,7 +19,7 @@
     "@opendaw/lib-std": "^0.0.22",
     "@opendaw/studio-adapters": "^0.0.22",
     "@opendaw/studio-boxes": "^0.0.22",
-    "@opendaw/studio-core": "^0.0.22",
+    "@opendaw/studio-core": "^0.0.23",
     "@opendaw/studio-enums": "^0.0.20",
     "@types/markdown-it": "^14.1.2",
     "markdown-it": "^14.1.0"

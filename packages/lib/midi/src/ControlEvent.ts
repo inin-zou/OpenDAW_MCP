@@ -1,7 +1,7 @@
 import {byte, Comparator, int, safeExecute} from "@opendaw/lib-std"
 import {Event} from "./Event"
 import {ControlType} from "./ControlType"
-import {ControlEventVisitor} from "./ControlEventVisitor"
+import {MidiEventVisitor} from "./MidiEventVisitor"
 import {MidiFileDecoder} from "./MidiFileDecoder"
 
 export class ControlEvent implements Event<ControlType> {
@@ -32,7 +32,7 @@ export class ControlEvent implements Event<ControlType> {
         return null
     }
 
-    accept(visitor: ControlEventVisitor): void {
+    accept(visitor: MidiEventVisitor): void {
         switch (this.type) {
             case ControlType.NOTE_ON: {
                 if (0 === this.param1) {

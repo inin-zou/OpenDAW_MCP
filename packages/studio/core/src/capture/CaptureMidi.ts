@@ -26,7 +26,6 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
     readonly #notifier = new Notifier<MIDIMessageEvent>()
 
     #filterChannel: Option<byte> = Option.None
-
     #streaming: Option<Subscription> = Option.None
 
     constructor(manager: CaptureManager, audioUnitBox: AudioUnitBox, captureMidiBox: CaptureMidiBox) {
@@ -54,7 +53,6 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
                 }
             }),
             this.#notifier.subscribe(event => {
-                console.debug(MidiData.debug(event.data))
                 const data = asDefined(event.data)
                 const engine = manager.project.engine
                 if (MidiData.isNoteOn(data)) {
@@ -69,7 +67,15 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
     get label(): string {
         return MidiDevices.get().mapOr(midiAccess => this.deviceId.getValue().match({
             none: () => this.armed.getValue() ? "Listening to all MIDI devices" : "Arm to listen to MIDI device...",
-            some: value => `Listening to ${midiAccess.inputs.get(value)?.name}`
+            some: value => {
+                const device = midiAccess.inputs.get(value)
+                if (isUndefined(device)) {return "⚠️ Could not find device"}
+                const deviceName = device.name ?? "Unknown device"
+                return this.#filterChannel.match({
+                    none: () => `Listening to ${deviceName}`,
+                    some: channel => `Listening to ${deviceName} on channel '${channel}'`
+                })
+            }
         }), "MIDI not available")
     }
 
@@ -105,33 +111,35 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
         // TODO Check if the requirements have been changed (are different than the current stream setup)
         if (MidiDevices.get().isEmpty()) {await MidiDevices.requestPermission()}
         const availableMidiDevices = MidiDevices.inputs()
-        const inputs = availableMidiDevices.unwrap()
-        const captureDevices = this.deviceId.getValue().match({
-            none: () => inputs,
-            some: id => inputs.filter(device => id === device.id)
+        const available = availableMidiDevices.unwrap()
+        const capturing = this.deviceId.getValue().match({
+            none: () => available,
+            some: id => available.filter(device => id === device.id)
         })
         const activeNotes = new Int8Array(128)
         this.#streaming.ifSome(terminable => terminable.terminate())
         this.#streaming = Option.wrap(Terminable.many(
-            ...captureDevices.map(input => Events.subscribe(input, "midimessage",
-                (event: MIDIMessageEvent) => {
-                    const data = event.data
-                    if (isDefined(data) &&
-                        this.#filterChannel.mapOr(channel => MidiData.readChannel(data) === channel, true)) {
-                        if (MidiData.isNoteOn(data)) {
-                            activeNotes[MidiData.readPitch(data)]++
-                            this.#notifier.notify(event)
-                        } else if (MidiData.isNoteOff(data)) {
-                            activeNotes[MidiData.readPitch(data)]--
+            ...capturing.map(input => Events.subscribe(input, "midimessage", (event: MIDIMessageEvent) => {
+                const data = event.data
+                if (isDefined(data) &&
+                    this.#filterChannel.mapOr(channel => MidiData.readChannel(data) === channel, true)) {
+                    const pitch = MidiData.readPitch(data)
+                    if (MidiData.isNoteOn(data)) {
+                        activeNotes[pitch]++
+                        this.#notifier.notify(event)
+                    } else if (MidiData.isNoteOff(data) && activeNotes[pitch] > 0) {
+                        activeNotes[pitch]--
+                        this.#notifier.notify(event)
+                    }
+                }
+            })),
+            Terminable.create(() => activeNotes.forEach((count, index) => {
+                if (count > 0) {
+                    for (let channel = 0; channel < 16; channel++) {
+                        const event = new MessageEvent("midimessage", {data: MidiData.noteOff(channel, index)})
+                        for (let i = 0; i < count; i++) {
                             this.#notifier.notify(event)
                         }
-                    }
-                })), Terminable.create(() => activeNotes.forEach((count, index) => {
-                if (count > 0) {
-                    // TODO respect channel!
-                    const event = new MessageEvent("midimessage", {data: MidiData.noteOff(index, count)})
-                    for (let i = 0; i < count; i++) {
-                        this.#notifier.notify(event)
                     }
                 }
             }))))

@@ -10,7 +10,7 @@ if ((globalThis as any)[key]) {
 export * from "./Channel"
 export * from "./Chunk"
 export * from "./ControlEvent"
-export * from "./ControlEventVisitor"
+export * from "./MidiEventVisitor"
 export * from "./ControlType"
 export * from "./Event"
 export * from "./MetaType"

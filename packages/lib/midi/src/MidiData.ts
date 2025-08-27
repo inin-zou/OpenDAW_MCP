@@ -1,4 +1,5 @@
-import {byte, Nullable} from "@opendaw/lib-std"
+import {byte, isUndefined, Nullable, safeExecute} from "@opendaw/lib-std"
+import {MidiEventVisitor} from "./MidiEventVisitor"
 
 export namespace MidiData {
     export const enum Command {NoteOn = 0x90, NoteOff = 0x80, PitchBend = 0xE0, Controller = 0xB0}
@@ -42,6 +43,22 @@ export namespace MidiData {
         bytes[0] = channel | Command.NoteOff
         bytes[1] = note
         return bytes
+    }
+
+    export const accept = (data: Nullable<Uint8Array>, visitor: MidiEventVisitor): void => {
+        if (isUndefined(data)) {return}
+        if (isNoteOn(data)) {
+            safeExecute(visitor.noteOn, readPitch(data), readVelocity(data))
+        } else if (isNoteOff(data)) {
+            safeExecute(visitor.noteOff, readPitch(data))
+        } else if (isPitchWheel(data)) {
+            const p1 = readParam1(data) & 0x7f
+            const p2 = readParam2(data) & 0x7f
+            const value = p1 | (p2 << 7)
+            safeExecute(visitor.pitchBend, 8192 >= value ? value / 8192.0 - 1.0 : (value - 8191) / 8192.0)
+        } else if (isController(data)) {
+            safeExecute(visitor.controller, readParam1(data), readParam2(data) / 127.0)
+        }
     }
 
     export const debug = (data: Nullable<Uint8Array>): string => {

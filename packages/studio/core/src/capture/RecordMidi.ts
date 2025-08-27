@@ -28,12 +28,12 @@ export namespace RecordMidi {
     export const start = ({notifier, project, capture}: RecordMidiContext): Terminable => {
         console.debug("RecordMidi.start")
         const beats = PPQN.fromSignature(1, project.timelineBox.signature.denominator.getValue())
-        const {editing, boxGraph} = project
+        const {editing, boxGraph, engine: {position, isRecording}} = project
         const trackBox: TrackBox = RecordTrack.findOrCreate(editing, capture.audioUnitBox, TrackType.Notes)
         const terminator = new Terminator()
         const activeNotes = new Map<byte, NoteEventBox>()
         let writing: Option<{ region: NoteRegionBox, collection: NoteEventCollectionBox }> = Option.None
-        terminator.own(project.engine.position.catchupAndSubscribe(owner => {
+        terminator.own(position.catchupAndSubscribe(owner => {
             if (writing.isEmpty()) {return}
             const writePosition = owner.getValue()
             const {region, collection} = writing.unwrap()
@@ -56,7 +56,7 @@ export namespace RecordMidi {
             }, false)
         }))
         terminator.ownAll(notifier.subscribe((event: MIDIMessageEvent) => {
-            if (!project.engine.isRecording.getValue()) {return}
+            if (!isRecording.getValue()) {return}
             const data = event.data
             if (isUndefined(data)) {return}
             const position = project.engine.position.getValue()
