@@ -17,6 +17,7 @@ export interface EngineCommands extends Terminable {
     // feeds a note request into an audio-unit identified by uuid
     noteOn(uuid: UUID.Format, pitch: byte, velocity: unitValue): void
     noteOff(uuid: UUID.Format, pitch: byte): void
+    ignoreNoteRegion(uuid: UUID.Format): void
     // timeline clip playback management
     scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void
     scheduleClipStop(trackIds: ReadonlyArray<UUID.Format>): void

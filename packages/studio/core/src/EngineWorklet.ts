@@ -109,6 +109,9 @@ export class EngineWorklet extends AudioWorkletNode implements Engine {
                     noteOff(uuid: UUID.Format, pitch: byte): void {
                         dispatcher.dispatchAndForget(this.noteOff, uuid, pitch)
                     }
+                    ignoreNoteRegion(uuid: UUID.Format): void {
+                        dispatcher.dispatchAndForget(this.ignoreNoteRegion, uuid)
+                    }
                     scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void {
                         dispatcher.dispatchAndForget(this.scheduleClipPlay, clipIds)
                     }
@@ -184,6 +187,7 @@ export class EngineWorklet extends AudioWorkletNode implements Engine {
         this.#notifyNoteTrigger.notify({type: "note-off", uuid, pitch})
     }
     subscribeNotes(observer: Observer<NoteTrigger>): Subscription {return this.#notifyNoteTrigger.subscribe(observer)}
+    ignoreNoteRegion(uuid: UUID.Format): void {this.#commands.ignoreNoteRegion(uuid)}
     scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void {
         this.#notifyClipNotification.notify({type: "waiting", clips: clipIds})
         this.#commands.scheduleClipPlay(clipIds)

@@ -18,4 +18,5 @@ export interface EngineContext extends BoxAdaptersContext, Terminable {
     registerProcessor(processor: Processor): Terminable
     registerEdge(source: Processor, target: Processor): Terminable
     subscribeProcessPhase(observer: Observer<ProcessPhase>): Subscription
+    ignoresRegion(uuid: UUID.Format): boolean
 }

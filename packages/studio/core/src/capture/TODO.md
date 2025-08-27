@@ -4,7 +4,6 @@
 
 ## Next
 
-* Ignore just recorded midi data while recording
 * Fully implement capture
     * ~~List all devices~~
     * ~~If MIDI, select all channels or specific channel~~
@@ -24,6 +23,7 @@
 
 ## Done
 
+* ~~Ignore just recorded midi data while recording~~
 * ~~Refactor MIDI learning for the new capture system~~
 * ~~If tracks, use the first available audio-unit to record~~
 * ~~If the project is empty, ask if the user wants to record audio or midi~~

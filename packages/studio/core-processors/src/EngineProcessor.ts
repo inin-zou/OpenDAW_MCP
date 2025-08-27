@@ -83,6 +83,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
     readonly #renderer: BlockRenderer
     readonly #stateSender: SyncStream.Writer
     readonly #stemExports: ReadonlyArray<AudioUnit>
+    readonly #ignoredRegions: SortedSet<UUID.Format, UUID.Format>
 
     #processQueue: Option<ReadonlyArray<Processor>> = Option.None
     #primaryOutput: Option<AudioUnit> = Option.None
@@ -127,6 +128,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
         this.#mixer = new Mixer()
         this.#metronome = new Metronome(this.#timeInfo)
         this.#renderer = new BlockRenderer(this)
+        this.#ignoredRegions = UUID.newSet<UUID.Format>(uuid => uuid)
         this.#stateSender = SyncStream.writer(EngineStateSchema(), sab, x => {
             const {transporting, isCountingIn, isRecording, position} = this.#timeInfo
             x.position = position
@@ -157,6 +159,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
                     const wasTransporting = this.#timeInfo.transporting
                     this.#timeInfo.transporting = false
                     this.#timeInfo.metronomeEnabled = this.#metronomeEnabled
+                    this.#ignoredRegions.clear()
                     if (reset || !wasTransporting) {
                         this.#reset()
                     }
@@ -195,6 +198,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
                     this.#timeInfo.isCountingIn = false
                     this.#timeInfo.metronomeEnabled = this.#metronomeEnabled
                     this.#timeInfo.transporting = false
+                    this.#ignoredRegions.clear()
                 },
                 setMetronomeEnabled: (value: boolean) => this.#timeInfo.metronomeEnabled = this.#metronomeEnabled = value,
                 queryLoadingComplete: (): Promise<boolean> =>
@@ -207,6 +211,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
                     this.optAudioUnit(uuid).ifSome(unit => unit.midiDeviceChain.noteSequencer.pushRawNoteOn(pitch, velocity)),
                 noteOff: (uuid: UUID.Format, pitch: byte) =>
                     this.optAudioUnit(uuid).ifSome(unit => unit.midiDeviceChain.noteSequencer.pushRawNoteOff(pitch)),
+                ignoreNoteRegion: (uuid: UUID.Format) => this.#ignoredRegions.add(uuid),
                 scheduleClipPlay: (clipIds: ReadonlyArray<UUID.Format>) => {
                     // TODO What to do when recording is in progress?
                     clipIds.forEach(clipId => {
@@ -234,6 +239,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
                     this.#context.ifSome(context => context.terminate())
                     this.#context = Option.None
                     this.#running = false
+                    this.#ignoredRegions.clear()
                     this.#terminator.terminate()
                 }
             }),
@@ -267,6 +273,8 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
         // For Safari :(
         console.log = (...message: string[]) => this.#engineToClient.log(message.join(", "))
     }
+
+    ignoresRegion(uuid: UUID.Format): boolean {return this.#ignoredRegions.hasKey(uuid)}
 
     process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
         try {

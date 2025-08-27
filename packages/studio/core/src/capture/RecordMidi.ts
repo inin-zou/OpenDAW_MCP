@@ -28,7 +28,8 @@ export namespace RecordMidi {
     export const start = ({notifier, project, capture}: RecordMidiContext): Terminable => {
         console.debug("RecordMidi.start")
         const beats = PPQN.fromSignature(1, project.timelineBox.signature.denominator.getValue())
-        const {editing, boxGraph, engine: {position, isRecording}} = project
+        const {editing, boxGraph, engine} = project
+        const {position, isRecording} = engine
         const trackBox: TrackBox = RecordTrack.findOrCreate(editing, capture.audioUnitBox, TrackType.Notes)
         const terminator = new Terminator()
         const activeNotes = new Map<byte, NoteEventBox>()
@@ -71,6 +72,7 @@ export namespace RecordMidi {
                             box.position.setValue(quantizeFloor(position, beats))
                             box.hue.setValue(ColorCodes.forTrackType(TrackType.Notes))
                         })
+                        engine.ignoreNoteRegion(region.address.uuid)
                         writing = Option.wrap({region, collection})
                     }, false)
                 }

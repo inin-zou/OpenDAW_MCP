@@ -1,5 +1,13 @@
 import {EngineContext} from "./EngineContext"
-import {TrackType} from "@opendaw/studio-adapters"
+import {
+    AudioUnitBoxAdapter,
+    NoteBroadcaster,
+    NoteClipBoxAdapter,
+    NoteEventCollectionBoxAdapter,
+    NoteRegionBoxAdapter,
+    TrackBoxAdapter,
+    TrackType
+} from "@opendaw/studio-adapters"
 import {EventSpanRetainer, LoopableRegion, NoteEvent, ppqn} from "@opendaw/lib-dsp"
 import {
     Bits,
@@ -16,16 +24,8 @@ import {
     unitValue,
     UUID
 } from "@opendaw/lib-std"
-import {NoteClipBoxAdapter} from "@opendaw/studio-adapters"
-import {
-    NoteEventCollectionBoxAdapter
-} from "@opendaw/studio-adapters"
-import {NoteRegionBoxAdapter} from "@opendaw/studio-adapters"
-import {AudioUnitBoxAdapter} from "@opendaw/studio-adapters"
-import {TrackBoxAdapter} from "@opendaw/studio-adapters"
 import {NoteCompleteEvent, NoteEventSource, NoteLifecycleEvent} from "./NoteEventSource"
 import {BlockFlag, ProcessPhase} from "./processing"
-import {NoteBroadcaster} from "@opendaw/studio-adapters"
 
 type ExternalNote = {
     readonly pitch: byte
@@ -170,7 +170,8 @@ export class NoteSequencer implements NoteEventSource, Terminable {
 
     * #processRegions(trackBoxAdapter: TrackBoxAdapter, p0: ppqn, p1: ppqn): Generator<Id<NoteEvent>> {
         for (const region of trackBoxAdapter.regions.collection.iterateRange(p0, p1)) {
-            if (region.mute || !isInstanceOf(region, NoteRegionBoxAdapter)) {continue}
+            if (this.#context.ignoresRegion(region.address.uuid)
+                || region.mute || !isInstanceOf(region, NoteRegionBoxAdapter)) {continue}
             const optCollection = region.optCollection
             if (optCollection.isEmpty()) {continue}
             const collection = optCollection.unwrap()

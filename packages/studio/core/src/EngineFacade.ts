@@ -74,7 +74,7 @@ export class EngineFacade implements Engine {
     get countInBeatsTotal(): ObservableValue<int> {return this.#countInBeatsTotal}
     get countInBeatsRemaining(): ObservableValue<int> {return this.#countInBeatsRemaining}
     get markerState(): DefaultObservableValue<Nullable<[UUID.Format, int]>> {return this.#markerState}
-    get project(): Project {return this.#client.unwrap("No engine").project}
+    get project(): Project {return this.#client.unwrap("No engine to get project").project}
 
     isReady(): Promise<void> {return this.#client.mapOr(client => client.isReady(), Promise.resolve())}
     queryLoadingComplete(): Promise<boolean> {
@@ -83,20 +83,23 @@ export class EngineFacade implements Engine {
     panic(): void {this.#client.ifSome(client => client.panic())}
     sampleRate(): number {return this.#client.isEmpty() ? 44_100 : this.#client.unwrap().context.sampleRate}
     subscribeClipNotification(observer: Observer<ClipNotification>): Subscription {
-        return this.#client.unwrap("No engine").subscribeClipNotification(observer)
+        return this.#client.unwrap("No engine to subscribeClipNotification").subscribeClipNotification(observer)
     }
     subscribeNotes(observer: Observer<NoteTrigger>): Subscription {
-        return this.#client.unwrap("No engine").subscribeNotes(observer)
+        return this.#client.unwrap("No engine to subscribeNotes").subscribeNotes(observer)
+    }
+    ignoreNoteRegion(uuid: UUID.Format): void {
+        this.#client.unwrap("No engine to ignoreNoteRegion").ignoreNoteRegion(uuid)
     }
     noteOn(uuid: UUID.Format, pitch: byte, velocity: unitValue): void {
-        this.#client.unwrap("No engine").noteOn(uuid, pitch, velocity)
+        this.#client.unwrap("No engine to noteOn").noteOn(uuid, pitch, velocity)
     }
-    noteOff(uuid: UUID.Format, pitch: byte): void {this.#client.unwrap("No engine").noteOff(uuid, pitch)}
+    noteOff(uuid: UUID.Format, pitch: byte): void {this.#client.unwrap("No engine to noteOff").noteOff(uuid, pitch)}
     scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void {
-        this.#client.unwrap("No engine").scheduleClipPlay(clipIds)
+        this.#client.unwrap("No engine to scheduleClipPlay").scheduleClipPlay(clipIds)
     }
     scheduleClipStop(trackIds: ReadonlyArray<UUID.Format>): void {
-        this.#client.unwrap("No engine").scheduleClipStop(trackIds)
+        this.#client.unwrap("No engine to scheduleClipStop").scheduleClipStop(trackIds)
     }
 
     terminate(): void {
