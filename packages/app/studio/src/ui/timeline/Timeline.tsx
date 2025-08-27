@@ -19,7 +19,8 @@ type Construct = {
 }
 
 export const Timeline = ({lifecycle, service}: Construct) => {
-    const {timeline, engine} = service
+    const {project, timeline} = service
+    const {engine} = project
     const {snapping, clips, followPlaybackCursor, primaryVisible} = timeline
     const snappingName = Inject.value(snapping.unit.name)
     lifecycle.own(snapping.subscribe(snapping => {snappingName.value = snapping.unit.name}))

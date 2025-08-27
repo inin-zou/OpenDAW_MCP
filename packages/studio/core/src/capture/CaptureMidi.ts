@@ -72,22 +72,15 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
         }
     }
 
-    startRecording({project, engine}: RecordingContext): Terminable {
+    startRecording({project}: RecordingContext): Terminable {
         const availableMidiDevices = MidiDevices.inputs()
         assert(availableMidiDevices.nonEmpty(), "No MIDI input devices found")
-        return RecordMidi.start({
-            notifier: this.#notifier,
-            engine,
-            project,
-            capture: this
-        })
+        return RecordMidi.start({notifier: this.#notifier, project, capture: this})
     }
 
     async #updateStream() {
         // TODO Check if the requirements have been changed (are different than the current stream setup)
-        if (MidiDevices.get().isEmpty()) {
-            await MidiDevices.requestPermission()
-        }
+        if (MidiDevices.get().isEmpty()) {await MidiDevices.requestPermission()}
         const availableMidiDevices = MidiDevices.inputs()
         const inputs = availableMidiDevices.unwrap()
         const captureDevices = this.deviceId.getValue().match({

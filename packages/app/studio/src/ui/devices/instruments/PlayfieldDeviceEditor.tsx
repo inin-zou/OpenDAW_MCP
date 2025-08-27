@@ -20,7 +20,7 @@ const octave = new DefaultObservableValue(5) // TODO Make that bound to its Play
 
 export const PlayfieldDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
     const {project} = service
-    const engine = service.engine
+    const {engine} = project
     const noteSender: NoteSender = {
         noteOn: (note: byte, velocity: float) => engine.noteOn(deviceHost.uuid, note, velocity),
         noteOff: (note: byte) => engine.noteOff(deviceHost.uuid, note)

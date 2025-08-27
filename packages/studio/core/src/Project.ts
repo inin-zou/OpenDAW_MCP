@@ -1,4 +1,13 @@
-import {ByteArrayOutput, Option, panic, Terminable, TerminableOwner, Terminator, UUID} from "@opendaw/lib-std"
+import {
+    ByteArrayOutput,
+    Option,
+    panic,
+    Procedure,
+    Terminable,
+    TerminableOwner,
+    Terminator,
+    UUID
+} from "@opendaw/lib-std"
 import {BoxGraph, Editing} from "@opendaw/lib-box"
 import {
     AudioBusBox,
@@ -30,9 +39,13 @@ import {Mixer} from "./Mixer"
 import {ProjectApi} from "./ProjectApi"
 import {ProjectMigration} from "./ProjectMigration"
 import {CaptureManager} from "./capture/CaptureManager"
+import {EngineFacade} from "./EngineFacade"
+import {EngineWorklet} from "./EngineWorklet"
+import {Worklets} from "./Worklets"
+
+export type RestartWorklet = { unload: Procedure<unknown>, load: Procedure<EngineWorklet> }
 
 // Main Entry Point for a Project
-//
 export class Project implements BoxAdaptersContext, Terminable, TerminableOwner {
     static new(env: ProjectEnv): Project {
         const boxGraph = new BoxGraph<BoxIO.TypeMap>(Option.wrap(BoxIO.create))
@@ -104,6 +117,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
     readonly parameterFieldAdapters: ParameterFieldAdapters
     readonly liveStreamReceiver: LiveStreamReceiver
     readonly mixer: Mixer
+    readonly engine = new EngineFacade()
 
     private constructor(env: ProjectEnv, boxGraph: BoxGraph, {
         rootBox,
@@ -133,6 +147,26 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
         this.mixer = new Mixer(this.rootBoxAdapter.audioUnits)
 
         console.debug(`Project was created on ${this.rootBoxAdapter.created.toString()}`)
+    }
+
+    startAudioWorklet(worklets: Worklets, restart: RestartWorklet): EngineWorklet {
+        console.debug(`start AudioWorklet`)
+        const lifecycle = this.#terminator.spawn()
+        const engine: EngineWorklet = lifecycle.own(worklets.createEngine(this))
+        const handler = async (event: unknown) => {
+            console.warn(event)
+            // we will only accept the first error
+            engine.removeEventListener("error", handler)
+            engine.removeEventListener("processorerror", handler)
+            restart.unload(event)
+            lifecycle.terminate()
+            restart.load(this.startAudioWorklet(worklets, restart))
+        }
+        engine.addEventListener("error", handler)
+        engine.addEventListener("processorerror", handler)
+        engine.connect(engine.context.destination)
+        this.engine.setClient(engine)
+        return engine
     }
 
     own<T extends Terminable>(terminable: T): T {return this.#terminator.own<T>(terminable)}

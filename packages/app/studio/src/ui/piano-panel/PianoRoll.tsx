@@ -17,9 +17,9 @@ type Construct = {
 
 export const PianoRoll = ({lifecycle, service, updateNotifier}: Construct) => {
     const {WhiteKey, BlackKey} = PianoRollLayout
-    const {project, engine} = service
-    const {rootBoxAdapter: {pianoMode: {keyboard, transpose}}} = project
-    const enginePosition = engine.position
+    const {project} = service
+    const {engine, rootBoxAdapter: {pianoMode: {keyboard, transpose}}} = project
+    const position = engine.position
     const getPianoLayout = () => PianoRollLayout.Defaults()[keyboard.getValue()]
     const createSVG = (): SVGSVGElement => {
         const pianoLayout = getPianoLayout()
@@ -87,15 +87,15 @@ export const PianoRoll = ({lifecycle, service, updateNotifier}: Construct) => {
         Events.subscribe(self, "keydown", event => {
             if (Events.isTextInput(event.target)) {return}
             if (event.code === "ArrowUp") {
-                const position = enginePosition.getValue() + PPQN.Quarter
-                engine.setPosition(Math.max(0, position))
+                const ppqn = position.getValue() + PPQN.Quarter
+                engine.setPosition(Math.max(0, ppqn))
             } else if (event.code === "ArrowDown") {
-                const position = enginePosition.getValue() - PPQN.Quarter
-                engine.setPosition(Math.max(0, position))
+                const ppqn = position.getValue() - PPQN.Quarter
+                engine.setPosition(Math.max(0, ppqn))
             }
         }, {capture: true}),
-        updateNotifier.subscribe(() => update(enginePosition.getValue()))
+        updateNotifier.subscribe(() => update(position.getValue()))
     )
-    update(enginePosition.getValue())
+    update(position.getValue())
     return placeholder
 }

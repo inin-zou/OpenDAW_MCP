@@ -15,9 +15,9 @@ export class Recording {
         }
         this.#isRecording = true
         assert(this.#instance.isEmpty(), "Recording already in progress")
-        const {engine, project} = context
+        const {project} = context
         this.#prepare(project)
-        const {captureManager, editing} = project
+        const {captureManager, engine, editing} = project
         const terminator = new Terminator()
         const captures = captureManager.filterArmed()
         if (captures.length === 0) {

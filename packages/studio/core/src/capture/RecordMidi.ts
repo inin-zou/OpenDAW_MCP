@@ -13,7 +13,6 @@ import {PPQN} from "@opendaw/lib-dsp"
 import {MidiData} from "@opendaw/lib-midi"
 import {NoteEventBox, NoteEventCollectionBox, NoteRegionBox, TrackBox} from "@opendaw/studio-boxes"
 import {TrackType} from "@opendaw/studio-adapters"
-import {Engine} from "../Engine"
 import {Project} from "../Project"
 import {Capture} from "./Capture"
 import {RecordTrack} from "./RecordTrack"
@@ -22,12 +21,11 @@ import {ColorCodes} from "../ColorCodes"
 export namespace RecordMidi {
     type RecordMidiContext = {
         notifier: Notifier<MIDIMessageEvent>,
-        engine: Engine,
         project: Project,
         capture: Capture
     }
 
-    export const start = ({notifier, engine, project, capture}: RecordMidiContext): Terminable => {
+    export const start = ({notifier, project, capture}: RecordMidiContext): Terminable => {
         console.debug("RecordMidi.start")
         const beats = PPQN.fromSignature(1, project.timelineBox.signature.denominator.getValue())
         const {editing, boxGraph} = project
@@ -35,7 +33,7 @@ export namespace RecordMidi {
         const terminator = new Terminator()
         const activeNotes = new Map<byte, NoteEventBox>()
         let writing: Option<{ region: NoteRegionBox, collection: NoteEventCollectionBox }> = Option.None
-        terminator.own(engine.position.catchupAndSubscribe(owner => {
+        terminator.own(project.engine.position.catchupAndSubscribe(owner => {
             if (writing.isEmpty()) {return}
             const writePosition = owner.getValue()
             const {region, collection} = writing.unwrap()
@@ -58,10 +56,10 @@ export namespace RecordMidi {
             }, false)
         }))
         terminator.ownAll(notifier.subscribe((event: MIDIMessageEvent) => {
-            if (!engine.isRecording.getValue()) {return}
+            if (!project.engine.isRecording.getValue()) {return}
             const data = event.data
             if (isUndefined(data)) {return}
-            const position = engine.position.getValue()
+            const position = project.engine.position.getValue()
             if (MidiData.isNoteOn(data)) {
                 const pitch = MidiData.readParam1(data)
                 if (writing.isEmpty()) {

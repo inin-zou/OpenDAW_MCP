@@ -13,6 +13,7 @@ import {
     Procedure,
     Progress,
     Provider,
+    safeRead,
     Subscription,
     Terminator,
     UUID
@@ -57,6 +58,7 @@ import {
     Project,
     ProjectEnv,
     Recording,
+    RestartWorklet,
     Worklets
 } from "@opendaw/studio-core"
 import {AudioOfflineRenderer} from "@/audio/AudioOfflineRenderer"
@@ -108,9 +110,11 @@ export class StudioService implements ProjectEnv {
     readonly samplePlayback: SamplePlayback
     // noinspection JSUnusedGlobalSymbols
     readonly _shortcuts = new Shortcuts(this) // TODO reference will be used later in a key-mapping configurator
-    readonly engine = new EngineFacade()
     readonly recovery = new Recovery(this)
     readonly midiLearning = new MIDILearning(this)
+
+    readonly engine = new EngineFacade()
+
     readonly #signals = new Notifier<StudioSignal>()
 
     #factoryFooterLabel: Option<Provider<FooterLabel>> = Option.None
@@ -166,7 +170,25 @@ export class StudioService implements ProjectEnv {
                     this.timeline.clips.count.setValue(3)
                     this.timeline.clips.visible.setValue(false)
                 }
-                this.#startAudioWorklet(lifeTime, project)
+                let screen: Nullable<Workspace.ScreenKeys> = null
+                const restart: RestartWorklet = {
+                    unload: async (event: unknown) => {
+                        screen = this.layout.screen.getValue()
+                        // we need to restart the screen to subscribe to new broadcaster instances
+                        this.switchScreen(null)
+                        this.engine.releaseClient()
+                        await showInfoDialog({
+                            headline: "Audio-Engine Error",
+                            message: String(safeRead(event, "message") ?? event),
+                            okText: "Restart"
+                        })
+                    },
+                    load: (engine: EngineWorklet) => {
+                        this.engine.setClient(engine)
+                        this.switchScreen(screen)
+                    }
+                }
+                this.engine.setClient(project.startAudioWorklet(this.worklets, restart))
                 if (root) {this.switchScreen("default")}
             } else {
                 this.engine.releaseClient()
@@ -233,7 +255,7 @@ export class StudioService implements ProjectEnv {
 
     get midi(): Option<MidiDeviceAccess> {return this.#midi}
 
-    panicEngine(): void {this.engine.panic()}
+    panicEngine(): void {this.runIfProject(({engine}) => engine.panic())}
 
     async closeProject() {
         RouteLocation.get().navigateTo("/")
@@ -265,8 +287,6 @@ export class StudioService implements ProjectEnv {
             sampleManager: this.sampleManager,
             project: this.project,
             worklets: this.worklets,
-            engine: this.engine,
-            requestMIDIAccess: MidiDeviceAccess.requestMidiAccess,
             audioContext: this.context
         }, countIn).catch(Dialogs.WarningProcedure)
     }
@@ -444,33 +464,6 @@ export class StudioService implements ProjectEnv {
     factoryFooterLabel(): Option<Provider<FooterLabel>> {return this.#factoryFooterLabel}
 
     resetPeaks(): void {this.#signals.notify({type: "reset-peaks"})}
-
-    #startAudioWorklet(terminator: Terminator, project: Project): void {
-        console.debug(`start AudioWorklet`)
-        const lifecycle = terminator.spawn()
-        const client: EngineWorklet = lifecycle.own(this.worklets.createEngine(project))
-        const handler = async (event: any) => {
-            console.warn(event)
-            // we will only accept the first error
-            client.removeEventListener("error", handler)
-            client.removeEventListener("processorerror", handler)
-            const screen = this.layout.screen.getValue()
-            // we need to restart the screen to subscribe to new broadcaster instances
-            this.switchScreen(null)
-            lifecycle.terminate()
-            await showInfoDialog({
-                headline: "Audio-Engine Error",
-                message: String(event?.message ?? event),
-                okText: "Restart"
-            })
-            this.#startAudioWorklet(lifecycle, project)
-            this.switchScreen(screen)
-        }
-        client.addEventListener("error", handler)
-        client.addEventListener("processorerror", handler)
-        client.connect(this.context.destination)
-        this.engine.setClient(client)
-    }
 
     async verifyProject() {
         if (!this.hasProjectSession) {return}

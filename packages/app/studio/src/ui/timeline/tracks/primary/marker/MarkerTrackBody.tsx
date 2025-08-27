@@ -18,12 +18,12 @@ type Construct = {
 }
 
 export const MarkerTrackBody = ({lifecycle, service}: Construct) => {
-    const {project, engine} = service
-    const {editing, boxGraph} = project
-    const {range, snapping} = service.timeline
+    const {project, timeline} = service
+    const {editing, engine, boxGraph} = project
+    const {range, snapping} = timeline
     const markerState = engine.markerState
     const canvas: HTMLCanvasElement = <canvas style={{fontSize: "1.25em"}}/>
-    const position = service.engine.position
+    const position = engine.position
     const timelineAdapter = project.boxAdapters.adapterFor(project.timelineBox, TimelineBoxAdapter)
     const markerTrackAdapter: MarkerTrackAdapter = timelineAdapter.markerTrack
     const events = markerTrackAdapter.events

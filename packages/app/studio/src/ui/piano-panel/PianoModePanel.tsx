@@ -23,7 +23,7 @@ type Construct = {
 export const PianoModePanel = ({lifecycle, service}: Construct) => {
     if (!service.hasProjectSession) {return "No session."}
     const {project} = service
-    const {rootBoxAdapter, editing} = project
+    const {rootBoxAdapter, engine: {position}, editing} = project
     const pianoMode = rootBoxAdapter.pianoMode
     const {keyboard, timeRangeInQuarters, noteScale, noteLabels, transpose} = pianoMode
     const updateNotifier = lifecycle.own(new Notifier<void>())
@@ -75,7 +75,7 @@ export const PianoModePanel = ({lifecycle, service}: Construct) => {
     }
     subscribeExcludePianoMode()
     lifecycle.ownAll(
-        service.engine.position.subscribe(notify.request),
+        position.subscribe(notify.request),
         pianoMode.subscribe(notify.request),
         excludePianoModeSubscription
     )
@@ -118,7 +118,7 @@ export const PianoModePanel = ({lifecycle, service}: Construct) => {
                                 .map((track, index, array) => (
                                     <Group>
                                         <span>{
-                                            // TODO This list will not scale and isn't very well designed
+                                            // TODO This list will not scale (scroll) and isn't very well designed
                                             array.length === 1
                                                 ? audioUnitBoxAdapter.label
                                                 : `${(audioUnitBoxAdapter.label)} (${index + 1})`}</span>

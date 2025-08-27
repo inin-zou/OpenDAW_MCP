@@ -19,7 +19,8 @@ type Construct = {
 }
 
 export const PlayfieldSampleEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
-    const {engine, project} = service
+    const {project} = service
+    const {engine, liveStreamReceiver, userEditingManager} = project
     const audioUnitBoxAdapter = deviceHost.audioUnitBoxAdapter()
     const noteSender: NoteSender = {
         noteOn: (note: byte, velocity: float) => engine.noteOn(audioUnitBoxAdapter.uuid, note, velocity),
@@ -27,7 +28,7 @@ export const PlayfieldSampleEditor = ({lifecycle, service, adapter, deviceHost}:
     }
     const fileName = adapter.file().mapOr(file => file.box.fileName.getValue(), "N/A")
     const deviceName = adapter.device().labelField.getValue()
-    const goDevice = () => project.userEditingManager.audioUnit.edit(deviceHost.audioUnitBoxAdapter().box.editing)
+    const goDevice = () => userEditingManager.audioUnit.edit(deviceHost.audioUnitBoxAdapter().box.editing)
     return (
         <DeviceEditor lifecycle={lifecycle}
                       project={project}
@@ -40,7 +41,7 @@ export const PlayfieldSampleEditor = ({lifecycle, service, adapter, deviceHost}:
                       )}
                       populateMeter={() => (
                           <DevicePeakMeter lifecycle={lifecycle}
-                                           receiver={project.liveStreamReceiver}
+                                           receiver={liveStreamReceiver}
                                            address={adapter.peakAddress}/>
                       )}
                       createLabel={() => {

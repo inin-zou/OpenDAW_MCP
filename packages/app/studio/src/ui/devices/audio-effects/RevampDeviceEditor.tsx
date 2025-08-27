@@ -47,7 +47,7 @@ export const RevampDeviceEditor = ({adapter, service, lifecycle, deviceHost}: Co
     lifecycle.ownAll(
         createCurveRenderer(curves, xAxis, yAxis, adapter),
         project.liveStreamReceiver.subscribeFloats(adapter.spectrum,
-            values => plotSpectrum(spectrumContext, xAxis, spectrumScale, values, service.engine.sampleRate())))
+            values => plotSpectrum(spectrumContext, xAxis, spectrumScale, values, project.engine.sampleRate())))
     const grid: SVGSVGElement = <svg/>
     lifecycle.own(createDisplay(xAxis, yAxis, grid))
     const {midiLearning} = service

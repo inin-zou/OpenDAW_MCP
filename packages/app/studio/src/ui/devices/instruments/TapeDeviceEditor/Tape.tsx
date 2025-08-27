@@ -1,9 +1,8 @@
 import {Arrays, Circle, clamp, Geom, isDefined, Lifecycle, ObservableValue, ValueMapping} from "@opendaw/lib-std"
 import {createElement, Frag} from "@opendaw/lib-jsx"
-import {PPQN} from "@opendaw/lib-dsp"
+import {ppqn, PPQN} from "@opendaw/lib-dsp"
 import {AudioUnitTracks} from "@opendaw/studio-adapters"
 import {deferNextFrame} from "@opendaw/lib-dom"
-import {StudioService} from "@/service/StudioService"
 import {Colors} from "@opendaw/studio-core"
 
 const tapeVelocity = 13.0 / PPQN.Bar // TapeDeviceEditor speed 4.76 cm/s converted into svg coordinates
@@ -29,11 +28,11 @@ const tapeReelHub = (): SVGPathElement => (
 
 export type Construct = {
     lifecycle: Lifecycle
-    service: StudioService
+    position: ObservableValue<ppqn>
     tracks: AudioUnitTracks
 }
 
-export const Tape = ({lifecycle, service, tracks}: Construct) => {
+export const Tape = ({lifecycle, position, tracks}: Construct) => {
     const reelHubs: ReadonlyArray<SVGGraphicsElement> = [tapeReelHub(), tapeReelHub()]
     const reelElements: ReadonlyArray<SVGCircleElement> = reels.map(reel =>
         (<circle cx={reel.x} cy={reel.y} r={0} fill="rgba(0,0,0,0.08)" stroke={stroke}/>))
@@ -41,12 +40,11 @@ export const Tape = ({lifecycle, service, tracks}: Construct) => {
         <rect x={100} y={106} width={8} height={2} stroke="none"/>
     )
     const tape: ReadonlyArray<SVGLineElement> = Arrays.create(() => <line stroke={stroke}/>, 3)
-    const position = service.engine.position
     const headerUpdater = deferNextFrame(() => {
-        const pulse = position.getValue()
+        const ppqn = position.getValue()
         const playingRegion = tracks.collection.adapters().some(track => {
-            const region = track.regions.collection.lowerEqual(pulse)
-            return isDefined(region) && region.hasCollection && region.complete > pulse
+            const region = track.regions.collection.lowerEqual(ppqn)
+            return isDefined(region) && region.hasCollection && region.complete > ppqn
         })
         head.setAttribute("fill", playingRegion ? Colors.bright : Colors.dark)
     })
@@ -80,8 +78,7 @@ export const Tape = ({lifecycle, service, tracks}: Construct) => {
         headerUpdater.immediate()
         lastTime = position
     }
-    lifecycle.own(position.subscribe(observer))
-    observer(position)
+    lifecycle.own(position.catchupAndSubscribe(observer))
     lifecycle.own(tracks.subscribeAnyChange(headerUpdater.request))
     return (
         <svg classList="tape" viewBox="0 0 208 112"

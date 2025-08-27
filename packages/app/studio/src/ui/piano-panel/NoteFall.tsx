@@ -26,8 +26,9 @@ type RenderCall = {
 }
 
 export const NoteFall = ({lifecycle, service, updateNotifier}: Construct) => {
-    const enginePosition = service.engine.position
     const {project} = service
+    const {engine} = project
+    const {position} = engine
     const pianoMode = project.rootBoxAdapter.pianoMode
     const {keyboard, timeRangeInQuarters, noteScale, noteLabels, transpose} = pianoMode
     const canvas: HTMLCanvasElement = <canvas/>
@@ -36,7 +37,7 @@ export const NoteFall = ({lifecycle, service, updateNotifier}: Construct) => {
         const {context, actualWidth, actualHeight} = painter
         const timeRange = PPQN.Quarter * timeRangeInQuarters.getValue()
         const labelEnabled = noteLabels.getValue()
-        const min = enginePosition.getValue()
+        const min = position.getValue()
         const max = min + timeRange
         const positionToY = (position: ppqn) => (1.0 - (position - min) / timeRange) * actualHeight
         context.clearRect(0, 0, actualWidth, actualHeight)
@@ -134,8 +135,8 @@ export const NoteFall = ({lifecycle, service, updateNotifier}: Construct) => {
         Html.watchResize(element, painter.requestUpdate),
         Events.subscribe(canvas, "wheel", event => {
             event.preventDefault()
-            const position = enginePosition.getValue() - Math.sign(event.deltaY) * PPQN.SemiQuaver * 2
-            service.engine.setPosition(Math.max(0, position))
+            const ppqn = position.getValue() - Math.sign(event.deltaY) * PPQN.SemiQuaver * 2
+            engine.setPosition(Math.max(0, ppqn))
         })
     )
     return element

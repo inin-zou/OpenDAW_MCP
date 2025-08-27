@@ -2,7 +2,6 @@ import {Option, quantizeFloor, Terminable, Terminator, UUID} from "@opendaw/lib-
 import {dbToGain, PPQN} from "@opendaw/lib-dsp"
 import {AudioFileBox, AudioRegionBox, TrackBox} from "@opendaw/studio-boxes"
 import {SampleManager, TrackType} from "@opendaw/studio-adapters"
-import {Engine} from "../Engine"
 import {Project} from "../Project"
 import {Capture} from "./Capture"
 import {RecordTrack} from "./RecordTrack"
@@ -15,7 +14,6 @@ export namespace RecordAudio {
         mediaStream: MediaStream
         sampleManager: SampleManager
         audioContext: AudioContext
-        engine: Engine
         project: Project
         capture: Capture
         gainDb: number
@@ -23,11 +21,11 @@ export namespace RecordAudio {
 
     export const start = (
         {
-            recordingWorklet, mediaStream, sampleManager, audioContext, engine, project, capture, gainDb
+            recordingWorklet, mediaStream, sampleManager, audioContext, project, capture, gainDb
         }: RecordAudioContext): Terminable => {
         const terminator = new Terminator()
         const beats = PPQN.fromSignature(1, project.timelineBox.signature.denominator.getValue())
-        const {editing, boxGraph} = project
+        const {editing, engine, boxGraph} = project
         const trackBox: TrackBox = RecordTrack.findOrCreate(editing, capture.audioUnitBox, TrackType.Audio)
         const uuid = recordingWorklet.uuid
         sampleManager.record(recordingWorklet)

@@ -35,6 +35,7 @@ type Construct = {
 }
 
 export const ClipLane = ({lifecycle, service, trackManager, adapter}: Construct) => {
+    const {project, timeline: {clips}} = service
     const placeholderContainer: HTMLElement = <Group/>
     const container: HTMLElement = (<div className={className}>{placeholderContainer}</div>)
     const runtime = lifecycle.own(new Terminator())
@@ -45,8 +46,7 @@ export const ClipLane = ({lifecycle, service, trackManager, adapter}: Construct)
             const adapter = new DefaultObservableValue<Nullable<AnyClipBoxAdapter>>(null)
             const placeholder: HTMLElement = (
                 <ClipPlaceholder lifecycle={terminator}
-                                 service={service}
-                                 project={service.project}
+                                 project={project}
                                  adapter={adapter}
                                  gridColumn={`${index + 1} / ${index + 2}`}/>
             )
@@ -86,7 +86,7 @@ export const ClipLane = ({lifecycle, service, trackManager, adapter}: Construct)
                 const {clip, selected, mirrored} = update
                 const {adapter, placeholder} = cells[index]
                 adapter.setValue(clip)
-                // Let's override the selection status by knowing the html stucture 😬
+                // Let's override the selection status by knowing the HTML structure 😬
                 const clipElement = placeholder.firstElementChild
                 clipElement?.classList.toggle("selected", selected)
                 clipElement?.classList.toggle("mirrored", mirrored)
@@ -102,7 +102,7 @@ export const ClipLane = ({lifecycle, service, trackManager, adapter}: Construct)
             placeholder.remove()
             terminator.terminate()
         })
-    const clipsCount = service.timeline.clips.count
+    const clipsCount = clips.count
     const {request: requestRebuild} = deferNextFrame(() => {
         const count = clipsCount.getValue()
         restockPlaceholders(count)
@@ -110,7 +110,7 @@ export const ClipLane = ({lifecycle, service, trackManager, adapter}: Construct)
         depletePlaceholders(count)
     })
     lifecycle.own(
-        service.timeline.clips.visible.catchupAndSubscribe(owner => {
+        clips.visible.catchupAndSubscribe(owner => {
             runtime.terminate()
             if (owner.getValue()) {
                 runtime.ownAll(

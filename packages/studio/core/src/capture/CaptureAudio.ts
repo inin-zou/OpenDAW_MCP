@@ -63,18 +63,18 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         return this.#streamGenerator()
     }
 
-    startRecording({audioContext, worklets, project, engine, sampleManager}: RecordingContext): Terminable {
+    startRecording({audioContext, worklets, project, sampleManager}: RecordingContext): Terminable {
         const streamOption = this.#stream
         assert(streamOption.nonEmpty(), "Stream not prepared.")
         const mediaStream = streamOption.unwrap()
         const channelCount = mediaStream.getAudioTracks().at(0)?.getSettings().channelCount ?? 1
         const numChunks = 128
+        const recordingWorklet = worklets.createRecording(channelCount, numChunks, audioContext.outputLatency)
         return RecordAudio.start({
-            recordingWorklet: worklets.createRecording(channelCount, numChunks, audioContext.outputLatency),
+            recordingWorklet,
             mediaStream,
             sampleManager,
             audioContext,
-            engine,
             project,
             capture: this,
             gainDb: this.#gainDb

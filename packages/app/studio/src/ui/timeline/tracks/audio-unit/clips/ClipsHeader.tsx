@@ -24,8 +24,8 @@ export const ClipsHeader = ({lifecycle, service}: Construct) => {
     const resizer: HTMLElement = <div className="resizer"/>
     const element: HTMLElement = (<div className={className}>{resizer}</div>)
     const runtime = lifecycle.own(new Terminator())
-    const {project, timeline, engine} = service
-    const {rootBoxAdapter} = project
+    const {project, timeline} = service
+    const {engine, rootBoxAdapter} = project
     const clips = timeline.clips
     const cells: Array<Cell> = []
     const {request: requestRebuild} = deferNextFrame(() => {

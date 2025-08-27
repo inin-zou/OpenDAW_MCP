@@ -26,20 +26,22 @@ export const TrackHeader = ({lifecycle, service, trackBoxAdapter, audioUnitBoxAd
     const {project} = service
     const channelLifeCycle = lifecycle.own(new Terminator())
     lifecycle.ownAll(
-        audioUnitBoxAdapter.input.catchupAndSubscribeLabelChange(option => nameLabel.value = option.unwrapOrElse("No Input")),
-        trackBoxAdapter.indexField.catchupAndSubscribe(owner => {
-            channelLifeCycle.terminate()
-            Html.empty(channelControls)
-            if (owner.getValue() === 0) {
-                replaceChildren(channelControls, (
-                    <AudioUnitChannelControls lifecycle={channelLifeCycle}
-                                              service={service}
-                                              adapter={audioUnitBoxAdapter}/>
-                ))
-            } else {
-                replaceChildren(channelControls, <div/>)
-            }
-        }),
+        audioUnitBoxAdapter.input
+            .catchupAndSubscribeLabelChange(option => nameLabel.value = option.unwrapOrElse("No Input")),
+        trackBoxAdapter.indexField
+            .catchupAndSubscribe(owner => {
+                channelLifeCycle.terminate()
+                Html.empty(channelControls)
+                if (owner.getValue() === 0) {
+                    replaceChildren(channelControls, (
+                        <AudioUnitChannelControls lifecycle={channelLifeCycle}
+                                                  service={service}
+                                                  adapter={audioUnitBoxAdapter}/>
+                    ))
+                } else {
+                    replaceChildren(channelControls, <div/>)
+                }
+            }),
         trackBoxAdapter.catchupAndSubscribePath(option =>
             nameLabel.value = option.unwrapOrElse(["", "Unassigned track"]).join(" "))
     )
