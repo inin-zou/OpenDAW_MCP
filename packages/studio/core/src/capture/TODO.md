@@ -9,16 +9,17 @@
 * Fully implement capture
     * ~~List all devices~~
     * ~~If MIDI, select all channels or specific channel~~
+    * Arm buttons default behavior should be radio group (shift to add)
     * If Audio, let the user select the number of channels (max and default is 2)
     * If Audio, how to adjust pre-gain?
     * MIDI Controller (values)
 
 ## Level #1
 
+* Put Recording.start into class Project
 * Stop (~~start~~) recording at quantized positions
 * Find a way to overlay, replace, mix on existing regions
 * Find a way to handle loops/jumps while recording
-* Respect zero-crossing
 * Sample editor
 
 ## Done
