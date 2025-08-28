@@ -1,6 +1,6 @@
 # openDAW Recording
 
-## Capturing Devices
+## Capturing
 
 openDAW allows you to capture and record audio and MIDI. To arm an audio-unit (essentially your instrument), please use
 the tiny record button in the timeline track-header. You can arm as many audio-units as you like by holding the
