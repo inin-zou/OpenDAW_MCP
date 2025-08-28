@@ -1,5 +1,9 @@
 # Development
 
+## Bugs
+
+* Allow dropping devices in the timeline header column
+
 ## TODO
 
 * PianoModePanel
@@ -18,7 +22,7 @@
     * ~~different keyboard layouts https://familypiano.com/blog/piano-keys-faq/~~
     * ~~time signature / octave (C, F) grid~~
 * ~~Playfield bug: Samples appear louder when polyphone~~
-* Attach a CurveBox to ValueEventBox (enables having different curve shapes in future)
+* ~~Attach a CurveBox to ValueEventBox (enables having different curve shapes in future)~~
 * Make effect-bypass parameter automatable
 * Add SoundFont device
 * Polish audio playback -> will have unwanted sounds when start/stop audio segments
@@ -26,24 +30,6 @@
 * Admin sample management (rename, edit, delete)
 * Do not use an unknown track for busses. This must be handled by the timeline view.
 * https://bungee.parabolaresearch.com/
-* Audio/Midi Recording
-    * Solid state for recording in main-thread (none, running, cancel, abort)
-    * Listen to all incoming midi-signals and create track, region, notes and automation (revertible process)
-    * Record audio to memory and create track and region (revertible process)
-    * Preview / update peaks
-    * ~~Count in~~
-    * ~~Global shuffle~~
-    * ~~Midi generator effects should continue to run when transport is stopped~~
-    * ~~Time-Manipulation Midi-Effects~~
-        * ~~clamp pitch 0-127~~
-        * ~~release notes when changing midi effect chain~~
-        * ~~release notes when pausing~~
-        * ~~Sending notes to broadcaster~~
-        * ~~Revive regions/clips~~
-        * ~~groove unipolar (percentage)~~
-        * ~~Replace event-targets with NoteEventSource~~
-        * ~~NoteEvent~~
-            * ~~Remove chance, playCount, playCurve (not needed in processing)~~
 * Playfield
     * ~~Panics when replacing synth with Playfield and undo~~
     * ~~Remember~~
@@ -59,7 +45,7 @@
     * ~~Gate-mode selector (Off, On, Loop)~~
     * ~~Monophone / Polyphone switcher~~
 * Stereo Tool
-    * Stereo Widthing is not really working (not in prototype < no easy fix)
+    * Stereo expander is not really working (not in prototype < no easy fix)
     * ~~Interpolate matrix~~
     * ~~swap channels~~
 * PointerLock Api
@@ -101,6 +87,24 @@
 
 ## Done
 
+* ~~Audio/Midi Recording~~
+* ~~Solid state for recording in main-thread (none, running, cancel, abort)~~
+* ~~Listen to all incoming midi-signals and create track, region, notes and automation (revertible process)~~
+* ~~Record audio to memory and create track and region (revertible process)~~
+* ~~Preview / update peaks~~
+* ~~Count in~~
+* ~~Global shuffle~~
+* ~~Midi generator effects should continue to run when transport is stopped~~
+* ~~Time-Manipulation Midi-Effects~~
+    * ~~clamp pitch 0-127~~
+    * ~~release notes when changing midi effect chain~~
+    * ~~release notes when pausing~~
+    * ~~Sending notes to broadcaster~~
+    * ~~Revive regions/clips~~
+    * ~~groove unipolar (percentage)~~
+    * ~~Replace event-targets with NoteEventSource~~
+    * ~~NoteEvent~~
+    * ~~Remove chance, playCount, playCurve (not needed in processing)~~
 * ~~Learn Midi Device~~
     * ~~Keys~~
     * ~~Control~~

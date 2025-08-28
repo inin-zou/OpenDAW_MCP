@@ -28,11 +28,11 @@ export const DevicesBrowser = ({lifecycle, service}: Construct) => {
                     {createInstrumentList(lifecycle, project)}
                 </section>
                 <section className="audio">
-                    <h1>Audio EffectFactories</h1>
+                    <h1>Audio Effects</h1>
                     {createEffectList(lifecycle, service, project, Objects.exclude(EffectFactories.AudioNamed, "Modular"), "audio-effect")}
                 </section>
                 <section className="midi">
-                    <h1>Midi EffectFactories</h1>
+                    <h1>Midi Effects</h1>
                     {createEffectList(lifecycle, service, project, EffectFactories.MidiNamed, "midi-effect")}
                 </section>
             </div>

@@ -8,8 +8,7 @@ import {TrackFactory, TracksManager} from "@/ui/timeline/tracks/audio-unit/Track
 import {Track} from "./Track"
 import {RegionsArea} from "./regions/RegionsArea.tsx"
 import {ClipsArea} from "./clips/ClipsArea.tsx"
-import {AudioUnitBoxAdapter} from "@opendaw/studio-adapters"
-import {TrackBoxAdapter} from "@opendaw/studio-adapters"
+import {AudioUnitBoxAdapter, TrackBoxAdapter} from "@opendaw/studio-adapters"
 import {AnimationFrame, Events, Html} from "@opendaw/lib-dom"
 import {ExtraSpace} from "./Constants.ts"
 

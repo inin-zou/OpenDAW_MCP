@@ -2,11 +2,8 @@
 
 ## Bugs
 
-* Allow dropping devices in the timeline header column
-
 ## Next
 
-* Manuals should be listing all entries in the dropdown
 * Fully implement capture
     * ~~List all devices~~
     * ~~If MIDI, select all channels or specific channel~~
@@ -25,6 +22,7 @@
 
 ## Done
 
+* ~~Manuals should be listing all entries in the dropdown~~
 * ~~Inform the user if there is no outputLatency~~
 * ~~Implement monitor~~
     * ~~If audio, show peak-meter~~

@@ -249,6 +249,9 @@ export class Surface implements TerminableOwner {
                 this.#pointer.x = event.clientX
                 this.#pointer.y = event.clientY
             }, {capture: true}),
+            Events.subscribe(this.#owner, "dragend", (_event: DragEvent) => {
+                pointerDown = Option.None
+            }, {capture: true}),
             Events.subscribe(this.#owner, "beforeunload", () => {
                 if (this.#owner === self) {return} // We are leaving the main window. Nothing to do.
                 console.debug(`Before-unload surface: '${this.#owner.name}'`)
