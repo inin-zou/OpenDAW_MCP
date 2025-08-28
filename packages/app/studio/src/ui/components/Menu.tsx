@@ -11,7 +11,7 @@ import {Colors} from "@opendaw/studio-core"
 const className = Html.adoptStyleSheet(css, "menu")
 
 export const HeaderMenuDataElement = ({data}: { data: HeaderMenuData }) => (
-    <div className={Html.buildClassList("header")} style={{"--color": Colors.blue}}>
+    <div className={Html.buildClassList("header")} style={{"--color": data.color ?? Colors.gray}}>
         <div className="icon-space"/>
         {data.icon && <Icon symbol={data.icon} style={{margin: "0 0.25em", fontSize: "1.25em"}}/>}
         <div className="label">{data.label}</div>

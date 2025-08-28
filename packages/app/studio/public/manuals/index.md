@@ -1,6 +1,6 @@
 # openDAW Manuals
 
-Please join our [discord community](https://discord.com/invite/ZRm8du7vn4) for updates and news!
+Please join our [discord community](https://discord.opendaw.studio) for updates and news!
 
 ## Known Issues
 
@@ -9,7 +9,7 @@ Please join our [discord community](https://discord.com/invite/ZRm8du7vn4) for u
 ### General
 
 * Some features in openDAW may be unpolished or not functional yet.
-* No backward compatibility guaranteed. New studio versions may invalidate old project files.
+* No backward compatibility is guaranteed. New studio versions may invalidate old project files.
 
 ### Audio Engine
 

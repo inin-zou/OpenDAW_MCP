@@ -21,6 +21,7 @@ export class AudioDevices {
                     : error.constraint
                 : String(error))
         }
+        await this.updateInputList()
         return stream
     }
 

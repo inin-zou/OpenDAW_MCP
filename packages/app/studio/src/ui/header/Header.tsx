@@ -13,6 +13,7 @@ import {IconSymbol} from "@opendaw/studio-adapters"
 import {Html} from "@opendaw/lib-dom"
 import {MenuItem} from "@/ui/model/menu-item"
 import {Colors, MidiDevices} from "@opendaw/studio-core"
+import {Manuals} from "@/ui/pages/Manuals"
 
 const className = Html.adoptStyleSheet(css, "Header")
 
@@ -39,10 +40,16 @@ export const Header = ({lifecycle, service}: Construct) => {
                     .setRuntimeChildrenProcedure(parent => {
                         const helpVisible = service.layout.helpVisible
                         return parent.addMenuItem(
-                            MenuItem.default({label: "Visible Hints & Tooltips", checked: helpVisible.getValue()})
-                                .setTriggerProcedure(() => helpVisible.setValue(!helpVisible.getValue())),
-                            MenuItem.default({label: "Manuals", separatorBefore: true})
-                                .setTriggerProcedure(() => RouteLocation.get().navigateTo("/manuals/"))
+                            MenuItem.header({label: "Manuals", icon: IconSymbol.OpenDAW, color: Colors.green}),
+                            ...Manuals.slice(1).map(([label, url]) => MenuItem.default({
+                                label,
+                                checked: RouteLocation.get().path === url
+                            }).setTriggerProcedure(() => RouteLocation.get().navigateTo(url))),
+                            MenuItem.default({
+                                label: "Visible Hints & Tooltips",
+                                checked: helpVisible.getValue(),
+                                separatorBefore: true
+                            }).setTriggerProcedure(() => helpVisible.setValue(!helpVisible.getValue()))
                         )
                     })} appearance={{color: Colors.green, tinyTriangle: true}}>
                     <Icon symbol={IconSymbol.Help}/>
