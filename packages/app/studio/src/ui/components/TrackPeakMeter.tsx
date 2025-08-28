@@ -53,7 +53,9 @@ export const TrackPeakMeter = ({lifecycle, peaksInDb}: Construct) => {
                 peakHold.value -= 0.75
             }
             const x = Math.ceil(actualWidth * mapping.x(peakHold.value))
-            context.fillRect(x, index * (h + 1), 1, h - 1)
+            if (x > 0) {
+                context.fillRect(x, index * (h + 1), 1, h - 1)
+            }
         })
     })
     lifecycle.ownAll(
