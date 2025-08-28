@@ -16,6 +16,7 @@ import {TrackPeakMeter} from "@/ui/components/TrackPeakMeter"
 import {gainToDb} from "@opendaw/lib-dsp"
 import {StudioService} from "@/service/StudioService"
 import {TextTooltip} from "@/ui/surface/TextTooltip"
+import {Button} from "@/ui/components/Button"
 
 const className = Html.adoptStyleSheet(css, "AudioUnitChannelControls")
 
@@ -117,14 +118,17 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
                 </div>
                 <div className="channel-capture">
                     {captureOption.ifSome(capture => {
-                        const checkbox: HTMLElement = (
-                            <Checkbox lifecycle={lifecycle}
-                                      model={capture.armed}
-                                      appearance={{activeColor: Colors.red, framed: true}}>
+                        const button: HTMLElement = (
+                            <Button lifecycle={lifecycle}
+                                    onClick={({shiftKey}) => captureDevices.setArm(capture, !shiftKey)}
+                                    appearance={{activeColor: Colors.red, framed: true}}>
                                 <Icon symbol={IconSymbol.Record}/>
-                            </Checkbox>)
-                        lifecycle.own(TextTooltip.default(checkbox, () => capture.label))
-                        return checkbox
+                            </Button>)
+                        lifecycle.ownAll(
+                            TextTooltip.default(button, () => capture.label),
+                            capture.armed.catchupAndSubscribe(owner => button.classList.toggle("active", owner.getValue()))
+                        )
+                        return button
                     })}
                 </div>
             </header>

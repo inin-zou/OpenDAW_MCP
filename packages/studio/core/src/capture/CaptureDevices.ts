@@ -31,6 +31,16 @@ export class CaptureDevices implements Terminable {
 
     get(uuid: UUID.Format): Option<Capture> {return this.#captures.opt(uuid)}
 
+    setArm(subject: Capture, exclusive: boolean): void {
+        const arming = !subject.armed.getValue()
+        subject.armed.setValue(arming)
+        if (exclusive) {
+            this.#captures.values()
+                .filter(capture => subject !== capture)
+                .forEach(capture => capture.armed.setValue(false))
+        }
+    }
+
     filterArmed(): ReadonlyArray<Capture> {
         return this.#captures.values()
             .filter(capture => capture.armed.getValue() && capture.audioUnitBox.input.pointerHub.nonEmpty())
