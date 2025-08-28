@@ -6,6 +6,5 @@ export const Manuals: ReadonlyArray<[string, string]> = [
     ["Private File System", "/manuals/private-file-system"],
     ["Firefox Midi", "/manuals/firefox-midi"],
     ["Permissions", "/manuals/permissions"],
-    ["Dev Log", "/manuals/dev-log"],
     ["Tech Stack", "/manuals/tech-stack"]
 ]

@@ -2,43 +2,75 @@
 
 ## Toolchain
 
-* [Vite](https://vite.dev)
-* [Typescript](https://www.typescriptlang.org)
+* Node.js + npm (monorepo package manager)
+* [Vite](https://vite.dev) (dev server & build)
+* [Typescript](https://www.typescriptlang.org) 5.9
 * [Sass](https://sass-lang.com)
+* [Vitest](https://vitest.dev) (unit tests)
+* [ESLint](https://eslint.org) + [@typescript-eslint](https://typescript-eslint.io) + [eslint-config-prettier](https://github.com/prettier/eslint-config-prettier)
+* [Prettier](https://prettier.io)
+* [Turbo](https://turbo.build) (incremental tasks)
+* [Lerna](https://lerna.js.org) (workspace orchestration)
+* ts-node / tsx (scripts & tooling)
+* Vite plugins: cross-origin isolation, compression
+
+## Monorepo
+
+The repository is a multi-package workspace managed with npm workspaces, Turbo, and Lerna:
+
+- Shared TypeScript config via @opendaw/typescript-config
+- Consistent linting via @opendaw/eslint-config
+- CI-friendly caching and parallel builds via Turbo
 
 ## Libraries
 
 openDAW uses minimal external dependencies, avoiding hidden behaviors from bulky UI frameworks.
 
-Each in-house library has a clear, focused purpose. [github repository](https://github.com/andremichelle/opendaw-lib)
-
-### Dependency Table
-
-| Library       | Dependencies                        |
-|---------------|-------------------------------------|
-| **std**       | none                                |
-| **dsp**       | std                                 |
-| **dom**       | std                                 |
-| **jsx**       | std, dom                            |
-| **runtime**   | std                                 |
-| **box**       | std, dom, runtime                   |
-| **box-forge** | std, dom, box                       |
-| **fusion**    | std, dom, box, runtime (all peered) |
+Each in-house library has a clear, focused purpose.
 
 ### In-House Runtime
 
-* std (Core)
+* std (Core utilities, Option/UUID/Observable)
 * dsp (DSP & Sequencing)
 * dom (DOM Integration)
 * jsx ([JSX](https://en.wikipedia.org/wiki/JSX_(JavaScript)) Integration)
-* runtime (Runtime and Scheduling)
-
-### In-House Data Management
-
+* lib-midi (MIDI utilities)
+* lib-xml (XML IO)
+* lib-dawproject (DAWproject app agnostic IO)
+* runtime (Runtime utilities, scheduling, network helpers)
 * box (Runtime Immutable Data Graph)
-* box-forge (Box Code Generator)
+* box-forge (Box SourceCode Generator)
+* fusion (Composition utilities)
+* studio-core (Core studio domain)
+* studio-boxes / studio-forge-boxes (predefined boxes & generators)
+* studio-adapters (adapters for audio/sample/media)
+* studio-core-processors (AudioWorklet/processors)
+* studio-core-workers (Web Workers)
+
+### Dependency Table
+
+| Library                    | Dependencies                 |
+|----------------------------|------------------------------|
+| **std**                    | none                         |
+| **dsp**                    | std                          |
+| **dom**                    | std                          |
+| **jsx**                    | std, dom                     |
+| **runtime**                | std                          |
+| **box**                    | std, dom, runtime            |
+| **box-forge**              | std, dom, box                |
+| **fusion**                 | std, dom, box, runtime       |
+| **lib-midi**               | std                          |
+| **lib-xml**                | std                          |
+| **lib-dawproject**         | std, lib-xml                 |
+| **studio-core**            | std, runtime, box, dsp, dom  |
+| **studio-boxes**           | std, box, studio-core        |
+| **studio-forge-boxes**     | std, box-forge, studio-boxes |
+| **studio-adapters**        | std, runtime                 |
+| **studio-core-processors** | std, dsp, runtime            |
+| **studio-core-workers**    | std, runtime                 |
 
 ### External
 
 * [jszip](https://www.npmjs.com/package/jszip) (Pack & Unpack Zip-Files)
-* [markdown-it](https://www.npmjs.com/package/markdown-it) (Markdown parser)
+* [markdown-it](https://www.npmjs.com/package/markdown-it) + markdown-it-table (Markdown parsing/rendering)
+* [d3-force](https://github.com/d3/d3-force) and [force-graph](https://github.com/vasturiano/force-graph) (graph/layout)
