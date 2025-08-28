@@ -14,7 +14,7 @@ request.
     - Search for `dom.webmidi.enabled`.
     - Ensure it is set to `true`. If not, double-click to enable it.
     - Search for `privacy.resistFingerprinting` (if enabled, it can block MIDI access).
-    - Set `privacy.resistFingerprinting` to `false` if you trust the site.
+    - Set `privacy.resistFingerprinting` to `false`.
 
 3. **Verify Device Detection**
     - Check if your OS detects the MIDI device.

@@ -2,17 +2,15 @@
 
 ## Toolchain
 
-* Node.js + npm (monorepo package manager)
+* [Node.js](https://nodejs.org) (package manager)
 * [Vite](https://vite.dev) (dev server & build)
-* [Typescript](https://www.typescriptlang.org) 5.9
-* [Sass](https://sass-lang.com)
 * [Vitest](https://vitest.dev) (unit tests)
+* [Typescript](https://www.typescriptlang.org)
+* [Sass](https://sass-lang.com)
 * [ESLint](https://eslint.org) + [@typescript-eslint](https://typescript-eslint.io) + [eslint-config-prettier](https://github.com/prettier/eslint-config-prettier)
 * [Prettier](https://prettier.io)
 * [Turbo](https://turbo.build) (incremental tasks)
 * [Lerna](https://lerna.js.org) (workspace orchestration)
-* ts-node / tsx (scripts & tooling)
-* Vite plugins: cross-origin isolation, compression
 
 ## Monorepo
 
@@ -73,4 +71,4 @@ Each in-house library has a clear, focused purpose.
 
 * [jszip](https://www.npmjs.com/package/jszip) (Pack & Unpack Zip-Files)
 * [markdown-it](https://www.npmjs.com/package/markdown-it) + markdown-it-table (Markdown parsing/rendering)
-* [d3-force](https://github.com/d3/d3-force) and [force-graph](https://github.com/vasturiano/force-graph) (graph/layout)
+* [d3-force](https://github.com/d3/d3-force) and [force-graph](https://github.com/vasturiano/force-graph) (graph/layout) < dynamic import
