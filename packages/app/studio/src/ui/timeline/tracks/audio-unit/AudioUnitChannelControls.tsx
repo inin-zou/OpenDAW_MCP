@@ -126,7 +126,8 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
                             </Button>)
                         lifecycle.ownAll(
                             TextTooltip.default(button, () => capture.label),
-                            capture.armed.catchupAndSubscribe(owner => button.classList.toggle("active", owner.getValue()))
+                            capture.armed.catchupAndSubscribe(owner =>
+                                button.classList.toggle("active", owner.getValue()))
                         )
                         return button
                     })}

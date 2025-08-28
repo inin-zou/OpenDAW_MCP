@@ -34,7 +34,7 @@ export class CaptureDevices implements Terminable {
     setArm(subject: Capture, exclusive: boolean): void {
         const arming = !subject.armed.getValue()
         subject.armed.setValue(arming)
-        if (exclusive) {
+        if (arming && exclusive) {
             this.#captures.values()
                 .filter(capture => subject !== capture)
                 .forEach(capture => capture.armed.setValue(false))
