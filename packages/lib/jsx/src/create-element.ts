@@ -1,4 +1,4 @@
-import {canWrite, isDefined, panic} from "@opendaw/lib-std"
+import {canWrite, isDefined, panic, safeWrite} from "@opendaw/lib-std"
 import {Html} from "@opendaw/lib-dom"
 import {SupportedSvgTags} from "./supported-svg-tags"
 import {Inject} from "./inject"
@@ -95,7 +95,13 @@ const transferAttributes = (element: DomElement, attributes: Readonly<Record<str
             if (typeof value === "string") {
                 element.setAttribute(key, value)
             } else if (isDefined(value)) {
-                Object.entries(value).forEach(([key, value]) => element.style.setProperty(key, value))
+                Object.entries(value).forEach(([key, value]) => {
+                    if (key.startsWith("--")) {
+                        element.style.setProperty(key, value) // special treatment for css variables
+                    } else {
+                        safeWrite(element.style, key, value)
+                    }
+                })
             }
         } else if (key === "ref") {
             if (value instanceof Inject.Ref) {
