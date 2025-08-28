@@ -86,8 +86,8 @@ export class ApplicationSchema {
     @Xml.Attribute("name", Xml.StringRequired)
     readonly name!: string
 
-    @Xml.Attribute("version", Xml.StringRequired)
-    readonly version!: string
+    @Xml.Attribute("version", Xml.StringOptional)
+    readonly version?: string
 }
 
 @Xml.Class("BooleanParameter")
