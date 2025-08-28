@@ -76,7 +76,6 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
             const approved = await safeExecute(project.env.dialogs?.approve, "Warning",
                 "Your browser does not support 'output latency'. This will cause timing issue while recording.",
                 "Ignore", "Cancel")
-            console.debug("approved", approved)
             if (!approved) {
                 return abort("Recording cancelled")
             }
