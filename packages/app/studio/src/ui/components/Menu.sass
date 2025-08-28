@@ -69,8 +69,9 @@ component
         padding: 0.5em 0
         margin: 0.25em 0
         white-space: nowrap
-        color: color-mix(in srgb, var(--color-blue) 75%, transparent)
-        background-color: color-mix(in srgb, var(--color-blue) 5%, transparent)
+        color: color-mix(in srgb, var(--color) 75%, transparent)
+        background-color: color-mix(in srgb, var(--color) 5%, transparent)
+        --color: var(--color-blue)
 
         > div.icon-space
           pointer-events: none

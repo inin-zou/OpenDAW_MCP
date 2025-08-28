@@ -3,12 +3,13 @@ import {Inject} from "./inject"
 
 export type DomElement = HTMLElement | SVGElement
 export type JsxValue = null | undefined | boolean | string | number | DomElement | Array<JsxValue>
+export type CSSVars = Record<`--${string}`, string>
 
 // These are all utility type to let jsx understand usual HTML and SVG elements.
 //
 type AttributeMap = {
     className?: string | Inject.ClassList
-    style?: Partial<CSSStyleDeclaration>
+    style?: Partial<CSSStyleDeclaration> | CSSVars
 }
 
 type ExtractProperties<T extends Element> = Partial<{

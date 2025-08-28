@@ -1,4 +1,4 @@
-import {canWrite, panic} from "@opendaw/lib-std"
+import {canWrite, isDefined, panic} from "@opendaw/lib-std"
 import {Html} from "@opendaw/lib-dom"
 import {SupportedSvgTags} from "./supported-svg-tags"
 import {Inject} from "./inject"
@@ -94,8 +94,8 @@ const transferAttributes = (element: DomElement, attributes: Readonly<Record<str
         } else if (key === "style") {
             if (typeof value === "string") {
                 element.setAttribute(key, value)
-            } else {
-                Object.assign(element.style, <CSSStyleDeclaration>value)
+            } else if (isDefined(value)) {
+                Object.entries(value).forEach(([key, value]) => element.style.setProperty(key, value))
             }
         } else if (key === "ref") {
             if (value instanceof Inject.Ref) {
