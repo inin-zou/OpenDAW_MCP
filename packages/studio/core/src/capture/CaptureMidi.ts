@@ -68,7 +68,10 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
 
     get label(): string {
         return MidiDevices.get().mapOr(midiAccess => this.deviceId.getValue().match({
-            none: () => this.armed.getValue() ? "Listening to all MIDI devices" : "Arm to listen to MIDI device...",
+            none: () => this.armed.getValue() ? this.#filterChannel.match({
+                none: () => `Listening to all devices`,
+                some: channel => `Listening to all devices on channel '${channel}'`
+            }) : "Arm to listen to MIDI device...",
             some: value => {
                 const device = midiAccess.inputs.get(value)
                 if (isUndefined(device)) {return "⚠️ Could not find device"}
