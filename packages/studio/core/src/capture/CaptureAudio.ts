@@ -72,7 +72,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
 
     async prepareRecording({audioContext, project}: RecordingContext): Promise<void> {
         console.debug("outputLatency", audioContext.outputLatency)
-        if (isUndefined(audioContext.outputLatency) || true) {
+        if (isUndefined(audioContext.outputLatency)) {
             const approved = await safeExecute(project.env.dialogs?.approve, "Warning",
                 "Your browser does not support 'output latency'. This will cause timing issue while recording.",
                 "Ignore", "Cancel")
