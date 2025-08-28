@@ -10,7 +10,7 @@ export * from "./samples/SampleProvider"
 export * from "./capture/Capture"
 export * from "./capture/CaptureAudio"
 export * from "./capture/CaptureMidi"
-export * from "./capture/CaptureManager"
+export * from "./capture/CaptureDevices"
 export * from "./capture/Recording"
 export * from "./capture/RecordingContext"
 

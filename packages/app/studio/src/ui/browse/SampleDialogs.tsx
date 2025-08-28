@@ -2,7 +2,7 @@ import {Dialog} from "@/ui/components/Dialog"
 import {IconSymbol, Sample} from "@opendaw/studio-adapters"
 import {Surface} from "@/ui/surface/Surface"
 import {createElement} from "@opendaw/lib-jsx"
-import {showInfoDialog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 import {isDefined, UUID} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {Errors, Files} from "@opendaw/lib-dom"
@@ -85,12 +85,12 @@ export namespace SampleDialogs {
         const approve = () => {
             const name = inputName.value
             if (name.trim().length < 3) {
-                showInfoDialog({headline: "Invalid Name", message: "Must be at least 3 letters long."})
+                Dialogs.info({headline: "Invalid Name", message: "Must be at least 3 letters long."}).finally()
                 return false
             }
             const bpm = parseFloat(inputBpm.value)
             if (isNaN(bpm)) {
-                showInfoDialog({headline: "Invalid Bpm", message: "Must be a number."})
+                Dialogs.info({headline: "Invalid Bpm", message: "Must be a number."}).finally()
                 return false
             }
             sample.name = name

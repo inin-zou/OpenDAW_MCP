@@ -17,7 +17,7 @@ import {Promises} from "@opendaw/lib-runtime"
 import {AudioUnitBox, CaptureMidiBox} from "@opendaw/studio-boxes"
 import {MidiDevices} from "../MidiDevices"
 import {Capture} from "./Capture"
-import {CaptureManager} from "./CaptureManager"
+import {CaptureDevices} from "./CaptureDevices"
 import {RecordMidi} from "./RecordMidi"
 import {RecordingContext} from "./RecordingContext"
 
@@ -28,7 +28,7 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
     #filterChannel: Option<byte> = Option.None
     #streaming: Option<Subscription> = Option.None
 
-    constructor(manager: CaptureManager, audioUnitBox: AudioUnitBox, captureMidiBox: CaptureMidiBox) {
+    constructor(manager: CaptureDevices, audioUnitBox: AudioUnitBox, captureMidiBox: CaptureMidiBox) {
         super(manager, audioUnitBox, captureMidiBox)
 
         this.#streamGenerator = Promises.sequential(() => this.#updateStream())

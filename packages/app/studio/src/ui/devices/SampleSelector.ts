@@ -1,6 +1,6 @@
 import {AudioFileBox} from "@opendaw/studio-boxes"
 import {isDefined, Option, Terminable, UUID} from "@opendaw/lib-std"
-import {showProcessMonolog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 import {Events, Files} from "@opendaw/lib-dom"
 import {Promises} from "@opendaw/lib-runtime"
 import {StudioService} from "@/service/StudioService"
@@ -108,7 +108,7 @@ export class SampleSelector {
             drag: (_event: DragEvent, data: AnyDragData): boolean => data.type === "sample" || data.type === "file",
             drop: async (_event: DragEvent, data: AnyDragData): Promise<void> => {
                 if (!(data.type === "sample" || data.type === "file")) {return}
-                const dialog = showProcessMonolog("Import Sample")
+                const dialog = Dialogs.processMonolog("Import Sample")
                 let sample: Sample
                 if (data.type === "sample") {
                     sample = data.sample

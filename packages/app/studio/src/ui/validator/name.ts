@@ -1,4 +1,4 @@
-import {showInfoDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {Result, Validator} from "./validator"
 
 export const NameValidator: Validator<string> = {
@@ -8,7 +8,7 @@ export const NameValidator: Validator<string> = {
             match.success(trimmed)
         } else {
             match.failure?.call(null)
-            showInfoDialog({message: "A name must have one to 64 chararacters.", origin: origin})
+            Dialogs.info({message: "A name must have one to 64 chararacters.", origin: origin}).finally()
         }
     }
 }

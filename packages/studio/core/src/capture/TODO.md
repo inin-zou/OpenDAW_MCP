@@ -2,6 +2,8 @@
 
 ## Bugs
 
+* Allow dropping devices in the timeline header column
+
 ## Next
 
 * Fully implement capture
@@ -21,7 +23,7 @@
 
 ## Done
 
-* ~~Inform the user if there is no outputLatency
+* ~~Inform the user if there is no outputLatency~~
 * ~~Implement monitor~~
     * ~~If audio, show peak-meter~~
 * ~~Handle external changes to the project (deletion of audio-units, tracks, regions, etc. while recording)~~

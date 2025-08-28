@@ -11,7 +11,7 @@ import {
 import {ProjectDialogs} from "@/project/ProjectDialogs"
 import {Projects} from "@/project/Projects"
 import {ProjectMeta} from "@/project/ProjectMeta"
-import {showApproveDialog, showInfoDialog, showProcessDialog, showProcessMonolog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 import {StudioService} from "./StudioService"
 import {Promises} from "@opendaw/lib-runtime"
 import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes.ts"
@@ -71,7 +71,7 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
 
     async loadTemplate(name: string): Promise<unknown> {
         console.debug(`load '${name}'`)
-        const handler = showProcessMonolog("Loading Template...")
+        const handler = Dialogs.processMonolog("Loading Template...")
         return fetch(`templates/${name}.od`)
             .then(res => res.arrayBuffer())
             .then(arrayBuffer => {
@@ -82,7 +82,7 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
             })
             .catch(reason => {
                 console.warn("Could not load template", reason)
-                showInfoDialog({headline: "Could not load template", message: "Please try again."})
+                Dialogs.info({headline: "Could not load template", message: "Please try again."}).finally()
             })
             .finally(() => handler.close())
     }
@@ -90,10 +90,10 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
     async exportZip() {
         return this.#session.getValue().ifSome(async session => {
             const progress = new DefaultObservableValue(0.0)
-            const processDialog = showProcessDialog("Bundling Project...", progress)
+            const processDialog = Dialogs.progress("Bundling Project...", progress)
             const arrayBuffer = await Projects.exportBundle(session, progress)
             processDialog.close()
-            const {status} = await Promises.tryCatch(showApproveDialog({
+            const {status} = await Promises.tryCatch(Dialogs.approve({
                 headline: "Save Project Bundle",
                 message: "",
                 approveText: "Save"
@@ -107,7 +107,7 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
                 })
             } catch (error) {
                 if (!Errors.isAbort(error)) {
-                    showInfoDialog({headline: "Could not export project", message: String(error)})
+                    Dialogs.info({headline: "Could not export project", message: String(error)}).finally()
                 }
             }
         })
@@ -120,7 +120,7 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
             this.#session.setValue(Option.wrap(session))
         } catch (error) {
             if (!Errors.isAbort(error)) {
-                showInfoDialog({headline: "Could not load project", message: String(error)})
+                Dialogs.info({headline: "Could not load project", message: String(error)}).finally()
             }
         }
     }
@@ -133,10 +133,10 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
                     suggestedName: "project.od",
                     types: [FilePickerAcceptTypes.ProjectFileType]
                 })
-                showInfoDialog({message: `Project '${fileName}' saved successfully!`})
+                Dialogs.info({message: `Project '${fileName}' saved successfully!`}).finally()
             } catch (error) {
                 if (!Errors.isAbort(error)) {
-                    showInfoDialog({message: `Error saving project: ${error}`})
+                    Dialogs.info({message: `Error saving project: ${error}`}).finally()
                 }
             }
         })
@@ -149,7 +149,7 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
             this.#setSession(this.#service, UUID.generate(), project, ProjectMeta.init(file.name), Option.None)
         } catch (error) {
             if (!Errors.isAbort(error)) {
-                showInfoDialog({headline: "Could not load project", message: String(error)}).then()
+                Dialogs.info({headline: "Could not load project", message: String(error)}).finally()
             }
         }
     }

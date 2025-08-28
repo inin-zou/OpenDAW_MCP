@@ -4,7 +4,7 @@ import {assert, Option, Terminable, Terminator, UUID} from "@opendaw/lib-std"
 import {PanelType} from "@/ui/workspace/PanelType.ts"
 import {PanelState} from "@/ui/workspace/PanelState.ts"
 import {Surface} from "../surface/Surface"
-import {showInfoDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {Html} from "@opendaw/lib-dom"
 
 export type PlaceHolder = {
@@ -79,7 +79,7 @@ export class PanelContent {
                 .new(640, 480, this.#id, panelState.name)
                 .match({
                     none: () => {
-                        showInfoDialog({message: "Could not open window. Check popup blocker?"})
+                        Dialogs.info({message: "Could not open window. Check popup blocker?"}).finally()
                     },
                     some: surface => {
                         this.#terminator.terminate()

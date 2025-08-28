@@ -11,19 +11,19 @@ import {AudioUnitBox} from "@opendaw/studio-boxes"
 import {CaptureBox} from "@opendaw/studio-adapters"
 
 import {RecordingContext} from "./RecordingContext"
-import {CaptureManager} from "./CaptureManager"
+import {CaptureDevices} from "./CaptureDevices"
 
 export abstract class Capture<BOX extends CaptureBox = CaptureBox> implements Terminable {
     readonly #terminator = new Terminator()
 
-    readonly #manager: CaptureManager
+    readonly #manager: CaptureDevices
     readonly #audioUnitBox: AudioUnitBox
     readonly #captureBox: BOX
 
     readonly #deviceId: MutableObservableValue<Option<string>>
     readonly #armed: DefaultObservableValue<boolean>
 
-    protected constructor(manager: CaptureManager, audioUnitBox: AudioUnitBox, captureBox: BOX) {
+    protected constructor(manager: CaptureDevices, audioUnitBox: AudioUnitBox, captureBox: BOX) {
         this.#manager = manager
         this.#audioUnitBox = audioUnitBox
         this.#captureBox = captureBox
@@ -48,7 +48,7 @@ export abstract class Capture<BOX extends CaptureBox = CaptureBox> implements Te
     abstract startRecording(context: RecordingContext): Terminable
 
     get uuid(): UUID.Format {return this.#audioUnitBox.address.uuid}
-    get manager(): CaptureManager {return this.#manager}
+    get manager(): CaptureDevices {return this.#manager}
     get audioUnitBox(): AudioUnitBox {return this.#audioUnitBox}
     get captureBox(): BOX {return this.#captureBox}
     get armed(): MutableObservableValue<boolean> {return this.#armed}

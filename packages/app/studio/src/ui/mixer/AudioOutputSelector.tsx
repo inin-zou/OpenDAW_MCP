@@ -7,7 +7,7 @@ import {IconSymbol} from "@opendaw/studio-adapters"
 import {Dialog} from "@/ui/components/Dialog"
 import {AudioOutputDevices} from "@/ui/mixer/AudioOutputDevices"
 import {Promises} from "@opendaw/lib-runtime"
-import {showInfoDialog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 import {TextScroller} from "@/ui/TextScroller"
 import {Lifecycle} from "@opendaw/lib-std"
 
@@ -22,7 +22,7 @@ export const AudioOutputSelector = ({lifecycle, output}: Construct) => {
     if (!output.switchable) {
         return (
             <div className={className}
-                 onclick={() => showInfoDialog({
+                 onclick={() => Dialogs.info({
                      headline: "Cannot Switch Audio-Output",
                      message: "Only Chrome supports this feature."
                  })}>
@@ -55,7 +55,7 @@ export const AudioOutputSelector = ({lifecycle, output}: Construct) => {
                                             const {status, error} = await Promises.tryCatch(output.setOutput(device))
                                             dialog.close()
                                             if (status === "rejected") {
-                                                await showInfoDialog({
+                                                await Dialogs.info({
                                                     headline: "Could Not Change Audio-Output",
                                                     message: String(error)
                                                 })

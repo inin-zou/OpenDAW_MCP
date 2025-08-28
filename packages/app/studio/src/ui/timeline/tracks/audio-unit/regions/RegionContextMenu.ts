@@ -14,7 +14,7 @@ import {exportNotesToMidiFile} from "@/ui/timeline/editors/notes/NoteUtils"
 import {ColorMenu} from "@/ui/timeline/ColorMenu"
 import {BPMTools} from "@opendaw/lib-dsp"
 import {Browser} from "@opendaw/lib-dom"
-import {showInfoDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {StudioService} from "@/service/StudioService"
 
 type Construct = {
@@ -109,7 +109,8 @@ export const installRegionContextMenu =
                             if (Browser.isLocalHost()) {
                                 console.debug(bpm)
                             } else {
-                                showInfoDialog({headline: "BPMTools", message: `${bpm.toFixed(3)} BPM`}).then()
+                                Dialogs.info({headline: "BPMTools", message: `${bpm.toFixed(3)} BPM`})
+                                    .finally()
                             }
                         })
                     }

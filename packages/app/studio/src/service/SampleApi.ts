@@ -1,6 +1,6 @@
 import {Arrays, asDefined, DefaultObservableValue, panic, Procedure, tryCatch, unitValue, UUID} from "@opendaw/lib-std"
 import {AudioData, Sample, SampleMetaData} from "@opendaw/studio-adapters"
-import {showInfoDialog, showProcessDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {network, Promises} from "@opendaw/lib-runtime"
 
 const username = "openDAW"
@@ -71,7 +71,7 @@ export namespace SampleApi {
 
     export const upload = async (arrayBuffer: ArrayBuffer, metaData: SampleMetaData) => {
         const progress = new DefaultObservableValue(0.0)
-        const dialogHandler = showProcessDialog("Uploading", progress)
+        const dialogHandler = Dialogs.progress("Uploading", progress)
         const formData = new FormData()
         Object.entries(metaData).forEach(([key, value]) => formData.set(key, String(value)))
         const params = new URLSearchParams(location.search)
@@ -89,13 +89,13 @@ export namespace SampleApi {
             if (xhr.readyState === 4) {
                 dialogHandler.close()
                 if (xhr.status === 200) {
-                    showInfoDialog({message: xhr.responseText})
+                    Dialogs.info({message: xhr.responseText})
                 } else {
                     const {
                         status,
                         value
                     } = tryCatch(() => JSON.parse(xhr.responseText).message ?? "Unknown error message")
-                    showInfoDialog({
+                    Dialogs.info({
                         headline: "Upload Failure",
                         message: status === "success" ? value : "Unknown error"
                     })

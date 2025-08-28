@@ -1,11 +1,10 @@
 import {ClipModifier} from "@/ui/timeline/tracks/audio-unit/clips/ClipModifier.ts"
 import {Editing} from "@opendaw/lib-box"
 import {Arrays, asDefined, clamp, int, Option, panic, Selection, ValueAxis} from "@opendaw/lib-std"
-import {AnyClipBoxAdapter} from "@opendaw/studio-adapters"
+import {AnyClipBox, AnyClipBoxAdapter} from "@opendaw/studio-adapters"
 import {TracksManager} from "@/ui/timeline/tracks/audio-unit/TracksManager.ts"
-import {AnyClipBox} from "@opendaw/studio-adapters"
 import {ClipModifyStrategy} from "@/ui/timeline/tracks/audio-unit/clips/ClipModifyStrategy.ts"
-import {showInfoDialog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 import {Dragging} from "@opendaw/lib-dom"
 
 class UnselectedModifyStrategy implements ClipModifyStrategy {
@@ -129,7 +128,7 @@ export class ClipMoveModifier implements ClipModifier {
             return trackAdapter.accepts(adapter)
         })) {
             this.cancel()
-            showInfoDialog({message: "Cannot move clip to different track type."}).then()
+            Dialogs.info({message: "Cannot move clip to different track type."}).then()
             return
         }
         const occupied: ReadonlyArray<Array<true>> = Arrays.create(() => [], tracks.length)

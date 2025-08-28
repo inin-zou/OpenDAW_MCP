@@ -38,7 +38,7 @@ import {ProjectEnv} from "./ProjectEnv"
 import {Mixer} from "./Mixer"
 import {ProjectApi} from "./ProjectApi"
 import {ProjectMigration} from "./ProjectMigration"
-import {CaptureManager} from "./capture/CaptureManager"
+import {CaptureDevices} from "./capture/CaptureDevices"
 import {EngineFacade} from "./EngineFacade"
 import {EngineWorklet} from "./EngineWorklet"
 import {Worklets} from "./Worklets"
@@ -109,7 +109,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
     readonly timelineBox: TimelineBox
 
     readonly api: ProjectApi
-    readonly captureManager: CaptureManager
+    readonly captureDevices: CaptureDevices
     readonly editing: Editing
     readonly selection: VertexSelection
     readonly boxAdapters: BoxAdapters
@@ -135,7 +135,6 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
         this.timelineBox = timelineBox
 
         this.api = new ProjectApi(this)
-        this.captureManager = this.#terminator.own(new CaptureManager(this))
         this.editing = new Editing(this.boxGraph)
         this.selection = new VertexSelection(this.editing, this.boxGraph)
         this.parameterFieldAdapters = new ParameterFieldAdapters()
@@ -144,6 +143,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
         this.userEditingManager.follow(this.userInterfaceBox)
         this.selection.switch(this.userInterfaceBox.selection)
         this.liveStreamReceiver = this.#terminator.own(new LiveStreamReceiver())
+        this.captureDevices = this.#terminator.own(new CaptureDevices(this))
         this.mixer = new Mixer(this.rootBoxAdapter.audioUnits)
 
         console.debug(`Project was created on ${this.rootBoxAdapter.created.toString()}`)

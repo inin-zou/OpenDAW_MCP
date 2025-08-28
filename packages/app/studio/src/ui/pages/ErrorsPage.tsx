@@ -3,7 +3,7 @@ import {Await, createElement, Group, PageContext, PageFactory} from "@opendaw/li
 import {StudioService} from "@/service/StudioService.ts"
 import {Html} from "@opendaw/lib-dom"
 import {EmptyExec, Strings, TimeSpan} from "@opendaw/lib-std"
-import {showDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {LogBuffer} from "@/errors/LogBuffer.ts"
 import {Logs} from "@/ui/pages/errors/Logs.tsx"
 import {Stack} from "@/ui/pages/errors/Stack.tsx"
@@ -65,7 +65,7 @@ export const ErrorsPage: PageFactory<StudioService> = ({}: PageContext<StudioSer
                                            <div>{entry.script_tags}</div>
                                            <div className="browser" title={userAgent}>{userAgent}</div>
                                            <div style={{cursor: "pointer"}}
-                                                onclick={() => showDialog({
+                                                onclick={() => Dialogs.show({
                                                     headline: "Error Stack",
                                                     content: (<Stack stack={entry.error_stack}/>)
                                                 }).catch(EmptyExec)}>
@@ -74,7 +74,7 @@ export const ErrorsPage: PageFactory<StudioService> = ({}: PageContext<StudioSer
                                            <div style={{cursor: "pointer"}}
                                                 onclick={() => {
                                                     const entries = JSON.parse(entry.logs) as Array<LogBuffer.Entry>
-                                                    return showDialog({
+                                                    return Dialogs.show({
                                                         headline: "Logs",
                                                         content: (
                                                             <Logs errorTime={errorTime}

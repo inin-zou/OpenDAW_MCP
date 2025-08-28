@@ -16,7 +16,7 @@ export const installTrackHeaderMenu = (service: StudioService,
     const acceptMidi = audioUnitBoxAdapter.captureBox.mapOr(box => isInstanceOf(box, CaptureMidiBox), false)
     const trackType = DeviceAccepts.toTrackType(accepts)
     const {project} = service
-    const {captureManager, editing, selection} = project
+    const {captureDevices, editing, selection} = project
     return parent.addMenuItem(
         MenuItem.default({label: "Enabled", checked: trackBoxAdapter.enabled.getValue()})
             .setTriggerProcedure(() => editing.modify(() => trackBoxAdapter.enabled.toggle())),
@@ -31,7 +31,7 @@ export const installTrackHeaderMenu = (service: StudioService,
                 box.target.refer(audioUnitBoxAdapter.box)
             })
         })),
-        MenuCapture.createItem(audioUnitBoxAdapter, trackBoxAdapter, editing, captureManager.get(audioUnitBoxAdapter.uuid)),
+        MenuCapture.createItem(audioUnitBoxAdapter, trackBoxAdapter, editing, captureDevices.get(audioUnitBoxAdapter.uuid)),
         MenuItem.default({label: "Move", separatorBefore: true})
             .setRuntimeChildrenProcedure(parent => parent.addMenuItem(
                 MenuItem.default({label: "Track 1 Up", selectable: trackBoxAdapter.indexField.getValue() > 0})

@@ -1,7 +1,7 @@
 import {encodeWavFloat, Project, Worklets} from "@opendaw/studio-core"
 import {PPQN} from "@opendaw/lib-dsp"
 import {DefaultObservableValue, int, Option, panic, TimeSpan} from "@opendaw/lib-std"
-import {showApproveDialog, showProcessDialog, showProcessMonolog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {Promises, Wait} from "@opendaw/lib-runtime"
 import {AnimationFrame, Errors, Files} from "@opendaw/lib-dom"
 import {ProjectMeta} from "@/project/ProjectMeta"
@@ -17,7 +17,7 @@ export namespace AudioOfflineRenderer {
         const project = source.copy()
         const numStems = ExportStemsConfiguration.countStems(optExportConfiguration)
         const progress = new DefaultObservableValue(0.0)
-        const dialogHandler = showProcessDialog("Rendering...", progress)
+        const dialogHandler = Dialogs.progress("Rendering...", progress)
         project.boxGraph.beginTransaction()
         project.timelineBox.loopArea.enabled.setValue(false)
         project.boxGraph.endTransaction()
@@ -44,7 +44,7 @@ export namespace AudioOfflineRenderer {
     }
 
     const saveWavFile = async (buffer: AudioBuffer, meta: ProjectMeta) => {
-        const approveResult = await Promises.tryCatch(showApproveDialog({
+        const approveResult = await Promises.tryCatch(Dialogs.approve({
             headline: "Save Wav-File",
             message: "",
             approveText: "Save"
@@ -59,7 +59,7 @@ export namespace AudioOfflineRenderer {
     }
 
     const saveZipFile = async (buffer: AudioBuffer, meta: ProjectMeta, trackNames: ReadonlyArray<string>) => {
-        const dialogHandler = showProcessMonolog("Creating Zip File...")
+        const dialogHandler = Dialogs.processMonolog("Creating Zip File...")
         const numStems = buffer.numberOfChannels >> 1
         const zip = new JSZip()
         for (let stemIndex = 0; stemIndex < numStems; stemIndex++) {
@@ -74,7 +74,7 @@ export namespace AudioOfflineRenderer {
             compressionOptions: {level: 6}
         })
         dialogHandler.close()
-        const approveResult = await Promises.tryCatch(showApproveDialog({
+        const approveResult = await Promises.tryCatch(Dialogs.approve({
             headline: "Save Zip",
             message: `Size: ${arrayBuffer.byteLength >> 20}M`,
             approveText: "Save"

@@ -4,7 +4,7 @@ import {EmptyExec, Procedure, StringComparator, TimeSpan, UUID} from "@opendaw/l
 import {Projects} from "@/project/Projects"
 import {Icon} from "@/ui/components/Icon"
 import {IconSymbol} from "@opendaw/studio-adapters"
-import {showApproveDialog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 import {Await, createElement, DomElement, Frag, Group} from "@opendaw/lib-jsx"
 import {ProjectMeta} from "@/project/ProjectMeta"
 import {Html} from "@opendaw/lib-dom"
@@ -50,7 +50,7 @@ export const ProjectBrowser = ({service, select}: Construct) => {
                                        )
                                        icon.onclick = (event) => {
                                            event.stopPropagation()
-                                           showApproveDialog({
+                                           Dialogs.approve({
                                                headline: "Delete Project?",
                                                message: "Are you sure? This cannot be undone."
                                            }).then(() => service.deleteProject(uuid, meta).then(() => row.remove()), EmptyExec)

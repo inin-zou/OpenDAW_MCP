@@ -13,7 +13,7 @@ import {
 import {NoteEventBox, NoteEventCollectionBox, NoteRegionBox, TrackBox} from "@opendaw/studio-boxes"
 import {AudioUnitBoxAdapter, TrackType} from "@opendaw/studio-adapters"
 import {PPQN, ppqn} from "@opendaw/lib-dsp"
-import {showInfoDialog, showProcessDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {Promises, Wait} from "@opendaw/lib-runtime"
 import {Errors, Files} from "@opendaw/lib-dom"
 import {ColorCodes, Project} from "@opendaw/studio-core"
@@ -28,13 +28,13 @@ export namespace MidiImport {
         }
         const formatResult = tryCatch(() => MidiFile.decoder(fileResult.value).decode())
         if (formatResult.status === "failure") {
-            showInfoDialog({message: String(formatResult.error)}).then()
+            Dialogs.info({message: String(formatResult.error)}).then()
             return
         }
         const {value: format} = formatResult
         const {boxGraph, editing} = project
         const progress = new DefaultObservableValue(0.0)
-        const dialogHandler = showProcessDialog("Import Midi", progress)
+        const dialogHandler = Dialogs.progress("Import Midi", progress)
         let reuseTrackBox: Nullish<TrackBox> = Arrays.peekLast(audioUnitBoxAdapter.tracks.collection.adapters())?.box
         let trackIndex: int
         if (isDefined(reuseTrackBox)) {
@@ -116,7 +116,7 @@ export namespace MidiImport {
             modificationProcess.approve()
         } else {
             modificationProcess.revert()
-            await showInfoDialog({headline: "Error Importing Midi-File", message: String(error)})
+            await Dialogs.info({headline: "Error Importing Midi-File", message: String(error)})
         }
         dialogHandler.close()
         console.debug("finished import.")

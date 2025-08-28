@@ -2,7 +2,7 @@ import css from "./SampleUploadPage.sass?inline"
 import {createElement, PageContext, PageFactory} from "@opendaw/lib-jsx"
 import {StudioService} from "@/service/StudioService.ts"
 import {Files, Html} from "@opendaw/lib-dom"
-import {showInfoDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {SampleApi} from "@/service/SampleApi.ts"
 import {estimateBpm} from "@opendaw/lib-dsp"
 import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes.ts"
@@ -36,7 +36,7 @@ export const SampleUploadPage: PageFactory<StudioService> = ({service}: PageCont
                         if (error instanceof DOMException && error.name === "AbortError") {
                             console.debug("Caught an AbortError")
                         } else {
-                            showInfoDialog({message: String(error)})
+                            Dialogs.info({message: String(error)}).finally()
                         }
                     }
                 }}>

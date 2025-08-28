@@ -2,7 +2,7 @@ import css from "./BoxesDebugView.sass?inline"
 import {NumberComparator, UUID} from "@opendaw/lib-std"
 import {createElement} from "@opendaw/lib-jsx"
 import {BoxGraph} from "@opendaw/lib-box"
-import {showDebugBoxDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {Html} from "@opendaw/lib-dom"
 
 const className = Html.adoptStyleSheet(css, "BoxesDebugView")
@@ -24,7 +24,7 @@ export const BoxesDebugView = ({boxGraph}: Construct) => {
                 </div>
                 <div className="scrollable">
                     {boxGraph.boxes().toSorted((a, b) => NumberComparator(a.creationIndex, b.creationIndex)).map(box => (
-                        <div className="box" onclick={() => showDebugBoxDialog(box)}>
+                        <div className="box" onclick={() => Dialogs.debugBox(box)}>
                             <span className="name">{box.name}</span>
                             <span className="dependencies">{box.incomingEdges().length}</span>
                             <span className="dependencies">{box.outgoingEdges().length}</span>

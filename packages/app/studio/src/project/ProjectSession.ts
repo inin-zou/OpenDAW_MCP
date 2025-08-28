@@ -1,7 +1,7 @@
 import {ProjectMeta} from "./ProjectMeta"
 import {Notifier, Observer, Option, Subscription, UUID} from "@opendaw/lib-std"
 import {Projects} from "@/project/Projects"
-import {showApproveDialog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 import {Promises} from "@opendaw/lib-runtime"
 import {MidiDeviceAccess} from "@/midi/devices/MidiDeviceAccess"
 import {StudioService} from "@/service/StudioService"
@@ -111,7 +111,7 @@ export class ProjectSession {
         const hasMidi = this.#service.midiLearning.loadFromLocalStorage(key)
         console.debug(`loadMidiConfiguration(${key}) - hasMidi: ${hasMidi}`)
         if (!MidiDeviceAccess.available().getValue() && hasMidi) {
-            const {status} = await Promises.tryCatch(showApproveDialog({
+            const {status} = await Promises.tryCatch(Dialogs.approve({
                 headline: "Midi Configuration Found",
                 approveText: "Connect",
                 message: "Connect your midi-device and click 'connect'.",

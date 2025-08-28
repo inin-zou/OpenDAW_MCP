@@ -6,7 +6,7 @@ import {Sample} from "@opendaw/studio-adapters"
 import {ColorCodes, InstrumentFactories, SampleStorage} from "@opendaw/studio-core"
 import {HTMLSelection} from "@/ui/HTMLSelection"
 import {StudioService} from "@/service/StudioService"
-import {showApproveDialog, showInfoDialog, showProcessDialog} from "../components/dialogs"
+import {Dialogs} from "../components/dialogs"
 import {Projects} from "@/project/Projects"
 import {SampleApi} from "@/service/SampleApi"
 
@@ -52,11 +52,11 @@ export class SampleService {
     async deleteSelected() {return this.deleteSamples(...this.#samples())}
 
     async deleteSamples(...samples: ReadonlyArray<Sample>) {
-        const processDialog = showProcessDialog("Checking Sample Usages", new DefaultObservableValue(0.5))
+        const processDialog = Dialogs.progress("Checking Sample Usages", new DefaultObservableValue(0.5))
         const used = await Projects.listUsedSamples()
         const online = new Set<string>((await SampleApi.all()).map(({uuid}) => uuid))
         processDialog.close()
-        const {status} = await Promises.tryCatch(showApproveDialog({
+        const {status} = await Promises.tryCatch(Dialogs.approve({
             headline: "Remove Sample(s)?",
             message: "This cannot be undone!",
             approveText: "Remove"
@@ -66,7 +66,7 @@ export class SampleService {
             const isUsed = used.has(uuid)
             const isOnline = online.has(uuid)
             if (isUsed && !isOnline) {
-                await showInfoDialog({headline: "Cannot Delete Sample", message: `${name} is used by a project.`})
+                await Dialogs.info({headline: "Cannot Delete Sample", message: `${name} is used by a project.`})
             } else {
                 await SampleStorage.remove(UUID.parse(uuid))
             }

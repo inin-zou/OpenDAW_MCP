@@ -17,9 +17,9 @@ export class Recording {
         assert(this.#instance.isEmpty(), "Recording already in progress")
         const {project} = context
         this.#prepare(project)
-        const {captureManager, engine, editing} = project
+        const {captureDevices, engine, editing} = project
         const terminator = new Terminator()
-        const captures = captureManager.filterArmed()
+        const captures = captureDevices.filterArmed()
         if (captures.length === 0) {
             this.#isRecording = false
             return warn("No track is armed for Recording")
@@ -48,8 +48,8 @@ export class Recording {
         return terminator
     }
 
-    static #prepare({api, captureManager, editing, rootBox, userEditingManager}: Project): void {
-        const captures = captureManager.filterArmed()
+    static #prepare({api, captureDevices, editing, rootBox, userEditingManager}: Project): void {
+        const captures = captureDevices.filterArmed()
         const instruments = rootBox.audioUnits.pointerHub.incoming()
             .map(({box}) => asInstanceOf(box, AudioUnitBox))
             .filter(box => box.type.getValue() === AudioUnitType.Instrument)
@@ -57,13 +57,13 @@ export class Recording {
             const {audioUnitBox} = editing
                 .modify(() => api.createInstrument(InstrumentFactories.Tape))
                 .unwrap("Could not create Tape")
-            captureManager.get(audioUnitBox.address.uuid)
+            captureDevices.get(audioUnitBox.address.uuid)
                 .unwrap("Could not unwrap capture")
                 .armed.setValue(true)
         } else if (captures.length === 0) {
             userEditingManager.audioUnit.get()
                 .ifSome(({box: {address: {uuid}}}) =>
-                    captureManager.get(uuid)
+                    captureDevices.get(uuid)
                         .ifSome(capture => capture.armed.setValue(true))) // auto arm editing audio-unit
         }
     }

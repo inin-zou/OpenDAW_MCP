@@ -41,7 +41,7 @@ import {PanelType} from "@/ui/workspace/PanelType.ts"
 import {CssUtils, Dragging, Events, Html, Keyboard} from "@opendaw/lib-dom"
 import {DragAndDrop} from "@/ui/DragAndDrop"
 import {AnyDragData} from "@/ui/AnyDragData"
-import {showProcessMonolog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 
 const className = Html.adoptStyleSheet(css, "RegionsArea")
 
@@ -189,7 +189,7 @@ export const RegionsArea = ({lifecycle, service, manager, scrollModel, scrollCon
                 return true
             },
             drop: (event: DragEvent, data: AnyDragData) => {
-                const dialog = showProcessMonolog("Import Sample")
+                const dialog = Dialogs.processMonolog("Import Sample")
                 dragAndDrop.drop(event, data).finally(() => dialog.close())
             },
             enter: (_allowDrop: boolean) => {},

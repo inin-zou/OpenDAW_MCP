@@ -1,9 +1,9 @@
 import css from "./Cover.sass?inline"
-import {EmptyExec, isDefined, Lifecycle, MutableObservableOption, panic} from "@opendaw/lib-std"
+import {isDefined, Lifecycle, MutableObservableOption, panic} from "@opendaw/lib-std"
 import {createElement} from "@opendaw/lib-jsx"
 import {Icon} from "../components/Icon"
 import {IconSymbol} from "@opendaw/studio-adapters"
-import {showInfoDialog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 import {Errors, Events, Files, Html} from "@opendaw/lib-dom"
 import {Promises} from "@opendaw/lib-runtime"
 
@@ -34,14 +34,14 @@ export const Cover = ({lifecycle, model}: Construct) => {
             const file = value?.at(0)
             if (!isDefined(file)) {return}
             if (file.size > (1 << 20) * 4) {
-                showInfoDialog({headline: "Cover", message: "Image is too large. Keep it below 4mb."}).catch(EmptyExec)
+                Dialogs.info({headline: "Cover", message: "Image is too large. Keep it below 4mb."}).finally()
                 return
             }
             const fallback = image.src
             image.onerror = () => {
                 image.onerror = null
                 image.src = fallback
-                showInfoDialog({headline: "Cover", message: `Unknown image format (${file.type}).`}).catch(EmptyExec)
+                Dialogs.info({headline: "Cover", message: `Unknown image format (${file.type}).`}).finally()
             }
             model.wrap(await file.arrayBuffer())
         })

@@ -3,7 +3,7 @@ import {App} from "@/ui/App.tsx"
 import {panic, Procedure, unitValue, UUID} from "@opendaw/lib-std"
 import {StudioService} from "@/service/StudioService"
 import {AudioData, SampleMetaData} from "@opendaw/studio-adapters"
-import {showCacheDialog, showInfoDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {installCursors} from "@/ui/Cursors.ts"
 import {BuildInfo} from "./BuildInfo"
 import {Surface} from "@/ui/surface/Surface.tsx"
@@ -96,16 +96,16 @@ requestAnimationFrame(async () => {
                 console.warn("expected uuid", uuid)
                 console.warn("sourceCss", sourceCss)
                 console.warn("sourceCode", sourceCode)
-                showCacheDialog()
+                Dialogs.cache()
                 return
             }
             const checkExtensions = setInterval(() => {
                 if (document.scripts.length > 1) {
-                    showInfoDialog({
+                    Dialogs.info({
                         headline: "Warning",
                         message: "Please disable extensions to avoid undefined behavior.",
                         okText: "Ignore"
-                    }).then()
+                    }).finally()
                     clearInterval(checkExtensions)
                 }
             }, 5_000)

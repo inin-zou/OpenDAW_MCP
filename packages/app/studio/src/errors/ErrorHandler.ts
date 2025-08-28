@@ -5,7 +5,7 @@ import {ErrorLog} from "@/errors/ErrorLog.ts"
 import {ErrorInfo} from "@/errors/ErrorInfo.ts"
 import {Surface} from "@/ui/surface/Surface.tsx"
 import {StudioService} from "@/service/StudioService.ts"
-import {showErrorDialog, showInfoDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 
 export class ErrorHandler {
     readonly terminator = new Terminator()
@@ -26,7 +26,7 @@ export class ErrorHandler {
             if (reason instanceof Warning) {
                 console.debug(`Warning '${reason.message}'`)
                 event.preventDefault()
-                showInfoDialog({headline: "Warning", message: reason.message}).then(EmptyExec)
+                Dialogs.info({headline: "Warning", message: reason.message}).then(EmptyExec)
                 return false
             }
         }
@@ -56,7 +56,7 @@ export class ErrorHandler {
             || error.message?.includes("script-src blocked eval") === true
             || error.stack?.includes("chrome-extension://") === true
         if (Surface.isAvailable()) {
-            showErrorDialog({
+            Dialogs.error({
                 scope: scope,
                 name: error.name,
                 message: error.message ?? "no message",

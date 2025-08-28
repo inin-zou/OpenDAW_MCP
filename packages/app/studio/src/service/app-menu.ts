@@ -1,6 +1,6 @@
 import {MenuItem} from "@/ui/model/menu-item"
 import {StudioService} from "@/service/StudioService"
-import {showApproveDialog, showDebugBoxesDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {RouteLocation} from "@opendaw/lib-jsx"
 import {isDefined, panic} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
@@ -44,7 +44,7 @@ export const initAppMenu = (service: StudioService) => {
                                 if (Browser.isLocalHost()) {
                                     return service.importDawproject()
                                 } else {
-                                    return showApproveDialog({
+                                    return Dialogs.approve({
                                         headline: "DAWproject Early Preview",
                                         message: "Please be aware that the import may not work as expected.",
                                         approveText: "Import",
@@ -62,18 +62,7 @@ export const initAppMenu = (service: StudioService) => {
                             MenuItem.default({label: "Project Bundle...", selectable: service.hasProjectSession})
                                 .setTriggerProcedure(() => service.exportZip()),
                             MenuItem.default({label: "DAWproject...", selectable: service.hasProjectSession})
-                                .setTriggerProcedure(async () => {
-                                    if (Browser.isLocalHost()) {
-                                        return service.exportDawproject()
-                                    } else {
-                                        return showApproveDialog({
-                                            headline: "DAWproject Early Preview",
-                                            message: "Please be aware that the export may not work as expected.",
-                                            approveText: "Export",
-                                            cancelText: "Cancel"
-                                        }).then(() => service.exportDawproject())
-                                    }
-                                })
+                                .setTriggerProcedure(async () => service.exportDawproject())
                         )),
                     MenuItem.default({label: "Debug", separatorBefore: true})
                         .setRuntimeChildrenProcedure(parent => {
@@ -91,7 +80,7 @@ export const initAppMenu = (service: StudioService) => {
                                     label: "Show Boxes...",
                                     selectable: service.hasProjectSession,
                                     separatorBefore: true
-                                }).setTriggerProcedure(() => showDebugBoxesDialog(service.project.boxGraph)),
+                                }).setTriggerProcedure(() => Dialogs.debugBoxes(service.project.boxGraph)),
                                 MenuItem.default({label: "Validate Project...", selectable: service.hasProjectSession})
                                     .setTriggerProcedure(() => service.verifyProject()),
                                 MenuItem.default({

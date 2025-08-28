@@ -4,7 +4,7 @@ import {createElement, LocalLink} from "@opendaw/lib-jsx"
 import {StudioService} from "@/service/StudioService.ts"
 import {Html} from "@opendaw/lib-dom"
 import {ProjectBrowser} from "@/project/ProjectBrowser"
-import {showProcessMonolog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 import {Colors} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "Dashboard")
@@ -58,7 +58,7 @@ export const Dashboard = ({service}: Construct) => {
                         <h3>Your Projects</h3>
                         <ProjectBrowser service={service}
                                         select={async ([uuid, meta]) => {
-                                            const handler = showProcessMonolog("Loading...")
+                                            const handler = Dialogs.processMonolog("Loading...")
                                             await service.sessionService.loadExisting(uuid, meta)
                                             handler.close()
                                         }}/>

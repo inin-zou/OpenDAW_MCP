@@ -13,7 +13,7 @@ import {
     Terminable,
     Terminator
 } from "@opendaw/lib-std"
-import {showInfoDialog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 import {RouteLocation} from "@opendaw/lib-jsx"
 import {AnimationFrame, Browser, ConsoleCommands} from "@opendaw/lib-dom"
 import {MIDIMessageSubscriber} from "@/midi/devices/MIDIMessageSubscriber"
@@ -54,7 +54,7 @@ export class MidiDeviceAccess {
                             .then(access => MidiDeviceAccess.#instance = Option.wrap(new MidiDeviceAccess(access)))
                             .catch(reason => {
                                 // do not use the dialog promise as a return > will delay the 'finally' statement below
-                                showInfoDialog({
+                                Dialogs.info({
                                     headline: "Cannot Access MIDI Devices",
                                     message: isInstanceOf(reason, Error) ? reason.message : String(reason),
                                     buttons: Browser.isFirefox() ? [{
@@ -74,10 +74,10 @@ export class MidiDeviceAccess {
                         return Option.wrap(promise)
                     })()
                 } else {
-                    showInfoDialog({
+                    Dialogs.info({
                         headline: "Cannot Access MIDI Devices",
                         message: "This browser does not support the WebMidiApi (Hint: Chrome does)."
-                    }).then()
+                    }).finally()
                 }
             }
 

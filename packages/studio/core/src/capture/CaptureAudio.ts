@@ -13,7 +13,7 @@ import {
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioUnitBox, CaptureAudioBox} from "@opendaw/studio-boxes"
 import {Capture} from "./Capture"
-import {CaptureManager} from "./CaptureManager"
+import {CaptureDevices} from "./CaptureDevices"
 import {RecordAudio} from "./RecordAudio"
 import {RecordingContext} from "./RecordingContext"
 import {AudioDevices} from "../AudioDevices"
@@ -26,7 +26,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
     #requestChannels: Option<1 | 2> = Option.None
     #gainDb: number = 0.0
 
-    constructor(manager: CaptureManager, audioUnitBox: AudioUnitBox, captureAudioBox: CaptureAudioBox) {
+    constructor(manager: CaptureDevices, audioUnitBox: AudioUnitBox, captureAudioBox: CaptureAudioBox) {
         super(manager, audioUnitBox, captureAudioBox)
 
         this.#stream = new MutableObservableOption<MediaStream>()

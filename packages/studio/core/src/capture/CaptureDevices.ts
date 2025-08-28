@@ -5,7 +5,7 @@ import {Capture} from "./Capture"
 import {CaptureMidi} from "./CaptureMidi"
 import {CaptureAudio} from "./CaptureAudio"
 
-export class CaptureManager implements Terminable {
+export class CaptureDevices implements Terminable {
     readonly #project: Project
     readonly #subscription: Subscription
     readonly #captures: SortedSet<UUID.Format, Capture>

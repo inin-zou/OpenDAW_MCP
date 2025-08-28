@@ -6,7 +6,7 @@ import {AudioFileBox} from "@opendaw/studio-boxes"
 import {Sample, SampleManager} from "@opendaw/studio-adapters"
 import {SampleStorage} from "@opendaw/studio-core"
 import {SampleDialogs} from "@/ui/browse/SampleDialogs"
-import {showInfoDialog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 import {SampleImporter} from "@/project/SampleImporter"
 import {SampleApi} from "@/service/SampleApi"
 
@@ -32,7 +32,7 @@ export namespace SampleUtils {
                     if (status === "rejected") {
                         if (Errors.isAbort(error)) {continue} else {return panic(String(error))}
                     }
-                    await showInfoDialog({
+                    await Dialogs.info({
                         headline: "Replaced Sample",
                         message: `${sample.name} has been replaced`
                     })

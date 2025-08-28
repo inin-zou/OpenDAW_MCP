@@ -26,7 +26,7 @@ import {createPanelFactory} from "@/ui/workspace/PanelFactory.tsx"
 import {SpotlightDataSupplier} from "@/ui/spotlight/SpotlightDataSupplier.ts"
 import {Workspace} from "@/ui/workspace/Workspace.ts"
 import {PanelType} from "@/ui/workspace/PanelType.ts"
-import {showApproveDialog, showInfoDialog, showProcessDialog} from "@/ui/components/dialogs.tsx"
+import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {BuildInfo} from "@/BuildInfo.ts"
 import {MidiDeviceAccess} from "@/midi/devices/MidiDeviceAccess"
 import {SamplePlayback} from "@/service/SamplePlayback"
@@ -115,9 +115,9 @@ export class StudioService implements ProjectEnv {
     readonly engine = new EngineFacade()
     readonly dialogs: ProjectEnv.Dialogs = {
         info: (headline: string, message: string, okText: string): Promise<void> =>
-            showInfoDialog({headline, message, okText}),
+            Dialogs.info({headline, message, okText}),
         approve: (headline: string, message: string, approveText: string, cancelText: string): Promise<boolean> =>
-            showApproveDialog({headline, message, approveText, cancelText}).then(() => true, () => false)
+            Dialogs.approve({headline, message, approveText, cancelText}).then(() => true, () => false)
     }
 
     readonly #signals = new Notifier<StudioSignal>()
@@ -182,7 +182,7 @@ export class StudioService implements ProjectEnv {
                         // we need to restart the screen to subscribe to new broadcaster instances
                         this.switchScreen(null)
                         this.engine.releaseClient()
-                        await showInfoDialog({
+                        await Dialogs.info({
                             headline: "Audio-Engine Error",
                             message: String(safeRead(event, "message") ?? event),
                             okText: "Restart"
@@ -265,7 +265,7 @@ export class StudioService implements ProjectEnv {
             this.sessionService.setValue(Option.None)
         } else {
             try {
-                await showApproveDialog({headline: "Closing Project?", message: "You will lose all progress!"})
+                await Dialogs.approve({headline: "Closing Project?", message: "You will lose all progress!"})
             } catch (error) {
                 if (!Errors.isAbort(error)) {panic(String(error))}
                 return
@@ -343,7 +343,7 @@ export class StudioService implements ProjectEnv {
             if (Errors.isAbort(error)) {return} else {return panic(String(error)) }
         }
         const progress = new DefaultObservableValue(0.0)
-        const progressDialog = showProcessDialog(`Importing ${files.length === 1 ? "Sample" : "Samples"}...`, progress)
+        const progressDialog = Dialogs.progress(`Importing ${files.length === 1 ? "Sample" : "Samples"}...`, progress)
         const progressHandler = Progress.split(value => progress.setValue(value), files.length)
         const rejected: Array<string> = []
         for (const [index, file] of files.entries()) {
@@ -360,7 +360,7 @@ export class StudioService implements ProjectEnv {
         }
         progressDialog.close()
         if (rejected.length > 0) {
-            await showInfoDialog({
+            await Dialogs.info({
                 headline: "Sample Import Issues",
                 message: `${rejected.join(", ")} could not be imported.`
             })
@@ -397,7 +397,7 @@ export class StudioService implements ProjectEnv {
         const {project: projectSchema, resources} = await DawProject.decode(arrayBuffer)
         const importResult = await Promises.tryCatch(DawProjectImport.read(projectSchema, resources))
         if (importResult.status === "rejected") {
-            return showInfoDialog({headline: "Import Error", message: String(importResult.error)})
+            return Dialogs.info({headline: "Import Error", message: String(importResult.error)})
         }
         const {skeleton, audioIds} = importResult.value
         await Promise.all(audioIds
@@ -419,7 +419,7 @@ export class StudioService implements ProjectEnv {
             website: "https://opendaw.studio"
         }, MetaDataSchema)))
         if (status === "rejected") {
-            return showInfoDialog({headline: "Export Error", message: String(error)})
+            return Dialogs.info({headline: "Export Error", message: String(error)})
         } else {
             const {status, error} = await Promises.tryCatch(Files.save(zip,
                 {types: [FilePickerAcceptTypes.DawprojectFileType]}))
@@ -471,6 +471,6 @@ export class StudioService implements ProjectEnv {
         assert(masterBusBox.isAttached(), "[verify] masterBusBox is not attached")
         assert(timelineBox.isAttached(), "[verify] timelineBox is not attached")
         const result = boxGraph.verifyPointers()
-        await showInfoDialog({message: `Project is okay. All ${result.count} pointers are fine.`})
+        await Dialogs.info({message: `Project is okay. All ${result.count} pointers are fine.`})
     }
 }

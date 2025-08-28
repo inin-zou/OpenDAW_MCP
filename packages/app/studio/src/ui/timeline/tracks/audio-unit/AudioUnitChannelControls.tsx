@@ -27,7 +27,7 @@ type Construct = {
 
 export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construct) => {
     const {project, midiLearning, context} = service
-    const {captureManager, editing} = project
+    const {captureDevices, editing} = project
     const {volume, panning, mute, solo} = adapter.namedParameter
     const volumeControl = (
         <RelativeUnitValueDragging lifecycle={lifecycle}
@@ -69,7 +69,7 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
     )
     const peaksInDb = new Float32Array(Arrays.create(() => Number.NEGATIVE_INFINITY, 2))
     let streamRunning = false
-    const captureOption = captureManager.get(adapter.uuid)
+    const captureOption = captureDevices.get(adapter.uuid)
     lifecycle.ownAll(
         attachParameterContextMenu(editing, midiLearning, adapter.tracks, volume, volumeControl),
         attachParameterContextMenu(editing, midiLearning, adapter.tracks, panning, panningControl),

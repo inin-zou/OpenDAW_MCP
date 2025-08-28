@@ -1,6 +1,6 @@
 import {Func, int, Option, panic} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
-import {showInfoDialog} from "@/ui/components/dialogs"
+import {Dialogs} from "@/ui/components/dialogs"
 import {Button} from "@/ui/components/Dialog"
 
 export class AudioDevices {
@@ -57,7 +57,7 @@ export class AudioDevices {
         const headline = "Permission Api"
         const {status, value: permissionState, error} =
             await Promises.tryCatch(navigator.permissions.query({name: "microphone"}))
-        if (status === "rejected") {return await showInfoDialog({headline, message: String(error)}) ?? false}
+        if (status === "rejected") {return await Dialogs.info({headline, message: String(error)}) ?? false}
         console.debug(`Permission state(${permissionState.name}): ${permissionState.state}`)
         if (permissionState.state === "granted") {return true}
         const buttons: ReadonlyArray<Button> = [{
@@ -70,12 +70,12 @@ export class AudioDevices {
             onClick: (handler) => handler.close()
         }]
         if (permissionState.state === "denied") {
-            return await showInfoDialog({
+            return await Dialogs.info({
                 headline, message: "Permissions to accept 'microphone / audio devices' has been denied.", buttons
             }) ?? false
         }
         if (permissionState.state === "prompt") {
-            return await showInfoDialog({
+            return await Dialogs.info({
                 headline,
                 message: "Your browser will now ask to request access to use your 'microphone / audio devices'.",
                 buttons,
