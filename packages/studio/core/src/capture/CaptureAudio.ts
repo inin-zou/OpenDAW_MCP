@@ -1,4 +1,15 @@
-import {assert, Func, isDefined, isUndefined, MutableObservableOption, Option, Terminable, warn} from "@opendaw/lib-std"
+import {
+    abort,
+    assert,
+    Func,
+    isDefined,
+    isUndefined,
+    MutableObservableOption,
+    Option,
+    safeExecute,
+    Terminable,
+    warn
+} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioUnitBox, CaptureAudioBox} from "@opendaw/studio-boxes"
 import {Capture} from "./Capture"
@@ -59,7 +70,19 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         return this.#stream.flatMap(stream => Option.wrap(stream.getAudioTracks().at(0)))
     }
 
-    async prepareRecording({}: RecordingContext): Promise<void> {return this.#streamGenerator()}
+    async prepareRecording({audioContext, project}: RecordingContext): Promise<void> {
+        console.debug("outputLatency", audioContext.outputLatency)
+        if (isUndefined(audioContext.outputLatency) || true) {
+            const approved = await safeExecute(project.env.dialogs?.approve, "Warning",
+                "Your browser does not support 'output latency'. This will cause timing issue while recording.",
+                "Ignore", "Cancel")
+            console.debug("approved", approved)
+            if (!approved) {
+                return abort("Recording cancelled")
+            }
+        }
+        return this.#streamGenerator()
+    }
 
     startRecording({audioContext, worklets, project, sampleManager}: RecordingContext): Terminable {
         const streamOption = this.#stream

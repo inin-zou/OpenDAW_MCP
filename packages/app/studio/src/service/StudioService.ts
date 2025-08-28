@@ -26,7 +26,7 @@ import {createPanelFactory} from "@/ui/workspace/PanelFactory.tsx"
 import {SpotlightDataSupplier} from "@/ui/spotlight/SpotlightDataSupplier.ts"
 import {Workspace} from "@/ui/workspace/Workspace.ts"
 import {PanelType} from "@/ui/workspace/PanelType.ts"
-import {Dialogs, showApproveDialog, showInfoDialog, showProcessDialog} from "@/ui/components/dialogs.tsx"
+import {showApproveDialog, showInfoDialog, showProcessDialog} from "@/ui/components/dialogs.tsx"
 import {BuildInfo} from "@/BuildInfo.ts"
 import {MidiDeviceAccess} from "@/midi/devices/MidiDeviceAccess"
 import {SamplePlayback} from "@/service/SamplePlayback"
@@ -112,8 +112,13 @@ export class StudioService implements ProjectEnv {
     readonly _shortcuts = new Shortcuts(this) // TODO reference will be used later in a key-mapping configurator
     readonly recovery = new Recovery(this)
     readonly midiLearning = new MIDILearning(this)
-
     readonly engine = new EngineFacade()
+    readonly dialogs: ProjectEnv.Dialogs = {
+        info: (headline: string, message: string, okText: string): Promise<void> =>
+            showInfoDialog({headline, message, okText}),
+        approve: (headline: string, message: string, approveText: string, cancelText: string): Promise<boolean> =>
+            showApproveDialog({headline, message, approveText, cancelText}).then(() => true, () => false)
+    }
 
     readonly #signals = new Notifier<StudioSignal>()
 
@@ -200,23 +205,18 @@ export class StudioService implements ProjectEnv {
         this.sessionService.catchupAndSubscribe(owner => observer(owner.getValue()))
 
         ConsoleCommands.exportAccessor("box.graph.boxes",
-            () => this.runIfProject(project => project.boxGraph.debugBoxes()))
+            () => this.runIfProject(({boxGraph}) => boxGraph.debugBoxes()))
         ConsoleCommands.exportMethod("box.graph.lookup",
-            (address: string) => this.runIfProject(({boxGraph}) =>
-                boxGraph.findVertex(Address.decode(address))
-                    .match({
-                        none: () => "not found",
-                        some: vertex => vertex.toString()
-                    }))
-                .match({none: () => "no project", some: value => value}))
+            (address: string) => this.runIfProject(({boxGraph}) => boxGraph.findVertex(Address.decode(address)).match({
+                none: () => "not found",
+                some: vertex => vertex.toString()
+            })).match({none: () => "no project", some: value => value}))
         ConsoleCommands.exportAccessor("box.graph.dependencies",
             () => this.runIfProject(project => project.boxGraph.debugDependencies()))
 
         if (!Browser.isLocalHost()) {
             window.addEventListener("beforeunload", (event: Event) => {
-                if (!navigator.onLine) {
-                    event.preventDefault()
-                }
+                if (!navigator.onLine) {event.preventDefault()}
                 if (this.hasProjectSession && (this.session.hasChanges() || !this.project.editing.isEmpty())) {
                     event.preventDefault()
                 }
@@ -235,9 +235,7 @@ export class StudioService implements ProjectEnv {
             value.catchupAndSubscribe(owner => {
                 const bool = owner.getValue()
                 set(bool)
-                try {
-                    localStorage.setItem(item, String(bool))
-                } catch (_reason: any) {}
+                try {localStorage.setItem(item, String(bool))} catch (_reason: any) {}
             })
         }
 
@@ -288,7 +286,7 @@ export class StudioService implements ProjectEnv {
             project: this.project,
             worklets: this.worklets,
             audioContext: this.context
-        }, countIn).catch(Dialogs.WarningProcedure)
+        }, countIn).finally()
     }
 
     stopRecording(): void {this.engine.stopRecording()}

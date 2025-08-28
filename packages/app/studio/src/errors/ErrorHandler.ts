@@ -1,4 +1,4 @@
-import {EmptyExec, Terminable, Terminator, Warning} from "@opendaw/lib-std"
+import {Abort, EmptyExec, Terminable, Terminator, Warning} from "@opendaw/lib-std"
 import {AnimationFrame, Browser, Events} from "@opendaw/lib-dom"
 import {LogBuffer} from "@/errors/LogBuffer.ts"
 import {ErrorLog} from "@/errors/ErrorLog.ts"
@@ -16,9 +16,19 @@ export class ErrorHandler {
     constructor(service: StudioService) {this.#service = service}
 
     processError(scope: string, event: Event): boolean {
-        if ("reason" in event && event.reason instanceof Warning) {
-            showInfoDialog({headline: "Warning", message: event.reason.message}).then(EmptyExec)
-            return false
+        if ("reason" in event) {
+            const reason = event.reason
+            if (reason instanceof Abort) {
+                console.debug(`Abort '${reason.message}'`)
+                event.preventDefault()
+                return false
+            }
+            if (reason instanceof Warning) {
+                console.debug(`Warning '${reason.message}'`)
+                event.preventDefault()
+                showInfoDialog({headline: "Warning", message: reason.message}).then(EmptyExec)
+                return false
+            }
         }
         console.debug("processError", scope, event)
         if (this.#errorThrown) {return false}

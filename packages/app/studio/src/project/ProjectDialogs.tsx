@@ -11,7 +11,6 @@ import {Errors} from "@opendaw/lib-dom"
 import {Project} from "@opendaw/studio-core"
 
 export namespace ProjectDialogs {
-
     export const showSaveDialog = async ({headline, meta}: {
         headline: string,
         meta?: ProjectMeta

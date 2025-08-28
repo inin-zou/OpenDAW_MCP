@@ -28,7 +28,7 @@ export class Recording {
             await Promises.tryCatch(Promise.all(captures.map(capture => capture.prepareRecording(context))))
         if (status === "rejected") {
             this.#isRecording = false
-            return warn(`Could not prepare recording: ${error}`)
+            throw error
         }
         terminator.ownAll(...captures.map(capture => capture.startRecording(context)))
         engine.startRecording(countIn)
