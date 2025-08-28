@@ -91,16 +91,25 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
     }
 
     async prepareRecording({}: RecordingContext): Promise<void> {
-        const availableMidiDevices = MidiDevices.get()
-        if (availableMidiDevices.isEmpty()) {
-            return Promise.reject("MIDI is not available")
+        if (MidiDevices.get().isEmpty()) {
+            if (MidiDevices.canRequestMidiAccess()) {
+                await MidiDevices.requestPermission()
+            } else {
+                return warn("MIDI not available")
+            }
+        }
+        const optInputs = MidiDevices.inputs()
+        if (optInputs.isEmpty()) {
+            return warn("MIDI not available")
+        }
+        const inputs = optInputs.unwrap()
+        if (inputs.length === 0) {
+            return warn("No MIDI input devices found")
         }
         const option = this.deviceId.getValue()
         if (option.nonEmpty()) {
-            const {inputs} = availableMidiDevices.unwrap()
-            const captureDevices = Array.from(inputs.values())
             const deviceId = option.unwrap()
-            if (isUndefined(captureDevices.find(device => deviceId === device.id))) {
+            if (isUndefined(inputs.find(device => deviceId === device.id))) {
                 return warn(`Could not find MIDI device with id: '${deviceId}'`)
             }
         }
