@@ -374,7 +374,6 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
     }
 
     #reset(): void {
-        console.debug("reset")
         this.#playbackTimestamp = 0.0
         this.#timeInfo.isRecording = false
         this.#timeInfo.isCountingIn = false

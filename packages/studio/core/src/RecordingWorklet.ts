@@ -3,7 +3,6 @@ import {
     assert,
     ByteArrayInput,
     int,
-    isUndefined,
     Notifier,
     Nullable,
     Observer,
@@ -86,13 +85,7 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
             processorOptions: config
         })
 
-        if (isUndefined(outputLatency)) {
-            // TODO Talk to the user
-            console.warn("outputLatency is undefined. Please use Chrome.")
-        }
-
         this.#peakWriter = new PeaksWriter(config.numberOfChannels)
-
         this.#truncateLatency = Math.floor((outputLatency ?? 0) * this.context.sampleRate / RenderQuantum)
         this.#output = []
         this.#notifier = new Notifier<SampleLoaderState>()
@@ -128,6 +121,7 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
     async finalize() {
         this.#reader.stop()
         this.#isRecording = false
+        if (this.#output.length === 0) {return}
         const sample_rate = this.context.sampleRate
         const numberOfFrames = this.#output.length * RenderQuantum
         const numberOfChannels = this.channelCount

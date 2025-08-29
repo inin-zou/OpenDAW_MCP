@@ -5,4 +5,5 @@ export interface SampleManager {
     getOrCreate(uuid: UUID.Format): SampleLoader
     record(loader: SampleLoader): void
     invalidate(uuid: UUID.Format): void
+    remove(uuid: UUID.Format): void
 }

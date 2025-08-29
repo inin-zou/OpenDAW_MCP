@@ -36,5 +36,6 @@ export class AudioManagerWorklet implements SampleManager {
         return this.#set.getOrCreate(uuid, uuid => new AudioLoaderWorklet(uuid, this.#engineToClient))
     }
 
+    remove(_uuid: UUID.Format) {}
     invalidate(_uuid: UUID.Format) {}
 }

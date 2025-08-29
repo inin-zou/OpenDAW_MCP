@@ -34,9 +34,8 @@ describe("DawProjectExport", () => {
                         }
                     }
                 }
-                invalidate(_uuid: UUID.Format): void {
-                    return panic("Method not implemented.")
-                }
+                remove(_uuid: UUID.Format): void {return panic("Method not implemented.")}
+                invalidate(_uuid: UUID.Format): void {return panic("Method not implemented.")}
             }
         }, arrayBuffer)
         const schema = DawProjectExporter.write(project, {

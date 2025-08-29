@@ -3,9 +3,9 @@ import {dbToGain, PPQN} from "@opendaw/lib-dsp"
 import {AudioFileBox, AudioRegionBox, TrackBox} from "@opendaw/studio-boxes"
 import {SampleManager, TrackType} from "@opendaw/studio-adapters"
 import {Project} from "../Project"
+import {RecordingWorklet} from "../RecordingWorklet"
 import {Capture} from "./Capture"
 import {RecordTrack} from "./RecordTrack"
-import {RecordingWorklet} from "../RecordingWorklet"
 import {ColorCodes} from "../ColorCodes"
 
 export namespace RecordAudio {
@@ -51,6 +51,9 @@ export namespace RecordAudio {
         }
         terminator.ownAll(
             Terminable.create(() => {
+                if(recordingWorklet.numberOfFrames === 0) {
+                    sampleManager.remove(uuid)
+                }
                 recordingWorklet.finalize().then()
                 streamGain.disconnect()
                 streamSource.disconnect()

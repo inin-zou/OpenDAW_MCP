@@ -20,6 +20,7 @@ export class MainThreadSampleManager implements SampleManager, SampleProvider {
         return this.#api.fetch(uuid, progress)
     }
 
+    remove(uuid: UUID.Format) {this.#loaders.removeByKey(uuid)}
     invalidate(uuid: UUID.Format) {this.#loaders.opt(uuid).ifSome(loader => loader.invalidate())}
 
     record(loader: SampleLoader): void {this.#loaders.add(loader)}
