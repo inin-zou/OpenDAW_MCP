@@ -100,10 +100,7 @@ class FloatArrayPackage extends ArrayPackage<Float32Array> {
 }
 
 class IntegerArrayPackage extends ArrayPackage<Int32Array> {
-    create(length: number): Int32Array {
-        console.debug("create")
-        return new Int32Array(length)
-    }
+    create(length: number): Int32Array {return new Int32Array(length)}
     read(input: ByteArrayInput, array: Int32Array, length: number): void {
         for (let i = 0; i < length; i++) {array[i] = input.readInt()}
     }
