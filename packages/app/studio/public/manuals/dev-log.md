@@ -6,6 +6,26 @@
 
 ## TODO
 
+* Recording
+    * Level #1
+        * ~~List all devices~~
+        * ~~If MIDI, select all channels or specific channel~~
+        * ~~Arm buttons default behavior should be radio group (shift to add)~~
+        * Capture audio
+          * layout channels
+          * adjust pre-gain?
+        * MIDI Controller (values)
+        * Put Recording.start into class Project
+        * Stop (~~start~~) recording at quantized positions
+        * Find a way to overlay, replace, mix on existing regions
+        * Find a way to handle loops/jumps while recording
+    * Level #2
+        * Sample editor
+        * Record samples into Playfield and clips
+        * Better audio playback algorithms
+            * time-stretch
+            * event-based warping
+        * Allow recording from other audio-units (baking)
 * PianoModePanel
     * Show timeline navigation?
     * Different note labels for different countries (Global Switch)
@@ -87,7 +107,24 @@
 
 ## Done
 
-* ~~Audio/Midi Recording~~
+* ~~Manuals should be listing all entries in the dropdown~~
+* ~~Inform the user if there is no outputLatency~~
+* ~~Implement monitor~~
+    * ~~If audio, show peak-meter~~
+* ~~Handle external changes to the project (deletion of audio-units, tracks, regions, etc. while recording)~~
+* ~~Ignore just recorded midi data while recording~~
+* ~~Refactor MIDI learning for the new capture system~~
+* ~~If tracks, use the first available audio-unit to record~~
+* ~~If the project is empty, ask if the user wants to record audio or midi~~
+* ~~Play global transport when starting a clip~~
+* ~~Severe bug in undo~~
+* ~~Store capture filters in boxes~~
+* ~~Template "Liquid" and "Release" timing issue because of CaptureManager~~
+* ~~We need a flag to identify audio-unit's main content (audio or MIDI)~~
+* ~~Generate peaks while recording~~
+* ~~Store samples in OPFS (to upload later into the cloud)~~
+* ~~Shift + Record to suppress count-in~~
+* ~~Recording-gain~~
 * ~~Solid state for recording in main-thread (none, running, cancel, abort)~~
 * ~~Listen to all incoming midi-signals and create track, region, notes and automation (revertible process)~~
 * ~~Record audio to memory and create track and region (revertible process)~~
