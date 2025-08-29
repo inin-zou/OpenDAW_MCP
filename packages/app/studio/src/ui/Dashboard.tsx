@@ -1,6 +1,6 @@
 import css from "./Dashboard.sass?inline"
 import {Lifecycle, TimeSpan} from "@opendaw/lib-std"
-import {createElement, LocalLink} from "@opendaw/lib-jsx"
+import {createElement, HTML, LocalLink} from "@opendaw/lib-jsx"
 import {StudioService} from "@/service/StudioService.ts"
 import {Html} from "@opendaw/lib-dom"
 import {ProjectBrowser} from "@/project/ProjectBrowser"
@@ -46,12 +46,15 @@ export const Dashboard = ({service}: Construct) => {
                                 {name: "Liquid", click: () => service.loadTemplate("BMX_LiquidDrums")},
                                 {name: "Release", click: () => service.loadTemplate("Release")},
                                 {name: "Dub Techno", click: () => service.loadTemplate("Dub-Techno")}
-                            ].map(({name, click}, index) => (
-                                <div onclick={click}>
-                                    <img src={`viscious-speed/abstract-${String(index).padStart(3, "0")}.svg`} alt=""/>
-                                    <label>{name}</label>
-                                </div>
-                            ))}
+                            ].map(({name, click}, index) => {
+                                const svgSource = `viscious-speed/abstract-${String(index).padStart(3, "0")}.svg`
+                                return (
+                                    <div onclick={click}>
+                                        <HTML src={fetch(svgSource)} className="icon"/>
+                                        <label>{name}</label>
+                                    </div>
+                                )
+                            })}
                         </div>
                     </div>
                     <div>

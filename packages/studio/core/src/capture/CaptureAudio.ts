@@ -1,6 +1,5 @@
 import {
     abort,
-    assert,
     Func,
     isDefined,
     isUndefined,
@@ -71,7 +70,6 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
     }
 
     async prepareRecording({audioContext, project}: RecordingContext): Promise<void> {
-        console.debug("outputLatency", audioContext.outputLatency)
         if (isUndefined(audioContext.outputLatency)) {
             const approved = await safeExecute(project.env.dialogs?.approve, "Warning",
                 "Your browser does not support 'output latency'. This will cause timing issue while recording.",
@@ -85,7 +83,10 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
 
     startRecording({audioContext, worklets, project, sampleManager}: RecordingContext): Terminable {
         const streamOption = this.#stream
-        assert(streamOption.nonEmpty(), "Stream not prepared.")
+        if (streamOption.isEmpty()) {
+            console.warn("No audio stream available for recording.")
+            return Terminable.Empty
+        }
         const mediaStream = streamOption.unwrap()
         const channelCount = mediaStream.getAudioTracks().at(0)?.getSettings().channelCount ?? 1
         const numChunks = 128
@@ -105,7 +106,6 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         if (this.#stream.nonEmpty()) {
             const stream = this.#stream.unwrap()
             const settings = stream.getAudioTracks().at(0)?.getSettings()
-            console.debug(stream.getAudioTracks())
             if (isDefined(settings)) {
                 const deviceId = this.deviceId.getValue().unwrapOrUndefined()
                 const channelCount = this.#requestChannels.unwrapOrElse(1)
@@ -118,7 +118,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         }
         this.#stopStream()
         const deviceId = this.deviceId.getValue().unwrapOrUndefined()
-        const channelCount = this.#requestChannels.unwrapOrElse(1) // as of today, browsers cap MediaStream audio to stereo.
+        const channelCount = this.#requestChannels.unwrapOrElse(1)
         return AudioDevices.requestStream({
             deviceId: {exact: deviceId},
             sampleRate: this.manager.project.engine.sampleRate(),
@@ -126,12 +126,13 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
             echoCancellation: false,
             noiseSuppression: false,
             autoGainControl: false,
-            channelCount
+            channelCount: {ideal: channelCount}
         }).then(stream => {
             const tracks = stream.getAudioTracks()
-            const settings = tracks.at(0)?.getSettings()
+            const track = tracks.at(0)
+            const settings = track?.getSettings()
             const gotDeviceId = settings?.deviceId
-            console.debug(`new stream id: ${stream.id}, device: ${gotDeviceId ?? "Default"}`)
+            console.debug(`new stream. device requested: ${stream.id}, got: ${gotDeviceId ?? "Default"}. channelCount requested: ${channelCount}, got: ${settings?.channelCount}`)
             if (isUndefined(deviceId) || deviceId === gotDeviceId) {
                 this.#stream.wrap(stream)
             } else {

@@ -4,8 +4,4 @@ import {Html} from "@opendaw/lib-dom"
 
 const className = Html.adoptStyleSheet(css, "FlexSpace")
 
-export const FlexSpace = () => {
-    return (
-        <div className={className}/>
-    )
-}
+export const FlexSpace = () => (<div className={className}/>)

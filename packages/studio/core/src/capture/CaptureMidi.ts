@@ -72,9 +72,9 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
                 none: () => `Listening to all devices`,
                 some: channel => `Listening to all devices on channel '${channel}'`
             }) : "Arm to listen to MIDI device...",
-            some: value => {
-                const device = midiAccess.inputs.get(value)
-                if (isUndefined(device)) {return "⚠️ Could not find device"}
+            some: id => {
+                const device = midiAccess.inputs.get(id)
+                if (isUndefined(device)) {return `⚠️ Could not find device with id '${id}'`}
                 const deviceName = device.name ?? "Unknown device"
                 return this.#filterChannel.match({
                     none: () => `Listening to ${deviceName}`,

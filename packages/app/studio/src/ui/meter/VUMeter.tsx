@@ -51,7 +51,7 @@ export namespace VUMeter {
                 font-family={fontFamily}>
                 <style>{`@import ${(getGoogleFontUrl(fontFamily, fontWeight))};`}</style>
                 {background}
-                <g style={{filter: "drop-shadow(0px 8px 2px rgba(0, 0, 0, 0.5))"}}>{needle}</g>
+                <g style={{filter: "drop-shadow(0px 8px 3px rgba(0, 0, 0, 0.3))"}}>{needle}</g>
             </svg>
         )
     }

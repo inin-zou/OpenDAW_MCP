@@ -9,7 +9,7 @@
     * ~~If MIDI, select all channels or specific channel~~
     * ~~Arm buttons default behavior should be radio group (shift to add)~~
     * If Audio, let the user select the number of channels (max and default is 2)
-    * If Audio, how to adjust pre-gain?
+    * If Audio, where to adjust pre-gain?
     * MIDI Controller (values)
 
 ## Level #1

@@ -67,28 +67,30 @@ component
             display: flex
             flex-direction: column
             align-items: center
-            background-color: black
+            background-color: var(--panel-background-dark)
             padding: 0.25em
             border-radius: 0.5em
             font-size: 0.75em
             cursor: pointer
             overflow: hidden
+            transition: background-color 0.2s ease-out
 
             &:first-child
+              fill: var(--color-green)
               color: var(--color-green)
 
             &:hover
-              > label
-                color: var(--color-purple)
+              outline: 1px var(--color-gray) solid
+              background-color: color-mix(in srgb, var(--color-green) 3%, transparent)
 
-              > img
-                scale: 0.9
+              > .icon
+                scale: 0.96
 
-            > img
+            > .icon
               width: 64px
               height: 64px
               scale: 0.8
-              transition: scale 0.2s ease-in-out
+              transition: scale 0.2s ease-out
 
             > label
               font-size: 0.6em

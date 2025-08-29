@@ -20,7 +20,7 @@ type Construct = {
 export const PanelResizer = ({lifecycle, orientation, siblings, panelContents, target}: Construct) => {
     const element: HTMLElement = <div className={Html.buildClassList(className, orientation)}/>
     const direction = AxisProperty[orientation]
-    lifecycle.own(Dragging.attach(element, (begingEvent) => {
+    lifecycle.own(Dragging.attach(element, (beginEvent) => {
         const successor = element.nextElementSibling
         if (successor === null) {return Option.None}
         const parent = element.parentElement
@@ -41,7 +41,7 @@ export const PanelResizer = ({lifecycle, orientation, siblings, panelContents, t
         const currConstrains = curr.content.constrains
         const nextConstrains = next.content.constrains
         if (currConstrains.type === "fixed" || nextConstrains.type === "fixed") {return Option.None}
-        const beginPointer = begingEvent[direction.pointer]
+        const beginPointer = beginEvent[direction.pointer]
         const beginSizeA = curr.size
         const beginSizeB = next.size
         const sumSize = curr.size + next.size
