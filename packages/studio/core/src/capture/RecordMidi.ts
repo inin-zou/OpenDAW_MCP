@@ -46,7 +46,7 @@ export namespace RecordMidi {
                     loopDuration.setValue(newDuration)
                     for (const event of activeNotes.values()) {
                         if (event.isAttached()) {
-                            event.duration.setValue(writePosition - event.position.getValue())
+                            event.duration.setValue(writePosition - region.position.getValue() - event.position.getValue())
                         } else {
                             activeNotes.delete(event.pitch.getValue())
                         }
@@ -77,10 +77,10 @@ export namespace RecordMidi {
                         writing = Option.wrap({region, collection})
                     }, false)
                 }
-                const {collection} = writing.unwrap()
+                const {region, collection} = writing.unwrap()
                 editing.modify(() => {
                     activeNotes.set(pitch, NoteEventBox.create(boxGraph, UUID.generate(), box => {
-                        box.position.setValue(ppqn)
+                        box.position.setValue(ppqn - region.position.getValue())
                         box.duration.setValue(1.0)
                         box.pitch.setValue(pitch)
                         box.velocity.setValue(MidiData.readParam2(data) / 127.0)
