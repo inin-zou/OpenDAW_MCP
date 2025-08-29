@@ -17,7 +17,7 @@ export class PlayfieldSequencer extends EventProcessor implements NoteEventTarge
 
         this.#device = device
 
-        this.#noteEventInstrument = new NoteEventInstrument(this, context.broadcaster, device.adapter.address)
+        this.#noteEventInstrument = new NoteEventInstrument(this, context.broadcaster, device.adapter.audioUnitBoxAdapter().address)
 
         this.own(context.registerProcessor(this))
         this.readAllParameters()

@@ -118,7 +118,7 @@ export class LiveStreamBroadcaster {
             put(output: ByteArrayOutput): void {
                 update()
                 output.writeInt(values.length)
-                for (const value of values) {output.writeInt(value)}
+                values.forEach(value => output.writeInt(value))
             }
         })
     }

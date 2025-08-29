@@ -6,11 +6,11 @@ export class Bits {
     static readonly some = (set: int, flag: int): boolean => (set & flag) > 0
 
     readonly #numBits: int
-    readonly #array: Uint32Array
+    readonly #array: Int32Array
 
     constructor(numBits: int = 32) {
         this.#numBits = numBits
-        this.#array = new Uint32Array(((numBits - 1) >>> 5) + 1)
+        this.#array = new Int32Array(((numBits - 1) >>> 5) + 1)
     }
 
     getBit(index: int): boolean {
@@ -32,14 +32,19 @@ export class Bits {
     isEmpty(): boolean {return this.#array.every(value => value === 0)}
     nonEmpty(): boolean {return this.#array.some(value => value > 0)}
 
-    set buffer(value: ArrayBufferLike) {this.#array.set(new Uint32Array(value))}
+    set buffer(value: ArrayBufferLike) {this.#array.set(new Int32Array(value))}
     get buffer(): ArrayBufferLike {return this.#array.buffer}
 
     replace(buffer: ArrayBufferLike): boolean {
-        const source = new Uint32Array(buffer)
-        if (source.every((value, index) => this.#array[index] === value)) {return false}
-        this.#array.set(source)
-        return true
+        const source = new Int32Array(buffer)
+        let changes = false
+        for (let index = 0; index < source.length; index++) {
+            if (this.#array[index] !== source[index]) {
+                this.#array[index] = source[index]
+                changes = true
+            }
+        }
+        return changes
     }
 
     toString(): string {

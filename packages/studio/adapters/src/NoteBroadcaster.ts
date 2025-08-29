@@ -19,12 +19,19 @@ export class NoteBroadcaster implements Terminable {
         )
     }
 
-    noteOn(note: int): void {if (note >= 0 && note < 128) {this.#bits.setBit(note, true)}}
-    noteOff(note: int): void {if (note >= 0 && note < 128) {this.#bits.setBit(note, false)}}
+    noteOn(note: int): void {
+        if (note >= 0 && note < 128) {
+            this.#bits.setBit(note, true)
+        }
+    }
+    noteOff(note: int): void {
+        if (note >= 0 && note < 128) {
+            this.#bits.setBit(note, false)
+        }
+    }
 
     reset(): void {}
     clear(): void {this.#bits.clear()}
     terminate(): void {this.#terminator.terminate()}
-
     toString(): string {return `{${this.constructor.name}}`}
 }

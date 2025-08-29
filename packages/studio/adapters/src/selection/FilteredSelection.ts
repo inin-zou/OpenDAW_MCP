@@ -70,6 +70,7 @@ export class FilteredSelection<T extends Addressable> implements Selection<T>, T
     }
 
     isEmpty(): boolean {return this.#set.size() === 0}
+    nonEmpty(): boolean {return this.#set.size() > 0}
 
     count(): int {return this.#set.size()}
 

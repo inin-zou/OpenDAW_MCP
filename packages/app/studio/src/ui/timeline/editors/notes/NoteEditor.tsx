@@ -126,51 +126,91 @@ export const NoteEditor =
             if (adapters.length === 0) {return}
             editing.modify(() => adapters.forEach(procedure))
         }
-        lifecycle.own(Events.subscribe(element, "keydown", event => {
-            if (event.altKey || Keyboard.isControlKey(event) || Events.isTextInput(event.target)) {return}
-            event.preventDefault()
-            switch (event.key) {
-                case "ArrowUp": {
-                    if (event.shiftKey) {
-                        modifySelection(({box, pitch}: NoteEventBoxAdapter) => {
-                            if (pitch + 12 <= 127) {box.pitch.setValue(pitch + 12)}
-                        })
+        lifecycle.ownAll(
+            Events.subscribe(element, "keydown", event => {
+                if (event.altKey || Keyboard.isControlKey(event) || Events.isTextInput(event.target)) {return}
+                event.preventDefault()
+                switch (event.key) {
+                    case "ArrowUp": {
+                        if (event.shiftKey) {
+                            modifySelection(({box, pitch}: NoteEventBoxAdapter) => {
+                                if (pitch + 12 <= 127) {box.pitch.setValue(pitch + 12)}
+                            })
+                        } else {
+                            modifySelection(({box, pitch}: NoteEventBoxAdapter) =>
+                                box.pitch.setValue(Math.max(pitch + 1, 0)))
+                        }
+                        break
+                    }
+                    case "ArrowDown": {
+                        if (event.shiftKey) {
+                            modifySelection(({box, pitch}: NoteEventBoxAdapter) => {
+                                if (pitch - 12 >= 0) {box.pitch.setValue(pitch - 12)}
+                            })
+                        } else {
+                            modifySelection(({box, pitch}: NoteEventBoxAdapter) =>
+                                box.pitch.setValue(Math.max(pitch - 1, 0)))
+                        }
+                        break
+                    }
+                    case "ArrowLeft": {
+                        if (selection.nonEmpty()) {
+                            if (!event.shiftKey) {
+                                modifySelection(({box, position}: NoteEventBoxAdapter) =>
+                                    box.position.setValue(position - snapping.value))
+                            }
+                        } else if (!engine.isPlaying.getValue()) {
+                            engine.setPosition(Math.max(reader.offset,
+                                snapping.ceil(engine.position.getValue()) - snapping.value))
+                        }
+                        break
+                    }
+                    case "ArrowRight": {
+                        if (selection.nonEmpty()) {
+                            if (!event.shiftKey) {
+                                modifySelection(({box, position}: NoteEventBoxAdapter) =>
+                                    box.position.setValue(position + snapping.value))
+                            }
+                        } else if (!engine.isPlaying.getValue()) {
+                            engine.setPosition(snapping.floor(engine.position.getValue()) + snapping.value)
+                        }
+                        break
+                    }
+                }
+            })
+            /* TODO STEP RECORDING
+            engine.isPlaying.catchupAndSubscribe((() => {
+                const terminator = lifecycle.own(new Terminator())
+                return (owner: ObservableValue<boolean>) => {
+                    // TODO There is still one in the buffer somewhere, when start playing again.
+                    //  I suppose isPlaying is set to false later.
+                    if (owner.getValue()) {
+                        terminator.terminate()
                     } else {
-                        modifySelection(({
-                                             box,
-                                             pitch
-                                         }: NoteEventBoxAdapter) => box.pitch.setValue(Math.max(pitch + 1, 0)))
+                        terminator.own(noteReceiver.subscribe(receiver => {
+                            const position = snapping.floor(engine.position.getValue())
+                            const duration = snapping.value
+                            let createdNote = false
+                            editing.modify(() => {
+                                for (let pitch = 0; pitch < 128; pitch++) {
+                                    if (receiver.isNoteOn(pitch)) {
+                                        NoteEventBox.create(boxGraph, UUID.generate(), box => {
+                                            box.events.refer(reader.content.box.events)
+                                            box.position.setValue(position - reader.position)
+                                            box.duration.setValue(duration)
+                                            box.pitch.setValue(pitch)
+                                        })
+                                        createdNote = true
+                                    }
+                                }
+                            })
+                            if (createdNote) {
+                                engine.setPosition(position + duration)
+                            }
+                        }))
                     }
-                    break
                 }
-                case "ArrowDown": {
-                    if (event.shiftKey) {
-                        modifySelection(({box, pitch}: NoteEventBoxAdapter) => {
-                            if (pitch - 12 >= 0) {box.pitch.setValue(pitch - 12)}
-                        })
-                    } else {
-                        modifySelection(({
-                                             box,
-                                             pitch
-                                         }: NoteEventBoxAdapter) => box.pitch.setValue(Math.max(pitch - 1, 0)))
-                    }
-                    break
-                }
-                case "ArrowLeft": {
-                    if (!event.shiftKey) {
-                        modifySelection(({box, position}: NoteEventBoxAdapter) =>
-                            box.position.setValue(position - snapping.value))
-                    }
-                    break
-                }
-                case "ArrowRight": {
-                    if (!event.shiftKey) {
-                        modifySelection(({box, position}: NoteEventBoxAdapter) =>
-                            box.position.setValue(position + snapping.value))
-                    }
-                    break
-                }
-            }
-        }))
+            })())*/
+        )
         return element
     }

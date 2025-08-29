@@ -33,7 +33,7 @@ export class NanoDeviceProcessor extends AudioProcessor implements InstrumentDev
 
         this.#voices = []
         this.#audioOutput = new AudioBuffer()
-        this.#noteEventProcessor = new NoteEventInstrument(this, context.broadcaster, adapter.address)
+        this.#noteEventProcessor = new NoteEventInstrument(this, context.broadcaster, adapter.audioUnitBoxAdapter().address)
         this.#peakBroadcaster = this.own(new PeakBroadcaster(context.broadcaster, adapter.address))
         this.#parameterVolume = this.own(this.bindParameter(this.#adapter.namedParameter.volume))
         this.#parameterRelease = this.own(this.bindParameter(this.#adapter.namedParameter.release))

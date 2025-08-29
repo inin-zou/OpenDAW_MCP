@@ -1,7 +1,6 @@
 import {EngineContext} from "./EngineContext"
 import {
     AudioUnitBoxAdapter,
-    NoteBroadcaster,
     NoteClipBoxAdapter,
     NoteEventCollectionBoxAdapter,
     NoteRegionBoxAdapter,
@@ -40,7 +39,7 @@ export class NoteSequencer implements NoteEventSource, Terminable {
     readonly #context: EngineContext
     readonly #adapter: AudioUnitBoxAdapter
 
-    readonly #noteBroadcaster: NoteBroadcaster
+    // readonly #noteBroadcaster: NoteBroadcaster TODO We can actually remove this entirely?
     readonly #random: Random
     readonly #externalNotes: Set<ExternalNote>
     readonly #retainer: EventSpanRetainer<Id<NoteEvent>>
@@ -49,7 +48,7 @@ export class NoteSequencer implements NoteEventSource, Terminable {
         this.#context = context
         this.#adapter = adapter
 
-        this.#noteBroadcaster = this.#terminator.own(new NoteBroadcaster(context.broadcaster, adapter.address))
+        // this.#noteBroadcaster = this.#terminator.own(new NoteBroadcaster(context.broadcaster, adapter.address))
         this.#random = Random.create(0xFFFF123)
         this.#externalNotes = new Set<ExternalNote>()
         this.#retainer = new EventSpanRetainer<Id<NoteEvent>>()
@@ -92,7 +91,7 @@ export class NoteSequencer implements NoteEventSource, Terminable {
             if (releaseAll) {
                 yield* this.#releaseAll(from)
             } else {
-                yield* this.#releasecompleted(from, to)
+                yield* this.#releaseCompleted(from, to)
             }
         }
         if (this.#externalNotes.size > 0) {
@@ -126,7 +125,7 @@ export class NoteSequencer implements NoteEventSource, Terminable {
                     }
                 }
             }
-            yield* this.#releasecompleted(from, to) // in case they complete in the same block
+            yield* this.#releaseCompleted(from, to) // in case they complete in the same block
         }
     }
 
@@ -200,7 +199,7 @@ export class NoteSequencer implements NoteEventSource, Terminable {
                         const b = NoteEvent.curveFunc((searchPosition + 1.0 / playCount), playCurve) * duration
                         const event: Id<NoteEvent> = NoteLifecycleEvent.startWith(source, position + a + delta, b - a)
                         this.#retainer.addAndRetain({...event})
-                        this.#noteBroadcaster.noteOn(event.pitch)
+                        // this.#noteBroadcaster.noteOn(event.pitch)
                         yield event
                     }
                     searchPosition = ++searchIndex / playCount
@@ -209,7 +208,7 @@ export class NoteSequencer implements NoteEventSource, Terminable {
                 if (localStart <= position && position < localEnd) {
                     const event: Id<NoteEvent> = NoteLifecycleEvent.startWith(source, position + delta)
                     this.#retainer.addAndRetain({...event})
-                    this.#noteBroadcaster.noteOn(event.pitch)
+                    // this.#noteBroadcaster.noteOn(event.pitch)
                     yield event
                 }
             }
@@ -218,14 +217,14 @@ export class NoteSequencer implements NoteEventSource, Terminable {
 
     * #releaseAll(from: ppqn): Generator<NoteCompleteEvent> {
         for (const event of this.#retainer.releaseAll()) {
-            this.#noteBroadcaster.noteOff(event.pitch)
+            // this.#noteBroadcaster.noteOff(event.pitch)
             yield NoteLifecycleEvent.stop(event, from)
         }
     }
 
-    * #releasecompleted(from: ppqn, to: ppqn): Generator<NoteCompleteEvent> {
+    * #releaseCompleted(from: ppqn, to: ppqn): Generator<NoteCompleteEvent> {
         for (const event of this.#retainer.releaseLinearCompleted(to)) {
-            this.#noteBroadcaster.noteOff(event.pitch)
+            // this.#noteBroadcaster.noteOff(event.pitch)
             // We need to clamp the value in case the time-domain has been changed between note-start and note-complete
             const position = clamp(event.position + event.duration, from, to)
             yield NoteLifecycleEvent.stop(event, position)
