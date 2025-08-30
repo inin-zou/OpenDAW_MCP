@@ -108,10 +108,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
             const settings = stream.getAudioTracks().at(0)?.getSettings()
             if (isDefined(settings)) {
                 const deviceId = this.deviceId.getValue().unwrapOrUndefined()
-                const channelCount = this.#requestChannels.unwrapOrElse(1)
-                const satisfyChannelCount = settings.channelCount === channelCount
-                const satisfiedDeviceId = isUndefined(deviceId) || deviceId === settings.deviceId
-                if (satisfiedDeviceId && satisfyChannelCount) {
+                if (isUndefined(deviceId) || deviceId === settings.deviceId) {
                     return Promise.resolve()
                 }
             }
