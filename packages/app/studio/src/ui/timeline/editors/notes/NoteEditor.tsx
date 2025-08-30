@@ -96,7 +96,8 @@ export const NoteEditor =
                              noteSender={noteSender}
                              selection={selection}
                              modifyContext={modifyContext}
-                             reader={reader}/>
+                             reader={reader}
+                             stepRecording={stepRecording}/>
             </div>
         )
         lifecycle.ownAll(

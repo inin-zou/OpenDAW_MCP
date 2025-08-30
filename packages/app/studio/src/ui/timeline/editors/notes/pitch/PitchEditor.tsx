@@ -1,5 +1,5 @@
 import css from "./PitchEditor.sass?inline"
-import {Lifecycle, Nullable, Option, panic, Selection, UUID} from "@opendaw/lib-std"
+import {Lifecycle, MutableObservableValue, Nullable, Option, panic, Selection, UUID} from "@opendaw/lib-std"
 import {createElement} from "@opendaw/lib-jsx"
 import {TimelineRange} from "@/ui/timeline/TimelineRange.ts"
 import {PitchPositioner} from "./PitchPositioner.ts"
@@ -50,6 +50,7 @@ type Construct = {
     selection: Selection<NoteEventBoxAdapter>
     modifyContext: ObservableModifyContext<NoteModifier>
     reader: NoteEventOwnerReader
+    stepRecording: MutableObservableValue<boolean>
 }
 
 export const PitchEditor =
@@ -64,7 +65,8 @@ export const PitchEditor =
          scale,
          selection,
          modifyContext,
-         reader
+         reader,
+         stepRecording
      }: Construct) => {
         const canvas: HTMLCanvasElement = <canvas tabIndex={-1}/>
         const capturing = createPitchEventCapturing(canvas, positioner, range, reader)
@@ -171,7 +173,8 @@ export const PitchEditor =
                 selection,
                 capturing,
                 editing,
-                events: reader.content.events
+                events: reader.content.events,
+                stepRecording
             }),
             positioner.subscribe(renderer.requestUpdate),
             range.subscribe(renderer.requestUpdate),
