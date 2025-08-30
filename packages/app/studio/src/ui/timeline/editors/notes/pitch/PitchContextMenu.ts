@@ -25,5 +25,5 @@ export const installContextMenu = ({element, capturing, snapping, editing, selec
             selection.deselectAll()
             selection.select(target.event)
         }
-        createPitchMenu(editing, snapping, selection, events)(collector)
+        createPitchMenu({editing: editing, snapping: snapping, selection: selection, events: events})(collector)
     })

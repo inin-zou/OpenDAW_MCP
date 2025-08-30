@@ -6,6 +6,7 @@ import {
     isDefined,
     isUndefined,
     Notifier,
+    Observer,
     Option,
     Subscription,
     Terminable,
@@ -65,6 +66,8 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
             })
         )
     }
+
+    subscribeNotes(observer: Observer<MIDIMessageEvent>): Subscription {return this.#notifier.subscribe(observer)}
 
     get label(): string {
         return MidiDevices.get().mapOr(midiAccess => this.deviceId.getValue().match({

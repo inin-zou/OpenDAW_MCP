@@ -1,14 +1,17 @@
 import {Editing} from "@opendaw/lib-box"
 import {Snapping} from "@/ui/timeline/Snapping.ts"
-import {Procedure, Selection} from "@opendaw/lib-std"
+import {MutableObservableValue, Procedure, Selection} from "@opendaw/lib-std"
 import {NoteEventBoxAdapter} from "@opendaw/studio-adapters"
 import {EventCollection} from "@opendaw/lib-dsp"
 import {MenuCollector, MenuItem} from "@/ui/model/menu-item.ts"
 
-export const createPitchMenu = (editing: Editing,
-                                snapping: Snapping,
-                                selection: Selection<NoteEventBoxAdapter>,
-                                events: EventCollection<NoteEventBoxAdapter>): Procedure<MenuCollector> => {
+export const createPitchMenu = ({editing, snapping, selection, events, stepRecording}: {
+    editing: Editing
+    snapping: Snapping
+    selection: Selection<NoteEventBoxAdapter>
+    events: EventCollection<NoteEventBoxAdapter>
+    stepRecording: MutableObservableValue<boolean>
+}): Procedure<MenuCollector> => {
     const modify = (procedure: Procedure<ReadonlyArray<NoteEventBoxAdapter>>) => {
         const adapters: ReadonlyArray<NoteEventBoxAdapter> = selection.isEmpty() ? events.asArray() : selection.selected()
         if (adapters.length === 0) {return}
@@ -18,6 +21,8 @@ export const createPitchMenu = (editing: Editing,
         MenuItem.default({label: "Delete", selectable: !selection.isEmpty()})
             .setTriggerProcedure(() => editing.modify(() => selection.selected()
                 .forEach(adapter => adapter.box.delete()))),
+        MenuItem.default({label: "Step Recording", checked: stepRecording.getValue()})
+            .setTriggerProcedure(() => stepRecording.setValue(!stepRecording.getValue())),
         MenuItem.default({
             label: "Consolidate",
             selectable: selection.selected().some(adapter => adapter.canConsolidate())
