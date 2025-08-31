@@ -12,7 +12,14 @@ import {
     ValueRegionBox
 } from "@opendaw/studio-boxes"
 import {NoteEditor} from "@/ui/timeline/editors/notes/NoteEditor.tsx"
-import {NoteRegionBoxAdapter} from "@opendaw/studio-adapters"
+import {
+    AudioClipBoxAdapter,
+    AudioRegionBoxAdapter,
+    NoteClipBoxAdapter,
+    NoteRegionBoxAdapter,
+    ValueClipBoxAdapter,
+    ValueRegionBoxAdapter
+} from "@opendaw/studio-adapters"
 import {Box, PointerField, Vertex} from "@opendaw/lib-box"
 import {SnapSelector} from "@/ui/timeline/SnapSelector.tsx"
 import {Snapping} from "@/ui/timeline/Snapping.ts"
@@ -20,9 +27,7 @@ import {TimelineRange} from "@/ui/timeline/TimelineRange.ts"
 import {TimeAxis} from "@/ui/timeline/TimeAxis.tsx"
 import {TimelineRangeSlider} from "@/ui/timeline/TimelineRangeSlider.tsx"
 import {ValueEventsEditor} from "./value/ValueEventsEditor.tsx"
-import {ValueRegionBoxAdapter} from "@opendaw/studio-adapters"
 import {FlexSpacer} from "@/ui/components/FlexSpacer.tsx"
-import {AudioRegionBoxAdapter} from "@opendaw/studio-adapters"
 import {PPQN} from "@opendaw/lib-dsp"
 import {AudioEditor} from "@/ui/timeline/editors/audio/AudioEditor.tsx"
 import {MenuButton} from "@/ui/components/MenuButton"
@@ -30,7 +35,6 @@ import {MenuItem} from "@/ui/model/menu-item.ts"
 import {EditorMenuCollector} from "@/ui/timeline/editors/EditorMenuCollector.ts"
 
 import {ClipReader} from "@/ui/timeline/editors/ClipReader.ts"
-import {NoteClipBoxAdapter} from "@opendaw/studio-adapters"
 import {RegionBound} from "./RegionBound"
 import {
     AudioEventOwnerReader,
@@ -39,11 +43,9 @@ import {
     ValueEventOwnerReader
 } from "@/ui/timeline/editors/EventOwnerReader.ts"
 import {RegionReader} from "@/ui/timeline/editors/RegionReader.ts"
-import {AudioClipBoxAdapter} from "@opendaw/studio-adapters"
-import {ValueClipBoxAdapter} from "@opendaw/studio-adapters"
 import {Pointers} from "@opendaw/studio-enums"
 import {ValueEditingContext} from "@/ui/timeline/editors/value/ValueEditingContext.ts"
-import {Html} from "@opendaw/lib-dom"
+import {AnimationFrame, Events, Html, Keyboard} from "@opendaw/lib-dom"
 import {Colors} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "ContentEditor")
@@ -76,7 +78,7 @@ export const ContentEditor = ({lifecycle, service}: Construct) => {
         ))
     )
     const element: HTMLElement = (
-        <div className={className}>
+        <div className={className} tabIndex={-1}>
             <div className="generic">
                 <div className="tool">
                     <SnapSelector lifecycle={lifecycle} snapping={snapping}/>
@@ -200,6 +202,7 @@ export const ContentEditor = ({lifecycle, service}: Construct) => {
                         return fallback(vertex.box)
                     })()
                     )
+                    AnimationFrame.once(() => element.focus())
                 },
                 none: () => {
                     owner = Option.None
@@ -227,7 +230,27 @@ export const ContentEditor = ({lifecycle, service}: Construct) => {
                     range.maxUnits = mainTimelineRange.maxUnits
                 }
             }
-        })())
+        })()),
+        Events.subscribe(element, "keydown", event => {
+            if (event.altKey || Keyboard.isControlKey(event) || Events.isTextInput(event.target)) {return}
+            const {project: {engine}} = service
+            event.preventDefault()
+            switch (event.key) {
+                case "ArrowLeft": {
+                    if (!engine.isPlaying.getValue()) {
+                        engine.setPosition(Math.max(0,
+                            snapping.ceil(engine.position.getValue()) - snapping.value))
+                    }
+                    break
+                }
+                case "ArrowRight": {
+                    if (!engine.isPlaying.getValue()) {
+                        engine.setPosition(snapping.floor(engine.position.getValue()) + snapping.value)
+                    }
+                    break
+                }
+            }
+        })
     )
     return element
 }

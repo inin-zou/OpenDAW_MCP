@@ -163,6 +163,7 @@ export const NoteEditor =
                             modifySelection(({box, pitch}: NoteEventBoxAdapter) =>
                                 box.pitch.setValue(Math.max(pitch + 1, 0)))
                         }
+                        event.stopPropagation()
                         break
                     }
                     case "ArrowDown": {
@@ -174,6 +175,7 @@ export const NoteEditor =
                             modifySelection(({box, pitch}: NoteEventBoxAdapter) =>
                                 box.pitch.setValue(Math.max(pitch - 1, 0)))
                         }
+                        event.stopPropagation()
                         break
                     }
                     case "ArrowLeft": {
@@ -181,10 +183,9 @@ export const NoteEditor =
                             if (!event.shiftKey) {
                                 modifySelection(({box, position}: NoteEventBoxAdapter) =>
                                     box.position.setValue(position - snapping.value))
+                                console.debug("stopPropagation")
+                                event.stopPropagation()
                             }
-                        } else if (!engine.isPlaying.getValue()) {
-                            engine.setPosition(Math.max(reader.offset,
-                                snapping.ceil(engine.position.getValue()) - snapping.value))
                         }
                         break
                     }
@@ -193,9 +194,9 @@ export const NoteEditor =
                             if (!event.shiftKey) {
                                 modifySelection(({box, position}: NoteEventBoxAdapter) =>
                                     box.position.setValue(position + snapping.value))
+                                console.debug("stopPropagation")
+                                event.stopPropagation()
                             }
-                        } else if (!engine.isPlaying.getValue()) {
-                            engine.setPosition(snapping.floor(engine.position.getValue()) + snapping.value)
                         }
                         break
                     }

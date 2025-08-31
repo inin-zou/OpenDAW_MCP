@@ -101,8 +101,16 @@ export const tryCatch = <T>(statement: Provider<T>)
 export const isValidIdentifier = (identifier: string): boolean => /^[A-Za-z_$][A-Za-z0-9_]*$/.test(identifier)
 export const asValidIdentifier = (identifier: string): string =>
     isValidIdentifier(identifier) ? identifier : panic(`'${identifier}' is not a valid identifier`)
-export const isEnumValue = <E extends Record<string, string | number>>(e: E, v: unknown): v is E[keyof E] =>
-    Object.keys(e).some(k => isNaN(+k) && e[k as keyof E] === v)
+export const asEnumValue = <
+    E extends Record<string, string | number>
+>(value: string | number, enm: E): E[keyof E] => {
+    const keys = Object.keys(enm)
+    if (keys.length === 0) return panic("Empty enum object (are you using `const enum`?)")
+    const values = Object.keys(enm)
+        .filter(k => isNaN(Number(k)))      // drop numeric reverse keys
+        .map(k => enm[k as keyof typeof enm])
+    return values.includes(value as any) ? value as E[keyof E] : panic(`Invalid enum value: ${String(value)}`)
+}
 export const EmptyExec: Exec = (): void => {}
 export const EmptyProvider: Provider<any> = (): any => {}
 export const EmptyProcedure: Procedure<any> = (_: any): void => {}

@@ -1,4 +1,4 @@
-import {clamp, Id, int, Option, Terminable, UUID} from "@opendaw/lib-std"
+import {asEnumValue, clamp, Id, int, Option, Terminable, UUID} from "@opendaw/lib-std"
 import {
     BandLimitedOscillator,
     BiquadCoeff,
@@ -120,7 +120,7 @@ export class VaporisateurDeviceProcessor extends AudioProcessor implements Instr
         } else if (parameter === this.#parameterRelease) {
             this.release = Math.floor(this.#parameterRelease.getValue() * sampleRate)
         } else if (parameter === this.#parameterWaveform) {
-            this.waveform = this.#parameterWaveform.getValue() as Waveform
+            this.waveform = asEnumValue(this.#parameterWaveform.getValue(), Waveform)
         } else if (parameter === this.#parameterCutoff) {
             this.cutoff = this.#parameterCutoff.getValue()
         } else if (parameter === this.#parameterResonance) {
