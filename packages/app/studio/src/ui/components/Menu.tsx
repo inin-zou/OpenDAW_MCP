@@ -41,7 +41,14 @@ type MenuHtmlStructure = {
 }
 
 export class Menu implements Terminable, Lifecycle {
-    static create(item: MenuItem, groupId?: string): Menu {return new Menu(Option.None, item, groupId ?? "")}
+    static create(item: MenuItem, groupId?: string): Menu {
+        const oldFocus = document.activeElement
+        const menu = new Menu(Option.None, item, groupId ?? "")
+        if (oldFocus instanceof HTMLElement) {
+            menu.own(Terminable.create(() => oldFocus.focus()))
+        }
+        return menu
+    }
 
     static Padding = 4 // this is the invisible increase of the hitarea to have seamless connection to the source
     static MIN_TIME_MS = 250 // if the menu is placed under the pointer, we avoid an accidental click
