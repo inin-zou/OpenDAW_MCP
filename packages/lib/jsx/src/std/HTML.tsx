@@ -16,6 +16,10 @@ export const HTML = ({src, className}: { src: HTMLSource, className?: string }) 
         } else {
             markup = await src.then(x => x.text())
         }
+        markup = markup
+            .replace(/^\uFEFF/, "") // BOM
+            .replace(/^\s*<\?xml[\s\S]*?\?>\s*/i, "") // XML prolog
+            .replace(/^\s*<!DOCTYPE[\s\S]*?>\s*/i, "") // DOCTYPE
         const frag = document.createElement("div")
         // console.debug(markup)
         frag.innerHTML = markup

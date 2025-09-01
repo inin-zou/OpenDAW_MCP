@@ -47,7 +47,7 @@ export const Dashboard = ({service}: Construct) => {
                                 {name: "Release", click: () => service.loadTemplate("Release")},
                                 {name: "Dub Techno", click: () => service.loadTemplate("Dub-Techno")}
                             ].map(({name, click}, index) => {
-                                const svgSource = `viscious-speed/abstract-${String(index + 1).padStart(3, "0")}.svg`
+                                const svgSource = `viscious-speed/abstract-${String(index).padStart(3, "0")}.svg`
                                 return (
                                     <div onclick={click}>
                                         <HTML src={fetch(svgSource)} className="icon"/>
