@@ -278,8 +278,8 @@ export namespace Dialogs {
                     <p>{message}</p>
                     {probablyHasExtension && (
                         <p style={{color: Colors.red}}>
-                            Something extra is running! A browser extension might be causing issues.<br/>
-                            Try disabling extensions for this site.
+                            Something extra is running! A browser extension might be causing issues. Disable
+                            extensions for this site.
                         </p>
                     )}
                 </div>

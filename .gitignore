@@ -1,7 +1,7 @@
 .DS_Store
 .turbo
 .idea
-.env
+packages/app/studio/.env
 .cache
 *.log
 *.local

@@ -4,21 +4,15 @@ import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {RouteLocation} from "@opendaw/lib-jsx"
 import {isDefined, panic} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
-import {AudioDevices} from "@opendaw/studio-core"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
 
 export const initAppMenu = (service: StudioService) => {
     return MenuItem.root()
         .setRuntimeChildrenProcedure(parent => {
-                const canRequestPermission = AudioDevices.inputs.length === 0
                 parent.addMenuItem(
                     MenuItem.header({label: "openDAW", icon: IconSymbol.OpenDAW}),
-                    MenuItem.default({
-                        label: "Request permission 🔊",
-                        hidden: !canRequestPermission
-                    }).setTriggerProcedure(() => AudioDevices.requestPermission()),
-                    MenuItem.default({label: "New", separatorBefore: canRequestPermission})
+                    MenuItem.default({label: "New"})
                         .setTriggerProcedure(() => service.closeProject()),
                     MenuItem.default({label: "Open...", shortcut: [ModfierKeys.System.Cmd, "O"]})
                         .setTriggerProcedure(() => service.browse()),

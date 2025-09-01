@@ -103,6 +103,7 @@ describe("SortedSet – behavioural contract", () => {
         set.addMany([5, 6, 7])
         expect(set.isEmpty()).toBe(false)
 
+        // @ts-ignore
         expect([...set]).toStrictEqual([5, 6, 7])
 
         set.clear()
