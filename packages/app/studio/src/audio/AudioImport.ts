@@ -15,10 +15,15 @@ export namespace AudioImporter {
 
     export const run = async (context: AudioContext,
                               {uuid, name, arrayBuffer, progressHandler}: Creation): Promise<Sample> => {
+        console.time("UUID.sha256")
         uuid ??= await UUID.sha256(arrayBuffer) // Must run before decodeAudioData laster, because it will detach the ArrayBuffer
+        console.timeEnd("UUID.sha256")
+        console.time("decodeAudioData")
         const audioResult = await Promises.tryCatch(context.decodeAudioData(arrayBuffer))
+        console.timeEnd("decodeAudioData")
         if (audioResult.status === "rejected") {return Promise.reject(name)}
         const {value: audioBuffer} = audioResult
+        console.debug(`Imported ${audioBuffer.duration.toFixed(1)} seconds`)
         const audioData: AudioData = {
             sampleRate: audioBuffer.sampleRate,
             numberOfFrames: audioBuffer.length,
