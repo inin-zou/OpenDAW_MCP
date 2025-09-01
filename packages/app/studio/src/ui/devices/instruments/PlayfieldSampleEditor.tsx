@@ -68,8 +68,10 @@ export const PlayfieldSampleEditor = ({lifecycle, service, adapter, deviceHost}:
                               Terminable.create(() => noteLifeTime.terminate()),
                               TextTooltip.default(deviceLabel, () => "Go back to device"),
                               TextTooltip.default(playLabel, () => "Play sample"),
-                              Events.subscribe(playLabel, "pointerdown", ({pointerId}: PointerEvent) => {
-                                  playLabel.setPointerCapture(pointerId)
+                              Events.subscribe(playLabel, "dblclick", event => event.stopPropagation()),
+                              Events.subscribe(playLabel, "pointerdown", (event: PointerEvent) => {
+                                  event.stopPropagation()
+                                  playLabel.setPointerCapture(event.pointerId)
                                   noteLifeTime = NoteLifeCycle.start(signal => engine.noteSignal(signal), audioUnitBoxAdapter.uuid, adapter.indexField.getValue())
                               }),
                               Events.subscribe(playLabel, "pointerup", () => noteLifeTime.terminate())
