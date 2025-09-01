@@ -1,6 +1,6 @@
 // DropboxHandler.ts
 import type {CloudStorageHandler} from "./CloudAuthManager"
-import {Dropbox, DropboxResponse} from "dropbox"
+import {Dropbox, DropboxResponse, files} from "dropbox"
 
 export class DropboxHandler implements CloudStorageHandler {
     #token: string
@@ -39,13 +39,11 @@ export class DropboxHandler implements CloudStorageHandler {
             const filename = path.replace(/:/g, "-")
             return `${this.#basePath}/${filename}`
         }
-
         const cleanPath = path.startsWith("/") ? path : `/${path}`
         return `${this.#basePath}${cleanPath}`
     }
 
     async upload(path: string, data: ArrayBuffer | Blob): Promise<void> {
-        console.debug("upload", path)
         const client = await this.#ensureClient()
         const fullPath = this.#getFullPath(path)
 
@@ -72,13 +70,11 @@ export class DropboxHandler implements CloudStorageHandler {
     async download(path: string): Promise<ArrayBuffer> {
         const client = await this.#ensureClient()
         const fullPath = this.#getFullPath(path)
-
         const response = await client.filesDownload({path: fullPath})
-
-        console.debug("download response", response)
-
-        const {result: {name, fileBlob}} = response as DropboxResponse<any>
-        console.debug("name", name)
+        const {result: {name, fileBlob}} = response as DropboxResponse<files.FileMetadata & {
+            fileBlob: Blob
+        }>
+        console.debug(`downloaded ${name}`)
         return await fileBlob.arrayBuffer()
     }
 
