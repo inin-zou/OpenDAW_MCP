@@ -1,32 +1,24 @@
-import {isDefined} from "@opendaw/lib-std"
+import {EmptyExec, isDefined} from "@opendaw/lib-std"
+import {Html} from "@opendaw/lib-dom"
+import sanitize = Html.sanitize
 
 export type HTMLSource = string | URL | Promise<Response>
 
-const sanitizeFragment = (frag: DocumentFragment) => {
-    frag.querySelectorAll("script").forEach(n => n.remove())
-    frag.querySelectorAll("*").forEach(el => {
-        for (const a of [...el.attributes]) {
-            if (a.name.toLowerCase().startsWith("on")) el.removeAttribute(a.name)
-        }
-    })
-}
-
 export const HTML = ({src, className}: { src: HTMLSource, className?: string }) => {
     const placeholder = document.createElement("span")
-    placeholder.hidden = true
-    const load = async () => {
+    ;(async () => {
         let markup: string
         if (typeof src === "string") {
             markup = src
         } else if (src instanceof URL) {
-            const r = await fetch(src.toString(), {credentials: "same-origin"})
-            markup = await r.text()
+            const response = await fetch(src.toString(), {credentials: "same-origin"})
+            markup = await response.text()
         } else {
             markup = await src.then(x => x.text())
         }
-        const range = document.createRange()
-        const frag = range.createContextualFragment(markup)
-        sanitizeFragment(frag)
+        const frag = document.createElement("div")
+        frag.innerHTML = markup
+        sanitize(frag)
         if (isDefined(className)) {
             for (const node of frag.childNodes) {
                 if (node instanceof Element) {
@@ -34,8 +26,7 @@ export const HTML = ({src, className}: { src: HTMLSource, className?: string }) 
                 }
             }
         }
-        placeholder.replaceWith(frag)
-    }
-    load().finally()
+        placeholder.replaceWith(...frag.childNodes)
+    })().catch(EmptyExec)
     return placeholder
 }

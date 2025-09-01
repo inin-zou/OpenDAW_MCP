@@ -15,16 +15,22 @@ export namespace Html {
 
     export const empty = (element: Element): void => {while (element.firstChild !== null) {element.firstChild.remove()}}
 
-    export const replace = (element: Element, ...elements: ReadonlyArray<string | Element>): void => {
-        Html.empty(element)
-        element.append(...elements)
-    }
-
     export const query = <E extends Element>(selectors: string, parent: ParentNode = document): E =>
         asDefined(parent.querySelector(selectors)) as E
 
     export const queryAll = <E extends Element>(selectors: string, parent: ParentNode = document): ReadonlyArray<E> =>
         Array.from(parent.querySelectorAll(selectors))
+
+    export const sanitize = (element: Element) => {
+        element.querySelectorAll("script").forEach(node => node.remove())
+        element.querySelectorAll("*").forEach(element => {
+            [...element.attributes].forEach(attribute => {
+                if (attribute.name.toLowerCase().startsWith("on")) {
+                    element.removeAttribute(attribute.name)
+                }
+            })
+        })
+    }
 
     export const nextID = (() => {
         let id: int = 0 | 0
