@@ -17,6 +17,7 @@ export const HTML = ({src, className}: { src: HTMLSource, className?: string }) 
             markup = await src.then(x => x.text())
         }
         const frag = document.createElement("div")
+        // console.debug(markup)
         frag.innerHTML = markup
         sanitize(frag)
         if (isDefined(className)) {
