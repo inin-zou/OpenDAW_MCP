@@ -20,7 +20,7 @@ export namespace NoteSignal {
         const data = event.data!
         if (MidiData.isNoteOn(data)) {
             const pitch = MidiData.readPitch(data)
-            const velocity = MidiData.readVelocity(data) / 127.0
+            const velocity = MidiData.readVelocity(data)
             return ({type: "note-on", uuid, pitch, velocity})
         } else if (MidiData.isNoteOff(data)) {
             const pitch = MidiData.readPitch(data)
