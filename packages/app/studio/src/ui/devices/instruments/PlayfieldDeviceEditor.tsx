@@ -1,9 +1,9 @@
-import {byte, DefaultObservableValue, float, Lifecycle} from "@opendaw/lib-std"
+import {DefaultObservableValue, Lifecycle} from "@opendaw/lib-std"
 import {createElement} from "@opendaw/lib-jsx"
 import {DeviceEditor} from "@/ui/devices/DeviceEditor.tsx"
 import {MenuItems} from "@/ui/devices/menu-items.ts"
 import {DevicePeakMeter} from "@/ui/devices/panel/DevicePeakMeter.tsx"
-import {DeviceHost, NoteSender, PlayfieldDeviceBoxAdapter} from "@opendaw/studio-adapters"
+import {DeviceHost, PlayfieldDeviceBoxAdapter} from "@opendaw/studio-adapters"
 import {MenuItem} from "@/ui/model/menu-item"
 import {SlotGrid} from "@/ui/devices/instruments/PlayfieldDeviceEditor/SlotGrid"
 import {StudioService} from "@/service/StudioService"
@@ -20,11 +20,6 @@ const octave = new DefaultObservableValue(5) // TODO Make that bound to its Play
 
 export const PlayfieldDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
     const {project} = service
-    const {engine} = project
-    const noteSender: NoteSender = {
-        noteOn: (note: byte, velocity: float) => engine.noteOn(deviceHost.uuid, note, velocity),
-        noteOff: (note: byte) => engine.noteOff(deviceHost.uuid, note)
-    }
     return (
         <DeviceEditor lifecycle={lifecycle}
                       project={project}
@@ -37,7 +32,6 @@ export const PlayfieldDeviceEditor = ({lifecycle, service, adapter, deviceHost}:
                       populateControls={() => (
                           <SlotGrid lifecycle={lifecycle}
                                     service={service}
-                                    noteSender={noteSender}
                                     adapter={adapter}
                                     octave={octave}/>
                       )}

@@ -1,16 +1,6 @@
 import css from "./NoteEditor.sass?inline"
 import {Events, Html, Keyboard} from "@opendaw/lib-dom"
-import {
-    byte,
-    DefaultObservableValue,
-    int,
-    isInstanceOf,
-    Lifecycle,
-    Option,
-    Procedure,
-    Terminable,
-    UUID
-} from "@opendaw/lib-std"
+import {DefaultObservableValue, int, isInstanceOf, Lifecycle, Procedure, Terminable, UUID} from "@opendaw/lib-std"
 import {createElement} from "@opendaw/lib-jsx"
 import {StudioService} from "@/service/StudioService.ts"
 import {PitchEditor} from "@/ui/timeline/editors/notes/pitch/PitchEditor.tsx"
@@ -21,7 +11,7 @@ import {NoteEventBox} from "@opendaw/studio-boxes"
 import {PianoRoll} from "@/ui/timeline/editors/notes/pitch/PianoRoll.tsx"
 import {ScaleConfig} from "@/ui/timeline/editors/notes/pitch/ScaleConfig.ts"
 import {PitchEditorHeader} from "@/ui/timeline/editors/notes/pitch/PitchEditorHeader.tsx"
-import {FilteredSelection, NoteEventBoxAdapter, NoteSender, NoteStreamReceiver} from "@opendaw/studio-adapters"
+import {FilteredSelection, NoteEventBoxAdapter, NoteSignal, NoteStreamReceiver} from "@opendaw/studio-adapters"
 import {ObservableModifyContext} from "@/ui/timeline/ObservableModifyContext.ts"
 import {PropertyEditor} from "./property/PropertyEditor.tsx"
 import {NoteModifier} from "@/ui/timeline/editors/notes/NoteModifier.ts"
@@ -33,7 +23,6 @@ import {NotePropertyVelocity, PropertyAccessor} from "@/ui/timeline/editors/note
 import {NoteEventOwnerReader} from "@/ui/timeline/editors/EventOwnerReader.ts"
 import {createPitchMenu} from "@/ui/timeline/editors/notes/pitch/PitchMenu.ts"
 import {CaptureMidi} from "@opendaw/studio-core"
-import {MidiData} from "@opendaw/lib-midi"
 
 const className = Html.adoptStyleSheet(css, "NoteEditor")
 
@@ -50,9 +39,9 @@ export const NoteEditor =
     ({lifecycle, service, menu: {editMenu, viewMenu}, range, snapping, reader}: Construct) => {
         const {project} = service
         const {captureDevices, editing, engine, boxGraph, boxAdapters} = project
-        const optCapture: Option<CaptureMidi> = reader.trackBoxAdapter
+        const capture: CaptureMidi = reader.trackBoxAdapter
             .flatMap((adapter) => captureDevices.get(adapter.audioUnit.address.uuid))
-            .map(capture => isInstanceOf(capture, CaptureMidi) ? capture : null)
+            .map(capture => isInstanceOf(capture, CaptureMidi) ? capture : null).unwrap("No CaptureMidi available")
         const stepRecording = lifecycle.own(new DefaultObservableValue(false))
         const pitchPositioner = lifecycle.own(new PitchPositioner())
         const scale = lifecycle.own(new ScaleConfig())
@@ -65,10 +54,6 @@ export const NoteEditor =
             }))
         const audioUnitAddress = reader.trackBoxAdapter.unwrap().audioUnit.address
         const noteReceiver = lifecycle.own(new NoteStreamReceiver(project.liveStreamReceiver, audioUnitAddress))
-        const noteSender: NoteSender = {
-            noteOn: (note, velocity) => engine.noteOn(audioUnitAddress.uuid, note, velocity),
-            noteOff: (note) => engine.noteOff(audioUnitAddress.uuid, note)
-        }
         const pitchHeader: HTMLElement = (
             <div className="pitch-header">
                 <PitchEditorHeader lifecycle={lifecycle}
@@ -80,7 +65,7 @@ export const NoteEditor =
                            positioner={pitchPositioner}
                            scale={scale}
                            noteReceiver={noteReceiver}
-                           noteSender={noteSender}/>
+                           capture={capture}/>
             </div>
         )
         const pitchBody: HTMLElement = (
@@ -93,7 +78,7 @@ export const NoteEditor =
                              snapping={snapping}
                              positioner={pitchPositioner}
                              scale={scale}
-                             noteSender={noteSender}
+                             capture={capture}
                              selection={selection}
                              modifyContext={modifyContext}
                              reader={reader}
@@ -183,7 +168,6 @@ export const NoteEditor =
                             if (!event.shiftKey) {
                                 modifySelection(({box, position}: NoteEventBoxAdapter) =>
                                     box.position.setValue(position - snapping.value))
-                                console.debug("stopPropagation")
                                 event.stopPropagation()
                             }
                         }
@@ -194,7 +178,6 @@ export const NoteEditor =
                             if (!event.shiftKey) {
                                 modifySelection(({box, position}: NoteEventBoxAdapter) =>
                                     box.position.setValue(position + snapping.value))
-                                console.debug("stopPropagation")
                                 event.stopPropagation()
                             }
                         }
@@ -202,29 +185,28 @@ export const NoteEditor =
                     }
                 }
             }),
-            optCapture.mapOr((capture: CaptureMidi) => capture.subscribeNotes(event => {
+            capture.subscribeNotes(signal => {
                 if (engine.isPlaying.getValue() || !stepRecording.getValue()) {return}
-                MidiData.accept(event.data, {
-                    noteOn(pitch: byte, velocity: byte) {
-                        const position = snapping.floor(engine.position.getValue())
-                        const duration = snapping.value
-                        let createdNote = false
-                        editing.modify(() => {
-                            NoteEventBox.create(boxGraph, UUID.generate(), box => {
-                                box.events.refer(reader.content.box.events)
-                                box.position.setValue(position - reader.position)
-                                box.duration.setValue(duration)
-                                box.pitch.setValue(pitch)
-                                box.velocity.setValue(velocity)
-                            })
-                            createdNote = true
+                if (NoteSignal.isOn(signal)) {
+                    const {pitch, velocity} = signal
+                    const position = snapping.floor(engine.position.getValue())
+                    const duration = snapping.value
+                    let createdNote = false
+                    editing.modify(() => {
+                        NoteEventBox.create(boxGraph, UUID.generate(), box => {
+                            box.events.refer(reader.content.box.events)
+                            box.position.setValue(position - reader.position)
+                            box.duration.setValue(duration)
+                            box.pitch.setValue(pitch)
+                            box.velocity.setValue(velocity)
                         })
-                        if (createdNote) {
-                            engine.setPosition(position + duration)
-                        }
+                        createdNote = true
+                    })
+                    if (createdNote) {
+                        engine.setPosition(position + duration)
                     }
-                })
-            }), Terminable.Empty)
+                }
+            }), Terminable.Empty
         )
         return element
     }

@@ -1,18 +1,7 @@
-import {
-    byte,
-    isUndefined,
-    Notifier,
-    Option,
-    quantizeCeil,
-    quantizeFloor,
-    Terminable,
-    Terminator,
-    UUID
-} from "@opendaw/lib-std"
+import {byte, Notifier, Option, quantizeCeil, quantizeFloor, Terminable, Terminator, UUID} from "@opendaw/lib-std"
 import {PPQN} from "@opendaw/lib-dsp"
-import {MidiData} from "@opendaw/lib-midi"
 import {NoteEventBox, NoteEventCollectionBox, NoteRegionBox, TrackBox} from "@opendaw/studio-boxes"
-import {TrackType} from "@opendaw/studio-adapters"
+import {NoteSignal, TrackType} from "@opendaw/studio-adapters"
 import {Project} from "../Project"
 import {Capture} from "./Capture"
 import {RecordTrack} from "./RecordTrack"
@@ -20,7 +9,7 @@ import {ColorCodes} from "../ColorCodes"
 
 export namespace RecordMidi {
     type RecordMidiContext = {
-        notifier: Notifier<MIDIMessageEvent>,
+        notifier: Notifier<NoteSignal>,
         project: Project,
         capture: Capture
     }
@@ -57,13 +46,11 @@ export namespace RecordMidi {
                 }
             }, false)
         }))
-        terminator.ownAll(notifier.subscribe((event: MIDIMessageEvent) => {
+        terminator.ownAll(notifier.subscribe((signal: NoteSignal) => {
             if (!isRecording.getValue()) {return}
-            const data = event.data
-            if (isUndefined(data)) {return}
             const ppqn = position.getValue()
-            if (MidiData.isNoteOn(data)) {
-                const pitch = MidiData.readParam1(data)
+            if (NoteSignal.isOn(signal)) {
+                const {pitch, velocity} = signal
                 if (writing.isEmpty()) {
                     editing.modify(() => {
                         const collection = NoteEventCollectionBox.create(boxGraph, UUID.generate())
@@ -83,13 +70,12 @@ export namespace RecordMidi {
                         box.position.setValue(ppqn - region.position.getValue())
                         box.duration.setValue(1.0)
                         box.pitch.setValue(pitch)
-                        box.velocity.setValue(MidiData.readParam2(data) / 127.0)
+                        box.velocity.setValue(velocity)
                         box.events.refer(collection.events)
                     }))
                 }, false)
-            } else if (MidiData.isNoteOff(data)) {
-                const pitch = MidiData.readParam1(data)
-                activeNotes.delete(pitch)
+            } else if (NoteSignal.isOff(signal)) {
+                activeNotes.delete(signal.pitch)
             }
         }))
         return terminator

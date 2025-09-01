@@ -3,7 +3,7 @@ import {Html} from "@opendaw/lib-dom"
 import {Arrays, DefaultObservableValue, int, Lifecycle, Option} from "@opendaw/lib-std"
 import {createElement} from "@opendaw/lib-jsx"
 import {StudioService} from "@/service/StudioService.ts"
-import {NoteSender, NoteStreamReceiver, PlayfieldDeviceBoxAdapter, PlayfieldSampleBoxAdapter} from "@opendaw/studio-adapters"
+import {NoteStreamReceiver, PlayfieldDeviceBoxAdapter, PlayfieldSampleBoxAdapter} from "@opendaw/studio-adapters"
 import {SlotState} from "@/ui/devices/instruments/PlayfieldDeviceEditor/SlotState"
 import {Slot} from "@/ui/devices/instruments/PlayfieldDeviceEditor/Slot"
 import {OctaveSelector} from "@/ui/devices/instruments/PlayfieldDeviceEditor/OctaveSelector"
@@ -13,12 +13,11 @@ const className = Html.adoptStyleSheet(css, "SlotGrid")
 type Construct = {
     lifecycle: Lifecycle
     service: StudioService
-    noteSender: NoteSender
     adapter: PlayfieldDeviceBoxAdapter
     octave: DefaultObservableValue<int>
 }
 
-export const SlotGrid = ({lifecycle, service, noteSender, adapter, octave}: Construct) => {
+export const SlotGrid = ({lifecycle, service, adapter, octave}: Construct) => {
     const {project} = service
     const noteReceiver = lifecycle.own(new NoteStreamReceiver(project.liveStreamReceiver, adapter.notesAddress))
     const slotStates = Arrays.create(() => new DefaultObservableValue<SlotState>(SlotState.Idle), 128)
@@ -26,7 +25,6 @@ export const SlotGrid = ({lifecycle, service, noteSender, adapter, octave}: Cons
     const slotViews: ReadonlyArray<HTMLElement> = slotValues.map((sample, semitone) => (
         <Slot lifecycle={lifecycle}
               service={service}
-              noteSender={noteSender}
               noteReceiver={noteReceiver}
               adapter={adapter}
               sample={sample}

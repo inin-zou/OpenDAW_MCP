@@ -1,6 +1,5 @@
 import {
     Arrays,
-    byte,
     DefaultObservableValue,
     int,
     MutableObservableValue,
@@ -12,7 +11,6 @@ import {
     Subscription,
     SyncStream,
     Terminator,
-    unitValue,
     UUID
 } from "@opendaw/lib-std"
 import {ppqn} from "@opendaw/lib-dsp"
@@ -28,11 +26,12 @@ import {
     EngineState,
     EngineStateSchema,
     EngineToClient,
-    ExportStemsConfiguration
+    ExportStemsConfiguration,
+    NoteSignal
 } from "@opendaw/studio-adapters"
 import {BoxIO} from "@opendaw/studio-boxes"
 import {Project} from "./Project"
-import {Engine, NoteTrigger} from "./Engine"
+import {Engine} from "./Engine"
 
 export class EngineWorklet extends AudioWorkletNode implements Engine {
     static ID: int = 0 | 0
@@ -52,7 +51,7 @@ export class EngineWorklet extends AudioWorkletNode implements Engine {
     readonly #metronomeEnabled: DefaultObservableValue<boolean> = new DefaultObservableValue(false)
     readonly #markerState: DefaultObservableValue<Nullable<[UUID.Format, int]>> = new DefaultObservableValue<Nullable<[UUID.Format, int]>>(null)
     readonly #notifyClipNotification: Notifier<ClipNotification>
-    readonly #notifyNoteTrigger: Notifier<NoteTrigger>
+    readonly #notifyNoteSignals: Notifier<NoteSignal>
     readonly #playingClips: Array<UUID.Format>
     readonly #commands: EngineCommands
     readonly #isReady: Promise<void>
@@ -88,7 +87,7 @@ export class EngineWorklet extends AudioWorkletNode implements Engine {
         this.#project = project
         this.#isReady = promise
         this.#notifyClipNotification = this.#terminator.own(new Notifier<ClipNotification>())
-        this.#notifyNoteTrigger = this.#terminator.own(new Notifier<NoteTrigger>())
+        this.#notifyNoteSignals = this.#terminator.own(new Notifier<NoteSignal>())
         this.#playingClips = []
         this.#commands = this.#terminator.own(
             Communicator.sender<EngineCommands>(messenger.channel("engine-commands"),
@@ -103,12 +102,7 @@ export class EngineWorklet extends AudioWorkletNode implements Engine {
                         return dispatcher.dispatchAndReturn(this.queryLoadingComplete)
                     }
                     panic(): void {dispatcher.dispatchAndForget(this.panic)}
-                    noteOn(uuid: UUID.Format, pitch: byte, velocity: unitValue): void {
-                        dispatcher.dispatchAndForget(this.noteOn, uuid, pitch, velocity)
-                    }
-                    noteOff(uuid: UUID.Format, pitch: byte): void {
-                        dispatcher.dispatchAndForget(this.noteOff, uuid, pitch)
-                    }
+                    noteSignal(signal: NoteSignal): void {dispatcher.dispatchAndForget(this.noteSignal, signal)}
                     ignoreNoteRegion(uuid: UUID.Format): void {
                         dispatcher.dispatchAndForget(this.ignoreNoteRegion, uuid)
                     }
@@ -178,15 +172,8 @@ export class EngineWorklet extends AudioWorkletNode implements Engine {
 
     isReady(): Promise<void> {return this.#isReady}
     queryLoadingComplete(): Promise<boolean> {return this.#commands.queryLoadingComplete()}
-    noteOn(uuid: UUID.Format, pitch: byte, velocity: unitValue): void {
-        this.#commands.noteOn(uuid, pitch, velocity)
-        this.#notifyNoteTrigger.notify({type: "note-on", uuid, pitch, velocity})
-    }
-    noteOff(uuid: UUID.Format, pitch: byte): void {
-        this.#commands.noteOff(uuid, pitch)
-        this.#notifyNoteTrigger.notify({type: "note-off", uuid, pitch})
-    }
-    subscribeNotes(observer: Observer<NoteTrigger>): Subscription {return this.#notifyNoteTrigger.subscribe(observer)}
+    noteSignal(signal: NoteSignal): void {this.#commands.noteSignal(signal)}
+    subscribeNotes(observer: Observer<NoteSignal>): Subscription {return this.#notifyNoteSignals.subscribe(observer)}
     ignoreNoteRegion(uuid: UUID.Format): void {this.#commands.ignoreNoteRegion(uuid)}
     scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void {
         this.#notifyClipNotification.notify({type: "waiting", clips: clipIds})

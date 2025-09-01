@@ -1,7 +1,8 @@
-import {byte, int, Nullable, Terminable, unitValue, UUID} from "@opendaw/lib-std"
+import {int, Nullable, Terminable, UUID} from "@opendaw/lib-std"
 import {ppqn} from "@opendaw/lib-dsp"
 import {AudioData} from "./audio/AudioData"
 import {ClipSequencingUpdates} from "./ClipNotifications"
+import {NoteSignal} from "./NoteSignal"
 
 export interface EngineCommands extends Terminable {
     play(): void
@@ -15,8 +16,7 @@ export interface EngineCommands extends Terminable {
     // throws a test error while processing audio
     panic(): void
     // feeds a note request into an audio-unit identified by uuid
-    noteOn(uuid: UUID.Format, pitch: byte, velocity: unitValue): void
-    noteOff(uuid: UUID.Format, pitch: byte): void
+    noteSignal(signal: NoteSignal): void
     ignoreNoteRegion(uuid: UUID.Format): void
     // timeline clip playback management
     scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void

@@ -1,5 +1,4 @@
 import {
-    asDefined,
     assert,
     byte,
     Func,
@@ -16,6 +15,7 @@ import {Events} from "@opendaw/lib-dom"
 import {MidiData} from "@opendaw/lib-midi"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioUnitBox, CaptureMidiBox} from "@opendaw/studio-boxes"
+import {NoteSignal} from "@opendaw/studio-adapters"
 import {MidiDevices} from "../MidiDevices"
 import {Capture} from "./Capture"
 import {CaptureDevices} from "./CaptureDevices"
@@ -24,7 +24,7 @@ import {RecordingContext} from "./RecordingContext"
 
 export class CaptureMidi extends Capture<CaptureMidiBox> {
     readonly #streamGenerator: Func<void, Promise<void>>
-    readonly #notifier = new Notifier<MIDIMessageEvent>()
+    readonly #notifier = new Notifier<NoteSignal>()
 
     #filterChannel: Option<byte> = Option.None
     #streaming: Option<Subscription> = Option.None
@@ -55,19 +55,13 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
                     this.#stopStream()
                 }
             }),
-            this.#notifier.subscribe(event => {
-                const data = asDefined(event.data)
-                const engine = manager.project.engine
-                if (MidiData.isNoteOn(data)) {
-                    engine.noteOn(this.uuid, MidiData.readPitch(data), MidiData.readVelocity(data))
-                } else if (MidiData.isNoteOff(data)) {
-                    engine.noteOff(this.uuid, MidiData.readPitch(data))
-                }
-            })
+            this.#notifier.subscribe((signal: NoteSignal) => manager.project.engine.noteSignal(signal))
         )
     }
 
-    subscribeNotes(observer: Observer<MIDIMessageEvent>): Subscription {return this.#notifier.subscribe(observer)}
+    notify(signal: NoteSignal): void {this.#notifier.notify(signal)}
+
+    subscribeNotes(observer: Observer<NoteSignal>): Subscription {return this.#notifier.subscribe(observer)}
 
     get label(): string {
         return MidiDevices.get().mapOr(midiAccess => this.deviceId.getValue().match({
@@ -106,9 +100,7 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
             return warn("MIDI not available")
         }
         const inputs = optInputs.unwrap()
-        if (inputs.length === 0) {
-            return warn("No MIDI input devices found")
-        }
+        if (inputs.length === 0) {return}
         const option = this.deviceId.getValue()
         if (option.nonEmpty()) {
             const deviceId = option.unwrap()
@@ -142,10 +134,10 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
                     const pitch = MidiData.readPitch(data)
                     if (MidiData.isNoteOn(data)) {
                         activeNotes[pitch]++
-                        this.#notifier.notify(event)
+                        this.#notifier.notify(NoteSignal.fromEvent(event, this.uuid))
                     } else if (MidiData.isNoteOff(data) && activeNotes[pitch] > 0) {
                         activeNotes[pitch]--
-                        this.#notifier.notify(event)
+                        this.#notifier.notify(NoteSignal.fromEvent(event, this.uuid))
                     }
                 }
             })),
@@ -153,8 +145,9 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
                 if (count > 0) {
                     for (let channel = 0; channel < 16; channel++) {
                         const event = new MessageEvent("midimessage", {data: MidiData.noteOff(channel, index)})
+                        const signal = NoteSignal.fromEvent(event, this.uuid)
                         for (let i = 0; i < count; i++) {
-                            this.#notifier.notify(event)
+                            this.#notifier.notify(signal)
                         }
                     }
                 }

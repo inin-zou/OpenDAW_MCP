@@ -12,13 +12,11 @@ import {
 } from "@opendaw/lib-std"
 import {createElement, DomElement} from "@opendaw/lib-jsx"
 import {StudioService} from "@/service/StudioService.ts"
-import {PlayfieldDeviceBoxAdapter} from "@opendaw/studio-adapters"
-import {NoteSender, NoteSustainer} from "@opendaw/studio-adapters"
+import {IconSymbol, NoteLifeCycle, PlayfieldDeviceBoxAdapter, PlayfieldSampleBoxAdapter} from "@opendaw/studio-adapters"
 import {SampleSelector} from "@/ui/devices/SampleSelector"
 import {CanvasPainter} from "@/ui/canvas/painter"
 import {SlotUtils} from "@/ui/devices/instruments/PlayfieldDeviceEditor/SlotUtils"
 import {Icon} from "@/ui/components/Icon"
-import {IconSymbol} from "@opendaw/studio-adapters"
 import {Checkbox} from "@/ui/components/Checkbox"
 import {Editing} from "@opendaw/lib-box"
 import {ContextMenu} from "@/ui/ContextMenu"
@@ -27,9 +25,6 @@ import {EditWrapper} from "@/ui/wrapper/EditWrapper.ts"
 import {SlotDragAndDrop} from "@/ui/devices/instruments/PlayfieldDeviceEditor/SlotDragAndDrop"
 import {NoteLabel} from "@/ui/devices/instruments/PlayfieldDeviceEditor/NoteLabel"
 import {DebugMenus} from "@/ui/menu/debug"
-import {
-    PlayfieldSampleBoxAdapter
-} from "@opendaw/studio-adapters"
 import {TextTooltip} from "@/ui/surface/TextTooltip"
 import {Colors} from "@opendaw/studio-core"
 
@@ -42,14 +37,13 @@ type Construct = {
     sampleSelector: SampleSelector
     sample: PlayfieldSampleBoxAdapter
     octave: ObservableValue<int>
-    noteSender: NoteSender
     semitone: int
 }
 
 export const BusySlot = ({
-                             lifecycle, service, adapter, sampleSelector, sample, octave, noteSender, semitone
+                             lifecycle, service, adapter, sampleSelector, sample, octave, semitone
                          }: Construct) => {
-    const {editing, userEditingManager} = service.project
+    const {editing, engine, userEditingManager} = service.project
     const labelName: HTMLElement = (<div className="label"/>)
     const muteValue = new DefaultObservableValue(false)
     const soloValue = new DefaultObservableValue(false)
@@ -167,7 +161,8 @@ export const BusySlot = ({
         Events.subscribe(iconEdit, "click", () => userEditingManager.audioUnit.edit(sample.box)),
         Events.subscribe(header, "pointerdown", (event: PointerEvent) => {
             if (event.ctrlKey) {return}
-            noteLifeTime = NoteSustainer.start(noteSender, sample.indexField.getValue())
+            noteLifeTime = NoteLifeCycle.start(signal =>
+                engine.noteSignal(signal), adapter.audioUnitBoxAdapter().uuid, sample.indexField.getValue())
         }),
         Events.subscribe(header, "pointerup", () => noteLifeTime.terminate()),
         Events.subscribe(element, "keydown", (event) => {

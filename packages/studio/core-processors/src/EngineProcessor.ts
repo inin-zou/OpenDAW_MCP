@@ -1,7 +1,6 @@
 import {
     Arrays,
     assert,
-    byte,
     EmptyExec,
     int,
     isDefined,
@@ -16,7 +15,6 @@ import {
     SyncStream,
     Terminable,
     Terminator,
-    unitValue,
     UUID
 } from "@opendaw/lib-std"
 import {Address, BoxGraph, createSyncTarget} from "@opendaw/lib-box"
@@ -35,6 +33,7 @@ import {
     EngineProcessorOptions,
     EngineStateSchema,
     EngineToClient,
+    NoteSignal,
     ParameterFieldAdapters,
     ProjectDecoder,
     RootBoxAdapter,
@@ -207,10 +206,17 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
                             this.#audioManager.getOrCreate(box.address.uuid).data.nonEmpty() && box.pointerHub.nonEmpty()
                     }) ?? true)),
                 panic: () => this.#panic = true,
-                noteOn: (uuid: UUID.Format, pitch: byte, velocity: unitValue) =>
-                    this.optAudioUnit(uuid).ifSome(unit => unit.midiDeviceChain.noteSequencer.pushRawNoteOn(pitch, velocity)),
-                noteOff: (uuid: UUID.Format, pitch: byte) =>
-                    this.optAudioUnit(uuid).ifSome(unit => unit.midiDeviceChain.noteSequencer.pushRawNoteOff(pitch)),
+                noteSignal: (signal: NoteSignal) => {
+                    if (NoteSignal.isOn(signal)) {
+                        const {uuid, pitch, velocity} = signal
+                        this.optAudioUnit(uuid)
+                            .ifSome(unit => unit.midiDeviceChain.noteSequencer.pushRawNoteOn(pitch, velocity))
+                    } else if (NoteSignal.isOff(signal)) {
+                        const {uuid, pitch} = signal
+                        this.optAudioUnit(uuid)
+                            .ifSome(unit => unit.midiDeviceChain.noteSequencer.pushRawNoteOff(pitch))
+                    }
+                },
                 ignoreNoteRegion: (uuid: UUID.Format) => this.#ignoredRegions.add(uuid),
                 scheduleClipPlay: (clipIds: ReadonlyArray<UUID.Format>) => {
                     // TODO What to do when recording is in progress?

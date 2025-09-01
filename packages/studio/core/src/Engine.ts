@@ -1,21 +1,7 @@
 import {ppqn} from "@opendaw/lib-dsp"
-import {
-    byte,
-    int,
-    Nullable,
-    ObservableValue,
-    Observer,
-    Subscription,
-    Terminable,
-    unitValue,
-    UUID
-} from "@opendaw/lib-std"
-import {ClipNotification} from "@opendaw/studio-adapters"
+import {int, Nullable, ObservableValue, Observer, Subscription, Terminable, UUID} from "@opendaw/lib-std"
+import {ClipNotification, NoteSignal} from "@opendaw/studio-adapters"
 import {Project} from "./Project"
-
-export type NoteTrigger =
-    | { type: "note-on", uuid: UUID.Format, pitch: byte, velocity: unitValue }
-    | { type: "note-off", uuid: UUID.Format, pitch: byte }
 
 export interface Engine extends Terminable {
     play(): void
@@ -27,9 +13,8 @@ export interface Engine extends Terminable {
     queryLoadingComplete(): Promise<boolean>
     stop(): void
     panic(): void
-    noteOn(uuid: UUID.Format, pitch: byte, velocity: unitValue): void
-    noteOff(uuid: UUID.Format, pitch: byte): void
-    subscribeNotes(observer: Observer<NoteTrigger>): Subscription
+    noteSignal(signal: NoteSignal): void
+    subscribeNotes(observer: Observer<NoteSignal>): Subscription
     ignoreNoteRegion(uuid: UUID.Format): void
     scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void
     scheduleClipStop(trackIds: ReadonlyArray<UUID.Format>): void

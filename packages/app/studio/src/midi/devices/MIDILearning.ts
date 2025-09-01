@@ -1,5 +1,4 @@
 import {
-    Arrays,
     byte,
     isDefined,
     isInstanceOf,
@@ -12,16 +11,16 @@ import {
     Terminator,
     tryCatch
 } from "@opendaw/lib-std"
-import {AudioUnitBoxAdapter, AutomatableParameterFieldAdapter} from "@opendaw/studio-adapters"
+import {AutomatableParameterFieldAdapter} from "@opendaw/studio-adapters"
 import {MidiDeviceAccess} from "@/midi/devices/MidiDeviceAccess"
 import {MidiDialogs} from "@/midi/devices/MidiDialogs"
 import {Address, AddressJSON, PrimitiveField, PrimitiveValues} from "@opendaw/lib-box"
 import {Pointers} from "@opendaw/studio-enums"
 import {StudioService} from "@/service/StudioService"
-import {Engine, Project} from "@opendaw/studio-core"
+import {Project} from "@opendaw/studio-core"
 import {MidiData} from "@opendaw/lib-midi"
 
-export type MIDIConnectionJSON = ({ type: "key" } | { type: "control", controlId: byte })
+export type MIDIConnectionJSON = ({ type: "control", controlId: byte })
     & { address: AddressJSON, channel: byte }
     & JSONValue
 
@@ -46,22 +45,6 @@ export class MIDILearning implements Terminable {
 
     hasMidiConnection(address: Address): boolean {return this.#connections.hasKey(address)}
     forgetMidiConnection(address: Address) {this.#connections.removeByKey(address).terminate()}
-
-    async learnMidiKeys(engine: Engine, adapter: AudioUnitBoxAdapter) {
-        if (!MidiDeviceAccess.canRequestMidiAccess()) {return}
-        MidiDeviceAccess.available().setValue(true)
-        const learnLifecycle = this.#terminator.spawn()
-        const dialog = MidiDialogs.showInfoDialog(() => learnLifecycle.terminate())
-        learnLifecycle.own(MidiDeviceAccess.subscribeMessageEvents((event: MIDIMessageEvent) => {
-            const data = event.data
-            if (data === null) {return}
-            if (MidiData.isNoteOn(data)) {
-                learnLifecycle.terminate()
-                dialog.close()
-                this.#startListeningKeys(engine, adapter, MidiData.readChannel(data), event)
-            }
-        }))
-    }
 
     async learnMIDIControls(field: PrimitiveField<PrimitiveValues, Pointers.MidiControl | Pointers>) {
         if (!MidiDeviceAccess.canRequestMidiAccess()) {return}
@@ -105,14 +88,8 @@ export class MIDILearning implements Terminable {
             .map<Nullish<MIDIConnection>>((json) => {
                 const {type, address: addressAsJson, channel} = json
                 const address = Address.compose(Uint8Array.from(addressAsJson.uuid), ...addressAsJson.fields)
-                const {engine, project: {boxGraph, boxAdapters}} = this.#service
+                const {project: {boxGraph}} = this.#service
                 switch (type) {
-                    case "key": {
-                        return boxGraph.findBox(address.uuid)
-                                .ifSome(box => this.#startListeningKeys(engine, boxAdapters
-                                    .adapterFor(box, AudioUnitBoxAdapter), channel))
-                            ?? undefined
-                    }
                     case "control": {
                         return boxGraph.findVertex(address)
                                 .ifSome(field => {
@@ -131,28 +108,6 @@ export class MIDILearning implements Terminable {
         this.#terminator.terminate()
     }
 
-    #startListeningKeys(engine: Engine,
-                        adapter: AudioUnitBoxAdapter,
-                        channel: byte,
-                        event?: MIDIMessageEvent): void {
-        console.debug(`startListeningKeys channel: ${channel}`)
-        const {observer, terminate} = this.#createMidiKeysObserver(engine, adapter)
-        const subscription = MidiDeviceAccess.subscribeMessageEvents(observer, channel)
-        this.#connections.add({
-            address: adapter.address,
-            label: () => adapter.input.label.unwrapOrElse("N/A"),
-            toJSON: (): MIDIConnectionJSON => ({
-                type: "key",
-                address: adapter.address.toJSON(),
-                channel
-            }),
-            terminate: () => {
-                terminate()
-                subscription.terminate()
-            }
-        })
-        if (isDefined(event)) {observer(event)}
-    }
     #startListeningControl(field: PrimitiveField<PrimitiveValues, Pointers.MidiControl | Pointers>,
                            channel: byte,
                            controlId: byte,
@@ -182,35 +137,6 @@ export class MIDILearning implements Terminable {
     #killAllConnections() {
         this.#connections.forEach(({terminate}) => terminate())
         this.#connections.clear()
-    }
-
-    #createMidiKeysObserver(engine: Engine, adapter: AudioUnitBoxAdapter): MIDIObserver {
-        const uuid = adapter.uuid
-        const activeNotes = Arrays.create(() => 0, 127)
-        return {
-            observer: (event: MIDIMessageEvent) => {
-                const data = event.data
-                if (data === null) {return}
-                if (MidiData.isNoteOff(data) || (MidiData.isNoteOn(data) && MidiData.readVelocity(data) === 0)) {
-                    const pitch = MidiData.readPitch(data)
-                    engine.noteOff(uuid, pitch)
-                    if (activeNotes[pitch] > 0) {
-                        activeNotes[pitch]--
-                    }
-                } else if (MidiData.isNoteOn(data)) {
-                    const pitch = MidiData.readPitch(data)
-                    engine.noteOn(uuid, pitch, MidiData.readVelocity(data))
-                    activeNotes[pitch]++
-                }
-            },
-            terminate: () => {
-                activeNotes.forEach((count, pitch) => {
-                    if (count > 0) {
-                        engine.noteOff(uuid, pitch)
-                    }
-                })
-            }
-        }
     }
 
     #createMidiControlObserver(project: Project, adapter: AutomatableParameterFieldAdapter, controlId: byte): MIDIObserver {

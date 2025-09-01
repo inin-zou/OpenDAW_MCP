@@ -1,21 +1,15 @@
 import {DefaultObservableValue, int, Lifecycle, ObservableValue, Option, Terminator, UUID} from "@opendaw/lib-std"
 import {createElement, replaceChildren} from "@opendaw/lib-jsx"
-import {PlayfieldDeviceBoxAdapter} from "@opendaw/studio-adapters"
-import {NoteSender} from "@opendaw/studio-adapters"
+import {NoteStreamReceiver, PlayfieldDeviceBoxAdapter, PlayfieldSampleBoxAdapter} from "@opendaw/studio-adapters"
 import {StudioService} from "@/service/StudioService"
 import {SampleSelector, SampleSelectStrategy} from "@/ui/devices/SampleSelector"
 import {AudioFileBox, PlayfieldSampleBox} from "@opendaw/studio-boxes"
 import {EmptySlot} from "@/ui/devices/instruments/PlayfieldDeviceEditor/EmptySlot"
 import {BusySlot} from "./BusySlot"
-import {NoteStreamReceiver} from "@opendaw/studio-adapters"
-import {
-    PlayfieldSampleBoxAdapter
-} from "@opendaw/studio-adapters"
 
 type Construct = {
     lifecycle: Lifecycle
     service: StudioService
-    noteSender: NoteSender
     noteReceiver: NoteStreamReceiver
     adapter: PlayfieldDeviceBoxAdapter
     sample: DefaultObservableValue<Option<PlayfieldSampleBoxAdapter>>
@@ -24,7 +18,7 @@ type Construct = {
 }
 
 export const Slot = (
-    {lifecycle, service, noteSender, noteReceiver, adapter, sample, octave, semitone}: Construct) => {
+    {lifecycle, service, noteReceiver, adapter, sample, octave, semitone}: Construct) => {
     const sampleSelector = new SampleSelector(service, {
         hasSample: (): boolean => sample.getValue().mapOr(sample => sample.box.file.nonEmpty(), false),
         replace: (replacement: Option<AudioFileBox>) => {
@@ -63,7 +57,6 @@ export const Slot = (
                               adapter={adapter}
                               sampleSelector={sampleSelector}
                               sample={sample}
-                              noteSender={noteSender}
                               octave={octave}
                               semitone={semitone}/>
                 )

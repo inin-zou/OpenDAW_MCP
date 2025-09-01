@@ -1,5 +1,4 @@
 import {
-    byte,
     DefaultObservableValue,
     int,
     MutableObservableValue,
@@ -9,12 +8,11 @@ import {
     Option,
     Subscription,
     Terminator,
-    unitValue,
     UUID
 } from "@opendaw/lib-std"
 import {ppqn} from "@opendaw/lib-dsp"
-import {ClipNotification} from "@opendaw/studio-adapters"
-import {Engine, NoteTrigger} from "./Engine"
+import {ClipNotification, NoteSignal} from "@opendaw/studio-adapters"
+import {Engine} from "./Engine"
 import {EngineWorklet} from "./EngineWorklet"
 import {Project} from "./Project"
 
@@ -85,16 +83,15 @@ export class EngineFacade implements Engine {
     subscribeClipNotification(observer: Observer<ClipNotification>): Subscription {
         return this.#client.unwrap("No engine to subscribeClipNotification").subscribeClipNotification(observer)
     }
-    subscribeNotes(observer: Observer<NoteTrigger>): Subscription {
+    subscribeNotes(observer: Observer<NoteSignal>): Subscription {
         return this.#client.unwrap("No engine to subscribeNotes").subscribeNotes(observer)
     }
     ignoreNoteRegion(uuid: UUID.Format): void {
         this.#client.unwrap("No engine to ignoreNoteRegion").ignoreNoteRegion(uuid)
     }
-    noteOn(uuid: UUID.Format, pitch: byte, velocity: unitValue): void {
-        this.#client.unwrap("No engine to noteOn").noteOn(uuid, pitch, velocity)
+    noteSignal(signal: NoteSignal): void {
+        this.#client.unwrap("No engine to noteOn").noteSignal(signal)
     }
-    noteOff(uuid: UUID.Format, pitch: byte): void {this.#client.unwrap("No engine to noteOff").noteOff(uuid, pitch)}
     scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void {
         this.#client.unwrap("No engine to scheduleClipPlay").scheduleClipPlay(clipIds)
     }
