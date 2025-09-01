@@ -27,7 +27,7 @@ if (DRY_RUN) {
     process.exit(0)
 }
 const sftp = new SftpClient()
-const staticFolders = ["/viscious-speed"]
+const staticFolders: Array<string> = [/*"/viscious-speed"*/]
 
 async function deleteDirectory(remoteDir: string) {
     const items = await sftp.list(remoteDir)
