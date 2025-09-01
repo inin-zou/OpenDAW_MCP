@@ -50,7 +50,7 @@ export const Dashboard = ({service}: Construct) => {
                                 const svgSource = `viscious-speed/abstract-${String(index).padStart(3, "0")}.svg`
                                 return (
                                     <div onclick={click}>
-                                        <HTML src={fetch(svgSource)} className="icon" debug={index === 0 || index === 1}/>
+                                        <HTML src={fetch(svgSource)} className="icon"/>
                                         <label>{name}</label>
                                     </div>
                                 )

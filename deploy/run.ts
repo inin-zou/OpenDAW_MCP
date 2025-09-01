@@ -27,13 +27,11 @@ if (DRY_RUN) {
     process.exit(0)
 }
 const sftp = new SftpClient()
-const staticFolders = ["/viscious-speed"]
 
 async function deleteDirectory(remoteDir: string) {
     const items = await sftp.list(remoteDir)
     for (const item of items) {
         const remotePath = path.posix.join(remoteDir, item.name)
-        if (staticFolders.includes(remotePath)) continue
         if (item.type === "d") {
             await deleteDirectory(remotePath)
             await sftp.rmdir(remotePath, true)
@@ -49,7 +47,6 @@ async function uploadDirectory(localDir: string, remoteDir: string) {
         const remotePath = path.posix.join(remoteDir, file)
         if (fs.lstatSync(localPath).isDirectory()) {
             await sftp.mkdir(remotePath, true).catch(() => {/* exists */})
-            if (staticFolders.includes(remotePath)) continue
             await uploadDirectory(localPath, remotePath)
         } else {
             console.log(`upload ${remotePath}`)
