@@ -188,11 +188,11 @@ export class StudioService implements ProjectEnv {
                         })
                     },
                     load: (engine: EngineWorklet) => {
-                        this.engine.setClient(engine)
+                        this.engine.setWorklet(engine)
                         this.switchScreen(screen)
                     }
                 }
-                this.engine.setClient(project.startAudioWorklet(this.audioWorklets, restart))
+                this.engine.setWorklet(project.startAudioWorklet(this.audioWorklets, restart))
                 if (root) {this.switchScreen("default")}
             } else {
                 this.engine.releaseWorklet()

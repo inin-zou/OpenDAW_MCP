@@ -82,7 +82,7 @@ export class VaporisateurDeviceBoxAdapter implements InstrumentDeviceBoxAdapter 
                 StringMapping.numeric({unit: "s", fractionDigits: 3}), "release"),
             filterEnvelope: this.#parametric.createParameter(
                 box.filterEnvelope,
-                ValueMapping.linear(-0.1, 0.1),
+                ValueMapping.linear(-0.5, 0.5),
                 StringMapping.percent(), "filter env", 0.5)
         } as const
     }

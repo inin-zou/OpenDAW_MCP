@@ -34,7 +34,7 @@ export class EngineFacade implements Engine {
 
     constructor() {}
 
-    setClient(worklet: EngineWorklet) {
+    setWorklet(worklet: EngineWorklet) {
         this.#worklet = Option.wrap(worklet)
         this.#lifecycle.terminate()
         this.#lifecycle.ownAll(

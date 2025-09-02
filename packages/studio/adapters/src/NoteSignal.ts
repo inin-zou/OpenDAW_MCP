@@ -5,7 +5,7 @@ export type NoteSignalOn = { type: "note-on", uuid: UUID.Format, pitch: byte, ve
 
 export type NoteSignalOff = { type: "note-off", uuid: UUID.Format, pitch: byte }
 
-export type NoteSignal = | NoteSignalOn | NoteSignalOff
+export type NoteSignal = NoteSignalOn | NoteSignalOff
 
 export namespace NoteSignal {
     export const on = (uuid: UUID.Format, pitch: byte, velocity: unitValue): NoteSignalOn =>

@@ -26,7 +26,7 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
     readonly #notifier = new Notifier<NoteSignal>()
 
     #filterChannel: Option<byte> = Option.None
-    #streaming: Option<Subscription> = Option.None
+    #stream: Option<Subscription> = Option.None
 
     constructor(manager: CaptureDevices, audioUnitBox: AudioUnitBox, captureMidiBox: CaptureMidiBox) {
         super(manager, audioUnitBox, captureMidiBox)
@@ -124,8 +124,8 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
             some: id => available.filter(device => id === device.id)
         })
         const activeNotes = new Int8Array(128)
-        this.#streaming.ifSome(terminable => terminable.terminate())
-        this.#streaming = Option.wrap(Terminable.many(
+        this.#stream.ifSome(terminable => terminable.terminate())
+        this.#stream = Option.wrap(Terminable.many(
             ...capturing.map(input => Events.subscribe(input, "midimessage", (event: MIDIMessageEvent) => {
                 const data = event.data
                 if (isDefined(data) &&
@@ -154,7 +154,7 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
     }
 
     #stopStream(): void {
-        this.#streaming.ifSome(terminable => terminable.terminate())
-        this.#streaming = Option.None
+        this.#stream.ifSome(terminable => terminable.terminate())
+        this.#stream = Option.None
     }
 }

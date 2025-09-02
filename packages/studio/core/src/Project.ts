@@ -166,7 +166,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
         engine.addEventListener("error", handler)
         engine.addEventListener("processorerror", handler)
         engine.connect(engine.context.destination)
-        this.engine.setClient(engine)
+        this.engine.setWorklet(engine)
         return engine
     }
 
