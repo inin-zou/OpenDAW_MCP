@@ -1,37 +1,69 @@
-// DropboxHandler.ts
 import type {CloudStorageHandler} from "./CloudAuthManager"
 import {Dropbox, DropboxResponse, files} from "dropbox"
+import {isDefined, Option, panic} from "@opendaw/lib-std"
+import {Promises} from "@opendaw/lib-runtime"
 
 export class DropboxHandler implements CloudStorageHandler {
-    #token: string
-    #basePath: string
-    #dropboxClient?: Dropbox
+    readonly #accessToken: string
+    readonly #basePath: string
 
-    constructor(token: string, basePath: string = "/openDAW") {
-        this.#token = token
+    #dropboxClient: Option<Dropbox> = Option.None
+
+    constructor(token: string, basePath: string) {
+        this.#accessToken = token
         this.#basePath = basePath
     }
 
-    async #ensureClient(): Promise<Dropbox> {
-        if (!this.#dropboxClient) {
-            // Dynamic import of Dropbox SDK
-            const DropboxModule = await import("dropbox")
-            this.#dropboxClient = new DropboxModule.Dropbox({accessToken: this.#token})
+    async upload(path: string, buffer: ArrayBuffer): Promise<void> {
+        const client = await this.#ensureClient()
+        const fullPath = this.#getFullPath(path)
+        console.debug("[Dropbox] Uploading to:", fullPath)
+        const {status, error, value: result} = await Promises.tryCatch(client
+            .filesUpload({path: fullPath, contents: buffer, mode: {".tag": "overwrite"}}))
+        if (status === "rejected") {
+            return panic(error)
+        } else {
+            console.debug("[Dropbox] Upload successful:", result.result.path_display)
+        }
+    }
 
-            // Ensure base folder exists
-            try {
-                await this.#dropboxClient.filesCreateFolderV2({path: this.#basePath})
-            } catch (error: any) {
-                console.warn("filesCreateFolderV2", error)
-                // Ignore if folder already exists
+    async download(path: string): Promise<ArrayBuffer> {
+        const client = await this.#ensureClient()
+        const fullPath = this.#getFullPath(path)
+        const response = await client.filesDownload({path: fullPath})
+        const {result: {fileBlob}} = response as DropboxResponse<files.FileMetadata & { fileBlob: Blob }>
+        return fileBlob.arrayBuffer()
+    }
+
+    async list(path?: string): Promise<string[]> {
+        const client = await this.#ensureClient()
+        const fullPath = path ? this.#getFullPath(path) : this.#basePath
+        const response = await client.filesListFolder({path: fullPath})
+        return response.result.entries.map(entry => entry.name).filter(isDefined)
+    }
+
+    async delete(path: string): Promise<void> {
+        const client = await this.#ensureClient()
+        const fullPath = this.#getFullPath(path)
+        await client.filesDeleteV2({path: fullPath})
+    }
+
+    async #ensureClient(): Promise<Dropbox> {
+        if (this.#dropboxClient.isEmpty()) {
+            const DropboxModule = await import("dropbox")
+            this.#dropboxClient = Option.wrap(new DropboxModule.Dropbox({accessToken: this.#accessToken}))
+            const {status, error} = await Promises.tryCatch(
+                this.#dropboxClient.unwrap().filesCreateFolderV2({path: this.#basePath}))
+                .catch(error => (error as any))
+            if (status === "rejected") {
                 if (error?.error?.error_summary?.includes("path/conflict/folder")) {
-                    // Folder already exists, that's fine
+                    console.debug("[Dropbox] path exists (error above is expected)")
                 } else {
-                    throw error
+                    return panic(error)
                 }
             }
         }
-        return this.#dropboxClient
+        return this.#dropboxClient.unwrap()
     }
 
     #getFullPath(path: string): string {
@@ -41,58 +73,5 @@ export class DropboxHandler implements CloudStorageHandler {
         }
         const cleanPath = path.startsWith("/") ? path : `/${path}`
         return `${this.#basePath}${cleanPath}`
-    }
-
-    async upload(path: string, data: ArrayBuffer | Blob): Promise<void> {
-        const client = await this.#ensureClient()
-        const fullPath = this.#getFullPath(path)
-
-        console.log("[Dropbox] Uploading to:", fullPath)
-
-        // Convert Blob to ArrayBuffer if needed
-        const buffer = data instanceof Blob
-            ? await data.arrayBuffer()
-            : data
-
-        try {
-            const result = await client.filesUpload({
-                path: fullPath,
-                contents: buffer,
-                mode: {".tag": "overwrite"}
-            })
-            console.log("[Dropbox] Upload successful:", result.result.path_display)
-        } catch (error) {
-            console.error("[Dropbox] Upload failed:", error)
-            throw error
-        }
-    }
-
-    async download(path: string): Promise<ArrayBuffer> {
-        const client = await this.#ensureClient()
-        const fullPath = this.#getFullPath(path)
-        const response = await client.filesDownload({path: fullPath})
-        const {result: {name, fileBlob}} = response as DropboxResponse<files.FileMetadata & {
-            fileBlob: Blob
-        }>
-        console.debug(`downloaded ${name}`)
-        return await fileBlob.arrayBuffer()
-    }
-
-    async list(path?: string): Promise<string[]> {
-        const client = await this.#ensureClient()
-        const fullPath = path ? this.#getFullPath(path) : this.#basePath
-
-        const response = await client.filesListFolder({path: fullPath})
-
-        return response.result.entries
-            .map(entry => entry.name)
-            .filter(name => name !== undefined)
-    }
-
-    async delete(path: string): Promise<void> {
-        const client = await this.#ensureClient()
-        const fullPath = this.#getFullPath(path)
-
-        await client.filesDeleteV2({path: fullPath})
     }
 }

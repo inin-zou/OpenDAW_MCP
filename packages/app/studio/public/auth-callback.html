@@ -14,6 +14,7 @@
             margin: 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
+
         .container {
             background: white;
             padding: 2rem;
@@ -22,25 +23,30 @@
             text-align: center;
             max-width: 400px;
         }
+
         .success {
             color: #10b981;
             font-size: 3rem;
             margin-bottom: 1rem;
         }
+
         .error {
             color: #ef4444;
             font-size: 3rem;
             margin-bottom: 1rem;
         }
+
         h1 {
             color: #1f2937;
             font-size: 1.5rem;
             margin: 0 0 0.5rem 0;
         }
+
         p {
             color: #6b7280;
             margin: 0;
         }
+
         #debug {
             margin-top: 1rem;
             font-size: 0.8rem;
@@ -107,7 +113,7 @@
             try {
                 log('Trying BroadcastChannel...');
                 const channel = new BroadcastChannel('auth-callback');
-                channel.postMessage({ type: 'auth-callback', code: code });
+                channel.postMessage({type: 'auth-callback', code: code});
                 messageSent = true;
                 log('✓ Sent via BroadcastChannel');
                 channel.close();

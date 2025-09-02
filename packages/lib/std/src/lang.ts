@@ -69,7 +69,17 @@ export const getOrProvide = <T>(value: ValueOrProvider<T>): T => value instanceo
 export const safeWrite = (object: any, property: string, value: any): void => property in object ? object[property] = value : undefined
 export const safeExecute = <F extends AnyFunc>(func: Nullish<F>, ...args: Parameters<F>): Nullish<ReturnType<F>> => func?.apply(null, args)
 export const isRecord = (value: unknown): value is Record<string, unknown> => isDefined(value) && typeof value === "object"
-export const safeRead = (object: unknown, key: string): Nullish<unknown> => isRecord(object) && key in object ? object[key] : undefined
+export const safeRead = (object: unknown, ...keys: string[]): unknown => {
+    let current: unknown = object
+    for (const key of keys) {
+        if (isRecord(current) && key in current) {
+            current = (current as any)[key]
+        } else {
+            return undefined
+        }
+    }
+    return current
+}
 export const Unhandled = <R>(empty: never): R => {throw new Error(`Unhandled ${empty}`)}
 export const panic = (issue?: string | Error | unknown): never => {throw typeof issue === "string" ? new Error(issue) : issue}
 export const assert = (condition: boolean, fail: ValueOrProvider<string>): void => condition ? undefined : panic(getOrProvide(fail))
