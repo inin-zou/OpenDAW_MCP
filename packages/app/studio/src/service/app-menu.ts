@@ -16,36 +16,6 @@ export const initAppMenu = (service: StudioService) => {
                     MenuItem.header({label: "openDAW", icon: IconSymbol.OpenDAW}),
                     MenuItem.default({label: "New"})
                         .setTriggerProcedure(() => service.closeProject()),
-                    MenuItem.default({label: "Log into Dropbox"})
-                        .setTriggerProcedure(async () => {
-                            console.debug("create CloudAuthManager and authenticate...")
-                            const manager = await CloudAuthManager.create()
-                            const {status, error, value: handler} = await Promises.tryCatch(manager.dropbox())
-                            if (status === "rejected") {
-                                console.debug(`Promise rejected with '${error}'`)
-                                return
-                            }
-                            const path = "test.txt"
-                            console.debug("upload tiny file to Dropbox", path)
-                            const uploadResult = await Promises.tryCatch(handler.upload(path, new TextEncoder().encode("Hello World").buffer))
-                            if (uploadResult.status === "rejected") {
-                                console.error(uploadResult.error)
-                                return
-                            }
-                            console.debug("upload result", uploadResult.value)
-                            const listResult = await Promises.tryCatch(handler.list(""))
-                            if (listResult.status === "rejected") {
-                                console.error(listResult.error)
-                                return
-                            }
-                            console.debug("list result", listResult.value)
-                            const downloadResult = await Promises.tryCatch(handler.download(path))
-                            if (downloadResult.status === "rejected") {
-                                console.error(downloadResult.error)
-                                return
-                            }
-                            console.debug("download result", downloadResult.value, new TextDecoder().decode(downloadResult.value))
-                        }),
                     MenuItem.default({label: "Open...", shortcut: [ModfierKeys.System.Cmd, "O"]})
                         .setTriggerProcedure(() => service.browse()),
                     MenuItem.default({
@@ -90,6 +60,40 @@ export const initAppMenu = (service: StudioService) => {
                             MenuItem.default({label: "DAWproject...", selectable: service.hasProjectSession})
                                 .setTriggerProcedure(async () => service.exportDawproject())
                         )),
+                    MenuItem.default({label: "Cloud Services"})
+                        .setRuntimeChildrenProcedure(parent => {
+                            parent.addMenuItem(MenuItem.default({label: "Dropbox", icon: IconSymbol.Dropbox})
+                                .setTriggerProcedure(async () => {
+                                    console.debug("create CloudAuthManager and authenticate...")
+                                    const manager = await CloudAuthManager.create()
+                                    const {status, error, value: handler} = await Promises.tryCatch(manager.dropbox())
+                                    if (status === "rejected") {
+                                        console.debug(`Promise rejected with '${error}'`)
+                                        return
+                                    }
+                                    const path = "test.txt"
+                                    console.debug("upload tiny file to Dropbox", path)
+                                    const uploadResult = await Promises.tryCatch(handler.upload(path, new TextEncoder().encode("Hello World").buffer))
+                                    if (uploadResult.status === "rejected") {
+                                        console.error(uploadResult.error)
+                                        return
+                                    }
+                                    console.debug("upload result", uploadResult.value)
+                                    const listResult = await Promises.tryCatch(handler.list(""))
+                                    if (listResult.status === "rejected") {
+                                        console.error(listResult.error)
+                                        return
+                                    }
+                                    console.debug("list result", listResult.value)
+                                    const downloadResult = await Promises.tryCatch(handler.download(path))
+                                    if (downloadResult.status === "rejected") {
+                                        console.error(downloadResult.error)
+                                        return
+                                    }
+                                    console.debug("download result", downloadResult.value, new TextDecoder().decode(downloadResult.value))
+                                })
+                            )
+                        }),
                     MenuItem.default({label: "Debug", separatorBefore: true})
                         .setRuntimeChildrenProcedure(parent => {
                             return parent.addMenuItem(

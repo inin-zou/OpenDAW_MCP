@@ -4,6 +4,7 @@ export enum IconSymbol {
     Panel,
     MainMenu,
     Dropdown,
+    Dropbox,
     AudioDevice,
     GuitarTab,
     Effects,
