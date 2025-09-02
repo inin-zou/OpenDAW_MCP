@@ -50,6 +50,7 @@ import {MetaDataSchema} from "@opendaw/lib-dawproject"
 import {Recovery} from "@/Recovery.ts"
 import {MIDILearning} from "@/midi/devices/MIDILearning"
 import {
+    AudioWorklets,
     DawProject,
     DawProjectImport,
     EngineFacade,
@@ -57,9 +58,7 @@ import {
     MainThreadSampleManager,
     Project,
     ProjectEnv,
-    Recording,
-    RestartWorklet,
-    Worklets
+    RestartWorklet
 } from "@opendaw/studio-core"
 import {AudioOfflineRenderer} from "@/audio/AudioOfflineRenderer"
 import {ProjectDialogs} from "@/project/ProjectDialogs"
@@ -126,12 +125,12 @@ export class StudioService implements ProjectEnv {
 
     #midi: Option<MidiDeviceAccess> = Option.None
 
-    constructor(readonly context: AudioContext,
-                readonly worklets: Worklets,
+    constructor(readonly audioContext: AudioContext,
+                readonly audioWorklets: AudioWorklets,
                 readonly audioDevices: AudioOutputDevice,
                 readonly sampleManager: MainThreadSampleManager,
                 readonly buildInfo: BuildInfo) {
-        this.samplePlayback = new SamplePlayback(context)
+        this.samplePlayback = new SamplePlayback(audioContext)
         const lifeTime = new Terminator()
         const observer = (optSession: Option<ProjectSession>) => {
             const root = RouteLocation.get().path === "/"
@@ -181,7 +180,7 @@ export class StudioService implements ProjectEnv {
                         screen = this.layout.screen.getValue()
                         // we need to restart the screen to subscribe to new broadcaster instances
                         this.switchScreen(null)
-                        this.engine.releaseClient()
+                        this.engine.releaseWorklet()
                         await Dialogs.info({
                             headline: "Audio-Engine Error",
                             message: String(safeRead(event, "message") ?? event),
@@ -189,14 +188,14 @@ export class StudioService implements ProjectEnv {
                         })
                     },
                     load: (engine: EngineWorklet) => {
-                        this.engine.setClient(engine)
+                        this.engine.setWorklet(engine)
                         this.switchScreen(screen)
                     }
                 }
-                this.engine.setClient(project.startAudioWorklet(this.worklets, restart))
+                this.engine.setWorklet(project.startAudioWorklet(this.audioWorklets, restart))
                 if (root) {this.switchScreen("default")}
             } else {
-                this.engine.releaseClient()
+                this.engine.releaseWorklet()
                 range.maxUnits = PPQN.fromSignature(128, 1)
                 range.showUnitInterval(0, PPQN.fromSignature(16, 1))
                 this.layout.screen.setValue("dashboard")
@@ -249,7 +248,7 @@ export class StudioService implements ProjectEnv {
         }, EmptyExec)
     }
 
-    get sampleRate(): number {return this.context.sampleRate}
+    get sampleRate(): number {return this.audioContext.sampleRate}
 
     get midi(): Option<MidiDeviceAccess> {return this.#midi}
 
@@ -279,19 +278,6 @@ export class StudioService implements ProjectEnv {
             UUID.generate(), Project.new(this), ProjectMeta.init("Untitled"), Option.None)))
     }
 
-    startRecording(countIn: boolean): void {
-        if (!this.hasProjectSession || Recording.isRecording) {return}
-        Recording.start({
-            sampleManager: this.sampleManager,
-            project: this.project,
-            worklets: this.worklets,
-            audioContext: this.context
-        }, countIn).finally()
-    }
-
-    stopRecording(): void {this.engine.stopRecording()}
-    isRecording(): boolean {return this.engine.isRecording.getValue()}
-
     async save(): Promise<void> {return this.sessionService.save()}
     async saveAs(): Promise<void> {return this.sessionService.saveAs()}
     async browse(): Promise<void> {return this.sessionService.browse()}
@@ -311,9 +297,9 @@ export class StudioService implements ProjectEnv {
     async exportMixdown() {
         return this.sessionService.getValue()
             .ifSome(async ({project, meta}) => {
-                await this.context.suspend()
+                await this.audioContext.suspend()
                 await AudioOfflineRenderer.start(project, meta, Option.None)
-                this.context.resume().then()
+                this.audioContext.resume().then()
             })
     }
 
@@ -331,9 +317,9 @@ export class StudioService implements ProjectEnv {
                     throw error
                 }
                 ExportStemsConfiguration.sanitizeExportNamesInPlace(config)
-                await this.context.suspend()
+                await this.audioContext.suspend()
                 await AudioOfflineRenderer.start(project, meta, Option.wrap(config))
-                this.context.resume().then(EmptyExec, EmptyExec)
+                this.audioContext.resume().then(EmptyExec, EmptyExec)
             })
     }
 
@@ -374,7 +360,7 @@ export class StudioService implements ProjectEnv {
         progressHandler?: Progress.Handler
     }): Promise<Sample> {
         console.debug(`Importing '${name}' (${arrayBuffer.byteLength >> 10}kb)`)
-        return AudioImporter.run(this.context, {uuid, name, arrayBuffer, progressHandler})
+        return AudioImporter.run(this.audioContext, {uuid, name, arrayBuffer, progressHandler})
             .then(sample => {
                 this.#signals.notify({type: "import-sample", sample})
                 return sample

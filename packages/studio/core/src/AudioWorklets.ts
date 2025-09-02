@@ -6,22 +6,24 @@ import {RecordingWorklet} from "./RecordingWorklet"
 import {Project} from "./Project"
 import {RenderQuantum} from "./RenderQuantum"
 
-export class Worklets {
-    static async install(context: BaseAudioContext, workletURL: string): Promise<Worklets> {
+export class AudioWorklets {
+    static async install(context: BaseAudioContext, workletURL: string): Promise<AudioWorklets> {
         return context.audioWorklet.addModule(workletURL).then(() => {
-            const worklets = new Worklets(context)
+            const worklets = new AudioWorklets(context)
             this.#map.set(context, worklets)
             return worklets
         })
     }
 
-    static get(context: BaseAudioContext): Worklets {return asDefined(this.#map.get(context), "Worklets not installed")}
+    static get(context: BaseAudioContext): AudioWorklets {return asDefined(this.#map.get(context), "Worklets not installed")}
 
-    static #map: WeakMap<BaseAudioContext, Worklets> = new WeakMap<AudioContext, Worklets>()
+    static #map: WeakMap<BaseAudioContext, AudioWorklets> = new WeakMap<AudioContext, AudioWorklets>()
 
     readonly #context: BaseAudioContext
 
     constructor(context: BaseAudioContext) {this.#context = context}
+
+    get context(): BaseAudioContext {return this.#context}
 
     createMeter(numberOfChannels: int): MeterWorklet {
         return new MeterWorklet(this.#context, numberOfChannels)

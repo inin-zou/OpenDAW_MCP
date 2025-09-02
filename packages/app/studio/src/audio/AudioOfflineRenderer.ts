@@ -1,4 +1,4 @@
-import {encodeWavFloat, Project, Worklets} from "@opendaw/studio-core"
+import {encodeWavFloat, Project, AudioWorklets} from "@opendaw/studio-core"
 import {PPQN} from "@opendaw/lib-dsp"
 import {DefaultObservableValue, int, Option, panic, TimeSpan} from "@opendaw/lib-std"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
@@ -25,7 +25,7 @@ export namespace AudioOfflineRenderer {
         const numSamples = PPQN.pulsesToSamples(durationInPulses, project.bpm, sampleRate)
         const context = new OfflineAudioContext(numStems * 2, numSamples, sampleRate)
         const durationInSeconds = numSamples / sampleRate
-        const worklets = await Worklets.install(context, WorkletsUrl)
+        const worklets = await AudioWorklets.install(context, WorkletsUrl)
         const engineWorklet = worklets.createEngine(project, optExportConfiguration.unwrapOrUndefined())
         engineWorklet.play()
         engineWorklet.connect(context.destination)

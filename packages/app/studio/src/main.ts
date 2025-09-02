@@ -20,7 +20,7 @@ import {AnimationFrame, Browser, Events, Keyboard} from "@opendaw/lib-dom"
 import {AudioOutputDevice} from "@/audio/AudioOutputDevice"
 import {FontLoader} from "@/ui/FontLoader"
 import {ErrorHandler} from "@/errors/ErrorHandler.ts"
-import {MainThreadSampleManager, SampleProvider, SampleStorage, WorkerAgents, Worklets} from "@opendaw/studio-core"
+import {MainThreadSampleManager, SampleProvider, SampleStorage, WorkerAgents, AudioWorklets} from "@opendaw/studio-core"
 
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
 import WorkletsUrl from "@opendaw/studio-core/processors.js?worker&url"
@@ -48,7 +48,7 @@ requestAnimationFrame(async () => {
         console.debug("requesting custom sampleRate", sampleRate ?? "'No (Firefox)'")
         const context = new AudioContext({sampleRate, latencyHint: 0})
         console.debug(`AudioContext state: ${context.state}, sampleRate: ${context.sampleRate}`)
-        const audioWorklets = await Promises.tryCatch(Worklets.install(context, WorkletsUrl))
+        const audioWorklets = await Promises.tryCatch(AudioWorklets.install(context, WorkletsUrl))
         if (audioWorklets.status === "rejected") {
             return panic(audioWorklets.error)
         }

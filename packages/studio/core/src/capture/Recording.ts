@@ -1,6 +1,5 @@
 import {asInstanceOf, assert, Option, Terminable, Terminator, warn} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
-import {RecordingContext} from "./RecordingContext"
 import {AudioUnitBox} from "@opendaw/studio-boxes"
 import {AudioUnitType} from "@opendaw/studio-enums"
 import {InstrumentFactories} from "../InstrumentFactories"
@@ -9,13 +8,12 @@ import {Project} from "../Project"
 export class Recording {
     static get isRecording(): boolean {return this.#isRecording}
 
-    static async start(context: RecordingContext, countIn: boolean): Promise<Terminable> {
+    static async start(project: Project, countIn: boolean): Promise<Terminable> {
         if (this.#isRecording) {
             return Promise.resolve(Terminable.Empty)
         }
         this.#isRecording = true
         assert(this.#instance.isEmpty(), "Recording already in progress")
-        const {project} = context
         this.#prepare(project)
         const {captureDevices, engine, editing} = project
         const terminator = new Terminator()
@@ -25,12 +23,12 @@ export class Recording {
             return warn("No track is armed for Recording")
         }
         const {status, error} =
-            await Promises.tryCatch(Promise.all(captures.map(capture => capture.prepareRecording(context))))
+            await Promises.tryCatch(Promise.all(captures.map(capture => capture.prepareRecording())))
         if (status === "rejected") {
             this.#isRecording = false
             return warn(String(error))
         }
-        terminator.ownAll(...captures.map(capture => capture.startRecording(context)))
+        terminator.ownAll(...captures.map(capture => capture.startRecording()))
         engine.startRecording(countIn)
         const {isRecording, isCountingIn} = engine
         const stop = (): void => {

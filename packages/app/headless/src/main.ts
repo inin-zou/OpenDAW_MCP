@@ -4,7 +4,7 @@ import {PPQN} from "@opendaw/lib-dsp"
 import {AnimationFrame, Browser} from "@opendaw/lib-dom"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioData, SampleMetaData} from "@opendaw/studio-adapters"
-import {MainThreadSampleManager, Project, WorkerAgents, Worklets} from "@opendaw/studio-core"
+import {AudioWorklets, MainThreadSampleManager, Project, WorkerAgents} from "@opendaw/studio-core"
 import {testFeatures} from "./features"
 import {SampleApi} from "./SampleApi"
 
@@ -30,12 +30,10 @@ import {createExampleProject} from "./ExampleProject"
     }
     const context = new AudioContext({latencyHint: 0})
     console.debug(`AudioContext state: ${context.state}, sampleRate: ${context.sampleRate}`)
-    {
-        const {status, error} = await Promises.tryCatch(Worklets.install(context, WorkletsUrl))
-        if (status === "rejected") {
-            alert(`Could not install Worklets (${error})`)
-            return
-        }
+    const audioWorkletResult = await Promises.tryCatch(AudioWorklets.install(context, WorkletsUrl))
+    if (audioWorkletResult.status === "rejected") {
+        alert(`Could not install Worklets (${(audioWorkletResult.error)})`)
+        return
     }
     {
         const sampleManager = new MainThreadSampleManager({
@@ -44,11 +42,11 @@ import {createExampleProject} from "./ExampleProject"
         }, context)
 
         const loadProject = false
-        const env = {sampleManager, sampleRate: context.sampleRate}
+        const env = {sampleManager, audioWorklets: audioWorkletResult.value, audioContext: context}
         const project = loadProject
             ? Project.load(env, await fetch("subset.od").then(x => x.arrayBuffer()))
             : createExampleProject(env)
-        const worklet = Worklets.get(context).createEngine(project)
+        const worklet = AudioWorklets.get(context).createEngine(project)
         await worklet.isReady()
         while (!await worklet.queryLoadingComplete()) {}
         worklet.connect(context.destination)

@@ -4,7 +4,7 @@ import * as path from "node:path"
 import * as fs from "node:fs"
 import {Project} from "../Project"
 import {AudioData, SampleLoader, SampleLoaderState, SampleManager} from "@opendaw/studio-adapters"
-import {Observer, Option, panic, Subscription, Terminable, UUID} from "@opendaw/lib-std"
+import {InaccessibleProperty, Observer, Option, panic, Subscription, Terminable, UUID} from "@opendaw/lib-std"
 import {Xml} from "@opendaw/lib-xml"
 import {FileReferenceSchema} from "@opendaw/lib-dawproject"
 import {DawProjectExporter} from "./DawProjectExporter"
@@ -17,6 +17,8 @@ describe("DawProjectExport", () => {
         const buffer = fs.readFileSync(path.join(__dirname, projectPath))
         const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
         const project = Project.load({
+            audioContext: InaccessibleProperty as any,
+            audioWorklets: InaccessibleProperty as any,
             sampleManager: new class implements SampleManager {
                 record(_loader: SampleLoader & { uuid: UUID.Format }): void {
                     throw new Error("Method not implemented.")

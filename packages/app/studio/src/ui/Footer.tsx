@@ -50,7 +50,7 @@ export const Footer = ({lifecycle, service}: Construct) => {
     const lastBuildTime = TimeSpan.millis(new Date(service.buildInfo.date).getTime() - new Date().getTime()).toUnitString()
     const labelLatency: HTMLElement = (<div title="Latency">N/A</div>)
     lifecycle.own(Runtime.scheduleInterval(() => {
-        const outputLatency = service.context.outputLatency
+        const outputLatency = service.audioContext.outputLatency
         if (outputLatency > 0.0) {
             labelLatency.textContent = `${(outputLatency * 1000.0).toFixed(1)}ms`
         }
@@ -59,7 +59,7 @@ export const Footer = ({lifecycle, service}: Construct) => {
         <footer className={className}>
             {labelOnline}
             {labelName}
-            <div title="SampleRate">{service.context.sampleRate}</div>
+            <div title="SampleRate">{service.audioContext.sampleRate}</div>
             {labelLatency}
             <div title="Build Version">{service.buildInfo.uuid}</div>
             <div title="Build Time">{lastBuildTime}</div>

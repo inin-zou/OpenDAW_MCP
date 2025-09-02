@@ -14,7 +14,6 @@ import {AudioUnitBox, CaptureAudioBox} from "@opendaw/studio-boxes"
 import {Capture} from "./Capture"
 import {CaptureDevices} from "./CaptureDevices"
 import {RecordAudio} from "./RecordAudio"
-import {RecordingContext} from "./RecordingContext"
 import {AudioDevices} from "../AudioDevices"
 
 export class CaptureAudio extends Capture<CaptureAudioBox> {
@@ -69,7 +68,9 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         return this.#stream.flatMap(stream => Option.wrap(stream.getAudioTracks().at(0)))
     }
 
-    async prepareRecording({audioContext, project}: RecordingContext): Promise<void> {
+    async prepareRecording(): Promise<void> {
+        const {project} = this.manager
+        const {env: {audioContext}} = project
         if (isUndefined(audioContext.outputLatency)) {
             const approved = await safeExecute(project.env.dialogs?.approve, "Warning",
                 "Your browser does not support 'output latency'. This will cause timing issue while recording.",
@@ -81,7 +82,9 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         return this.#streamGenerator()
     }
 
-    startRecording({audioContext, worklets, project, sampleManager}: RecordingContext): Terminable {
+    startRecording(): Terminable {
+        const {project} = this.manager
+        const {env: {audioContext, audioWorklets, sampleManager}} = project
         const streamOption = this.#stream
         if (streamOption.isEmpty()) {
             console.warn("No audio stream available for recording.")
@@ -90,7 +93,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         const mediaStream = streamOption.unwrap()
         const channelCount = mediaStream.getAudioTracks().at(0)?.getSettings().channelCount ?? 1
         const numChunks = 128
-        const recordingWorklet = worklets.createRecording(channelCount, numChunks, audioContext.outputLatency)
+        const recordingWorklet = audioWorklets.createRecording(channelCount, numChunks, audioContext.outputLatency)
         return RecordAudio.start({
             recordingWorklet,
             mediaStream,
