@@ -79,7 +79,10 @@ export class CloudAuthManager {
                 reject(null)
             }
         }
-
+        // the beauty is that you can reject a promise after it has been resolved.
+        // so we can be sure that this code will always be executed exactly once.
+        // we need that because we lose any access (like listening to closing) to the popup
+        // once the dropbox HTML has been loaded.
         return promise.finally(() => {
             console.debug("[CloudAuth] Closing auth window")
             authWindow.close()
