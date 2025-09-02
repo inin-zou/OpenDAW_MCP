@@ -19,10 +19,12 @@ export const initAppMenu = (service: StudioService) => {
                     MenuItem.default({label: "Log into Dropbox"})
                         .setTriggerProcedure(async () => {
                             console.debug("create CloudAuthManager and authenticate...")
-                            const handler = await new CloudAuthManager({
-                                clientId: "jtehjzxaxf3bf1l",
-                                redirectUri: "https://localhost:8080/auth-callback.html"
-                            }).authenticate("dropbox")
+                            const manager = await CloudAuthManager.create()
+                            const {status, error, value: handler} = await Promises.tryCatch(manager.dropbox())
+                            if (status === "rejected") {
+                                console.debug(`Promise rejected with '${error}'`)
+                                return
+                            }
                             const path = "test.txt"
                             console.debug("upload tiny file to Dropbox", path)
                             const uploadResult = await Promises.tryCatch(handler.upload(path, new TextEncoder().encode("Hello World").buffer))
