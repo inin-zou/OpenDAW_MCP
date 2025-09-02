@@ -3,6 +3,7 @@ import {AudioWorklets} from "./AudioWorklets"
 
 export interface ProjectEnv {
     dialogs?: ProjectEnv.Dialogs
+    audioContext: AudioContext
     audioWorklets: AudioWorklets
     sampleManager: SampleManager
 }

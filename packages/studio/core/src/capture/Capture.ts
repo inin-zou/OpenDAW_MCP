@@ -9,8 +9,6 @@ import {
 } from "@opendaw/lib-std"
 import {AudioUnitBox} from "@opendaw/studio-boxes"
 import {CaptureBox} from "@opendaw/studio-adapters"
-
-import {RecordingContext} from "./RecordingContext"
 import {CaptureDevices} from "./CaptureDevices"
 
 export abstract class Capture<BOX extends CaptureBox = CaptureBox> implements Terminable {
@@ -44,8 +42,8 @@ export abstract class Capture<BOX extends CaptureBox = CaptureBox> implements Te
 
     abstract get label(): string
     abstract get deviceLabel(): Option<string>
-    abstract prepareRecording(context: RecordingContext): Promise<void>
-    abstract startRecording(context: RecordingContext): Terminable
+    abstract prepareRecording(): Promise<void>
+    abstract startRecording(): Terminable
 
     get uuid(): UUID.Format {return this.#audioUnitBox.address.uuid}
     get manager(): CaptureDevices {return this.#manager}

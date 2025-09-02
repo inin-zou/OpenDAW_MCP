@@ -30,38 +30,40 @@ export class EngineFacade implements Engine {
     readonly #markerState: DefaultObservableValue<Nullable<[UUID.Format, int]>> =
         new DefaultObservableValue<Nullable<[UUID.Format, int]>>(null)
 
-    #client: Option<EngineWorklet> = Option.None
+    #worklet: Option<EngineWorklet> = Option.None
 
     constructor() {}
 
-    setClient(client: EngineWorklet) {
-        this.#client = Option.wrap(client)
+    setClient(worklet: EngineWorklet) {
+        this.#worklet = Option.wrap(worklet)
         this.#lifecycle.terminate()
         this.#lifecycle.ownAll(
-            client.playbackTimestamp.catchupAndSubscribe(owner => this.#playbackTimestamp.setValue(owner.getValue())),
-            client.countInBeatsTotal.catchupAndSubscribe(owner => this.#countInBeatsTotal.setValue(owner.getValue())),
-            client.countInBeatsRemaining.catchupAndSubscribe(owner => this.#countInBeatsRemaining.setValue(owner.getValue())),
-            client.position.catchupAndSubscribe(owner => this.#position.setValue(owner.getValue())),
-            client.isPlaying.catchupAndSubscribe(owner => this.#isPlaying.setValue(owner.getValue())),
-            client.isRecording.catchupAndSubscribe(owner => this.#isRecording.setValue(owner.getValue())),
-            client.isCountingIn.catchupAndSubscribe(owner => this.#isCountingIn.setValue(owner.getValue())),
-            client.metronomeEnabled.catchupAndSubscribe(owner => this.#metronomeEnabled.setValue(owner.getValue())),
-            client.markerState.catchupAndSubscribe(owner => this.#markerState.setValue(owner.getValue())),
-            this.metronomeEnabled.catchupAndSubscribe(owner => client.metronomeEnabled.setValue(owner.getValue()))
+            worklet.playbackTimestamp.catchupAndSubscribe(owner => this.#playbackTimestamp.setValue(owner.getValue())),
+            worklet.countInBeatsTotal.catchupAndSubscribe(owner => this.#countInBeatsTotal.setValue(owner.getValue())),
+            worklet.countInBeatsRemaining.catchupAndSubscribe(owner => this.#countInBeatsRemaining.setValue(owner.getValue())),
+            worklet.position.catchupAndSubscribe(owner => this.#position.setValue(owner.getValue())),
+            worklet.isPlaying.catchupAndSubscribe(owner => this.#isPlaying.setValue(owner.getValue())),
+            worklet.isRecording.catchupAndSubscribe(owner => this.#isRecording.setValue(owner.getValue())),
+            worklet.isCountingIn.catchupAndSubscribe(owner => this.#isCountingIn.setValue(owner.getValue())),
+            worklet.metronomeEnabled.catchupAndSubscribe(owner => this.#metronomeEnabled.setValue(owner.getValue())),
+            worklet.markerState.catchupAndSubscribe(owner => this.#markerState.setValue(owner.getValue())),
+            this.metronomeEnabled.catchupAndSubscribe(owner => worklet.metronomeEnabled.setValue(owner.getValue()))
         )
     }
 
-    releaseClient(): void {
+    assertWorklet(): void {this.#worklet.unwrap("No worklet available")}
+
+    releaseWorklet(): void {
         this.#lifecycle.terminate()
-        this.#client.ifSome(client => client.terminate())
-        this.#client = Option.None
+        this.#worklet.ifSome(worklet => worklet.terminate())
+        this.#worklet = Option.None
     }
 
-    play(): void {this.#client.ifSome(client => client.play())}
-    stop(reset: boolean = false): void {this.#client.ifSome(client => client.stop(reset))}
-    setPosition(position: ppqn): void {this.#client.ifSome(client => client.setPosition(position))}
-    startRecording(countIn: boolean): void {this.#client.ifSome(client => client.startRecording(countIn))}
-    stopRecording(): void {this.#client.ifSome(client => client.stopRecording())}
+    play(): void {this.#worklet.ifSome(worklet => worklet.play())}
+    stop(reset: boolean = false): void {this.#worklet.ifSome(worklet => worklet.stop(reset))}
+    setPosition(position: ppqn): void {this.#worklet.ifSome(worklet => worklet.setPosition(position))}
+    startRecording(countIn: boolean): void {this.#worklet.ifSome(worklet => worklet.startRecording(countIn))}
+    stopRecording(): void {this.#worklet.ifSome(worklet => worklet.stopRecording())}
 
     get position(): ObservableValue<ppqn> {return this.#position}
     get isPlaying(): ObservableValue<boolean> {return this.#isPlaying}
@@ -72,35 +74,35 @@ export class EngineFacade implements Engine {
     get countInBeatsTotal(): ObservableValue<int> {return this.#countInBeatsTotal}
     get countInBeatsRemaining(): ObservableValue<int> {return this.#countInBeatsRemaining}
     get markerState(): DefaultObservableValue<Nullable<[UUID.Format, int]>> {return this.#markerState}
-    get project(): Project {return this.#client.unwrap("No engine to get project").project}
+    get project(): Project {return this.#worklet.unwrap("No worklet to get project").project}
 
-    isReady(): Promise<void> {return this.#client.mapOr(client => client.isReady(), Promise.resolve())}
+    isReady(): Promise<void> {return this.#worklet.mapOr(worklet => worklet.isReady(), Promise.resolve())}
     queryLoadingComplete(): Promise<boolean> {
-        return this.#client.mapOr(client => client.queryLoadingComplete(), Promise.resolve(false))
+        return this.#worklet.mapOr(worklet => worklet.queryLoadingComplete(), Promise.resolve(false))
     }
-    panic(): void {this.#client.ifSome(client => client.panic())}
-    sampleRate(): number {return this.#client.isEmpty() ? 44_100 : this.#client.unwrap().context.sampleRate}
+    panic(): void {this.#worklet.ifSome(worklet => worklet.panic())}
+    sampleRate(): number {return this.#worklet.isEmpty() ? 44_100 : this.#worklet.unwrap().context.sampleRate}
     subscribeClipNotification(observer: Observer<ClipNotification>): Subscription {
-        return this.#client.unwrap("No engine to subscribeClipNotification").subscribeClipNotification(observer)
+        return this.#worklet.unwrap("No worklet to subscribeClipNotification").subscribeClipNotification(observer)
     }
     subscribeNotes(observer: Observer<NoteSignal>): Subscription {
-        return this.#client.unwrap("No engine to subscribeNotes").subscribeNotes(observer)
+        return this.#worklet.unwrap("No worklet to subscribeNotes").subscribeNotes(observer)
     }
     ignoreNoteRegion(uuid: UUID.Format): void {
-        this.#client.unwrap("No engine to ignoreNoteRegion").ignoreNoteRegion(uuid)
+        this.#worklet.unwrap("No worklet to ignoreNoteRegion").ignoreNoteRegion(uuid)
     }
     noteSignal(signal: NoteSignal): void {
-        this.#client.unwrap("No engine to noteOn").noteSignal(signal)
+        this.#worklet.unwrap("No worklet to noteOn").noteSignal(signal)
     }
     scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void {
-        this.#client.unwrap("No engine to scheduleClipPlay").scheduleClipPlay(clipIds)
+        this.#worklet.unwrap("No worklet to scheduleClipPlay").scheduleClipPlay(clipIds)
     }
     scheduleClipStop(trackIds: ReadonlyArray<UUID.Format>): void {
-        this.#client.unwrap("No engine to scheduleClipStop").scheduleClipStop(trackIds)
+        this.#worklet.unwrap("No worklet to scheduleClipStop").scheduleClipStop(trackIds)
     }
 
     terminate(): void {
-        this.releaseClient()
+        this.releaseWorklet()
         this.#terminator.terminate()
     }
 }

@@ -20,7 +20,6 @@ import {MidiDevices} from "../MidiDevices"
 import {Capture} from "./Capture"
 import {CaptureDevices} from "./CaptureDevices"
 import {RecordMidi} from "./RecordMidi"
-import {RecordingContext} from "./RecordingContext"
 
 export class CaptureMidi extends Capture<CaptureMidiBox> {
     readonly #streamGenerator: Func<void, Promise<void>>
@@ -87,7 +86,7 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
                 .map(inputs => inputs.find(input => input.id === deviceId)?.name))
     }
 
-    async prepareRecording({}: RecordingContext): Promise<void> {
+    async prepareRecording(): Promise<void> {
         if (MidiDevices.get().isEmpty()) {
             if (MidiDevices.canRequestMidiAccess()) {
                 await MidiDevices.requestPermission()
@@ -110,10 +109,10 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
         }
     }
 
-    startRecording({project}: RecordingContext): Terminable {
+    startRecording(): Terminable {
         const availableMidiDevices = MidiDevices.inputs()
         assert(availableMidiDevices.nonEmpty(), "No MIDI input devices found")
-        return RecordMidi.start({notifier: this.#notifier, project, capture: this})
+        return RecordMidi.start({notifier: this.#notifier, project: this.manager.project, capture: this})
     }
 
     async #updateStream() {

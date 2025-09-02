@@ -27,10 +27,10 @@ export const TransportGroup = ({lifecycle, service}: Construct) => {
                     tooltip: "Start Recording (Shift-Click to suppress count-in)"
                 }}
                 onClick={event => {
-                    if (service.isRecording()) {
-                        service.stopRecording()
+                    if (service.engine.isRecording.getValue()) {
+                        service.engine.stopRecording()
                     } else {
-                        service.startRecording(!event.shiftKey)
+                        service.runIfProject(project => project.startRecording(!event.shiftKey))
                     }
                 }}><Icon symbol={IconSymbol.Record}/></Button>)
     const playButton: HTMLElement = (

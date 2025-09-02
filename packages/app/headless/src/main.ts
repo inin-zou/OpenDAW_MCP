@@ -42,7 +42,7 @@ import {createExampleProject} from "./ExampleProject"
         }, context)
 
         const loadProject = false
-        const env = {sampleManager, audioWorklets: audioWorkletResult.value}
+        const env = {sampleManager, audioWorklets: audioWorkletResult.value, audioContext: context}
         const project = loadProject
             ? Project.load(env, await fetch("subset.od").then(x => x.arrayBuffer()))
             : createExampleProject(env)

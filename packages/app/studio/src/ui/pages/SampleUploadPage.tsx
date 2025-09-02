@@ -20,7 +20,7 @@ export const SampleUploadPage: PageFactory<StudioService> = ({service}: PageCont
                         const [file] = await Files.open(FilePickerAcceptTypes.WavFiles)
                         const arrayBuffer = await file.arrayBuffer()
                         if (arrayBuffer.byteLength === 0) {return}
-                        const buffer = await service.context.decodeAudioData(arrayBuffer.slice())
+                        const buffer = await service.audioContext.decodeAudioData(arrayBuffer.slice())
                         if (arrayBuffer.byteLength === 0) {return}
                         const name = file.name.substring(0, file.name.lastIndexOf(".wav"))
                         const sample_rate = buffer.sampleRate

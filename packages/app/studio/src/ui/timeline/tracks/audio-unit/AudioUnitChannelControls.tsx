@@ -27,7 +27,7 @@ type Construct = {
 }
 
 export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construct) => {
-    const {project, midiLearning, context} = service
+    const {project, midiLearning, audioContext} = service
     const {captureDevices, editing} = project
     const {volume, panning, mute, solo} = adapter.namedParameter
     const volumeControl = (
@@ -85,7 +85,7 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
                 return optStream.ifSome(stream => {
                     const numberOfChannels = stream.getAudioTracks().at(0)?.getSettings().channelCount ?? 2
                     const meterWorklet = service.audioWorklets.createMeter(numberOfChannels)
-                    const streamSource = context.createMediaStreamSource(stream)
+                    const streamSource = audioContext.createMediaStreamSource(stream)
                     streamSource.connect(meterWorklet)
                     streamRunning = true
                     streamLifeCycle.ownAll(

@@ -17,6 +17,7 @@ describe("DawProjectExport", () => {
         const buffer = fs.readFileSync(path.join(__dirname, projectPath))
         const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
         const project = Project.load({
+            audioContext: InaccessibleProperty as any,
             audioWorklets: InaccessibleProperty as any,
             sampleManager: new class implements SampleManager {
                 record(_loader: SampleLoader & { uuid: UUID.Format }): void {

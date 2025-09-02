@@ -12,7 +12,6 @@ export * from "./capture/CaptureAudio"
 export * from "./capture/CaptureMidi"
 export * from "./capture/CaptureDevices"
 export * from "./capture/Recording"
-export * from "./capture/RecordingContext"
 
 export * from "./dawproject/DawProject"
 export * from "./dawproject/DawProjectExporter"

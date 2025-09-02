@@ -42,6 +42,7 @@ import {CaptureDevices} from "./capture/CaptureDevices"
 import {EngineFacade} from "./EngineFacade"
 import {EngineWorklet} from "./EngineWorklet"
 import {AudioWorklets} from "./AudioWorklets"
+import {Recording} from "./capture/Recording"
 
 export type RestartWorklet = { unload: Procedure<unknown>, load: Procedure<EngineWorklet> }
 
@@ -167,6 +168,12 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
         engine.connect(engine.context.destination)
         this.engine.setClient(engine)
         return engine
+    }
+
+    startRecording(countIn: boolean = true): void {
+        this.engine.assertWorklet()
+        if (Recording.isRecording) {return}
+        Recording.start(this, countIn).finally()
     }
 
     own<T extends Terminable>(terminable: T): T {return this.#terminator.own<T>(terminable)}
