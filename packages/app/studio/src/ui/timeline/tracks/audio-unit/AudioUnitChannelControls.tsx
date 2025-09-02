@@ -84,7 +84,7 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
                 streamLifeCycle.terminate()
                 return optStream.ifSome(stream => {
                     const numberOfChannels = stream.getAudioTracks().at(0)?.getSettings().channelCount ?? 2
-                    const meterWorklet = service.worklets.createMeter(numberOfChannels)
+                    const meterWorklet = service.audioWorklets.createMeter(numberOfChannels)
                     const streamSource = context.createMediaStreamSource(stream)
                     streamSource.connect(meterWorklet)
                     streamRunning = true

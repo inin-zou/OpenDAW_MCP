@@ -41,7 +41,7 @@ import {ProjectMigration} from "./ProjectMigration"
 import {CaptureDevices} from "./capture/CaptureDevices"
 import {EngineFacade} from "./EngineFacade"
 import {EngineWorklet} from "./EngineWorklet"
-import {Worklets} from "./Worklets"
+import {AudioWorklets} from "./AudioWorklets"
 
 export type RestartWorklet = { unload: Procedure<unknown>, load: Procedure<EngineWorklet> }
 
@@ -149,7 +149,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
         console.debug(`Project was created on ${this.rootBoxAdapter.created.toString()}`)
     }
 
-    startAudioWorklet(worklets: Worklets, restart: RestartWorklet): EngineWorklet {
+    startAudioWorklet(worklets: AudioWorklets, restart: RestartWorklet): EngineWorklet {
         console.debug(`start AudioWorklet`)
         const lifecycle = this.#terminator.spawn()
         const engine: EngineWorklet = lifecycle.own(worklets.createEngine(this))

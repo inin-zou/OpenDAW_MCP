@@ -50,6 +50,7 @@ import {MetaDataSchema} from "@opendaw/lib-dawproject"
 import {Recovery} from "@/Recovery.ts"
 import {MIDILearning} from "@/midi/devices/MIDILearning"
 import {
+    AudioWorklets,
     DawProject,
     DawProjectImport,
     EngineFacade,
@@ -58,8 +59,7 @@ import {
     Project,
     ProjectEnv,
     Recording,
-    RestartWorklet,
-    Worklets
+    RestartWorklet
 } from "@opendaw/studio-core"
 import {AudioOfflineRenderer} from "@/audio/AudioOfflineRenderer"
 import {ProjectDialogs} from "@/project/ProjectDialogs"
@@ -127,7 +127,7 @@ export class StudioService implements ProjectEnv {
     #midi: Option<MidiDeviceAccess> = Option.None
 
     constructor(readonly context: AudioContext,
-                readonly worklets: Worklets,
+                readonly audioWorklets: AudioWorklets,
                 readonly audioDevices: AudioOutputDevice,
                 readonly sampleManager: MainThreadSampleManager,
                 readonly buildInfo: BuildInfo) {
@@ -193,7 +193,7 @@ export class StudioService implements ProjectEnv {
                         this.switchScreen(screen)
                     }
                 }
-                this.engine.setClient(project.startAudioWorklet(this.worklets, restart))
+                this.engine.setClient(project.startAudioWorklet(this.audioWorklets, restart))
                 if (root) {this.switchScreen("default")}
             } else {
                 this.engine.releaseClient()
@@ -284,7 +284,7 @@ export class StudioService implements ProjectEnv {
         Recording.start({
             sampleManager: this.sampleManager,
             project: this.project,
-            worklets: this.worklets,
+            worklets: this.audioWorklets,
             audioContext: this.context
         }, countIn).finally()
     }

@@ -1,7 +1,9 @@
 import {SampleManager} from "@opendaw/studio-adapters"
+import {AudioWorklets} from "./AudioWorklets"
 
 export interface ProjectEnv {
     dialogs?: ProjectEnv.Dialogs
+    audioWorklets: AudioWorklets
     sampleManager: SampleManager
 }
 

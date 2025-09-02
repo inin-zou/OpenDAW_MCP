@@ -1,10 +1,10 @@
 import {SampleManager} from "@opendaw/studio-adapters"
 import {Project} from "../Project"
-import {Worklets} from "../Worklets"
+import {AudioWorklets} from "../AudioWorklets"
 
 export interface RecordingContext {
     project: Project
-    worklets: Worklets
+    worklets: AudioWorklets
     audioContext: AudioContext
     sampleManager: SampleManager
 }
