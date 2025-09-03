@@ -56,8 +56,10 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
         this.#reader = RingBuffer.reader(config, array => {
             if (this.#isRecording) {
                 this.#output.push(array)
-                this.#peakWriter.append(array)
                 const latencyInSamples = (outputLatency * this.context.sampleRate) | 0
+                if(this.numberOfFrames > latencyInSamples) {
+                    this.#peakWriter.append(array)
+                }
                 const need = this.numberOfFrames - latencyInSamples
                 if (need >= this.#limitSamples) {
                     this.#finalize().catch(error => console.warn(error))
