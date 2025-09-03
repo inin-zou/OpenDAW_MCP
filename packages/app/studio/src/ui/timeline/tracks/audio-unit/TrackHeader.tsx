@@ -1,15 +1,17 @@
 import css from "./TrackHeader.sass?inline"
-import {Lifecycle, Terminator} from "@opendaw/lib-std"
-import {createElement, Group, Inject, replaceChildren} from "@opendaw/lib-jsx"
+import {Lifecycle, panic, Terminator} from "@opendaw/lib-std"
+import {createElement, Group, replaceChildren} from "@opendaw/lib-jsx"
 import {Icon} from "@/ui/components/Icon.tsx"
 import {MenuButton} from "@/ui/components/MenuButton.tsx"
 import {MenuItem} from "@/ui/model/menu-item.ts"
 import {AudioUnitBoxAdapter, IconSymbol, TrackBoxAdapter, TrackType} from "@opendaw/studio-adapters"
 import {AudioUnitChannelControls} from "@/ui/timeline/tracks/audio-unit/AudioUnitChannelControls.tsx"
 import {installTrackHeaderMenu} from "@/ui/timeline/tracks/audio-unit/TrackHeaderMenu.ts"
-import {Events, Html, Keyboard} from "@opendaw/lib-dom"
+import {Errors, Events, Html, Keyboard} from "@opendaw/lib-dom"
 import {StudioService} from "@/service/StudioService"
 import {ColorCodes, Colors} from "@opendaw/studio-core"
+import {Surface} from "@/ui/surface/Surface"
+import {Promises} from "@opendaw/lib-runtime"
 
 const className = Html.adoptStyleSheet(css, "TrackHeader")
 
@@ -21,13 +23,13 @@ type Construct = {
 }
 
 export const TrackHeader = ({lifecycle, service, trackBoxAdapter, audioUnitBoxAdapter}: Construct) => {
-    const nameLabel = Inject.value("Untitled")
+    const nameLabel: HTMLElement = <h5 style={{color: Colors.dark}}/>
     const channelControls: HTMLElement = <Group/>
     const {project} = service
     const channelLifeCycle = lifecycle.own(new Terminator())
     lifecycle.ownAll(
         audioUnitBoxAdapter.input
-            .catchupAndSubscribeLabelChange(option => nameLabel.value = option.unwrapOrElse("No Input")),
+            .catchupAndSubscribeLabelChange(option => nameLabel.textContent = option.unwrapOrElse("No Input")),
         trackBoxAdapter.indexField
             .catchupAndSubscribe(owner => {
                 channelLifeCycle.terminate()
@@ -43,14 +45,14 @@ export const TrackHeader = ({lifecycle, service, trackBoxAdapter, audioUnitBoxAd
                 }
             }),
         trackBoxAdapter.catchupAndSubscribePath(option =>
-            nameLabel.value = option.unwrapOrElse(["", "Unassigned track"]).join(" "))
+            nameLabel.textContent = option.unwrapOrElse(["", "Unassigned track"]).join(" "))
     )
 
     const color = ColorCodes.forAudioType(audioUnitBoxAdapter.type)
     const element: HTMLElement = (
         <div className={Html.buildClassList(className, "is-primary")} tabindex={-1}>
             <Icon symbol={TrackType.toIconSymbol(trackBoxAdapter.type)} style={{color}}/>
-            <h5 style={{color: Colors.dark}}>{nameLabel}</h5>
+            {nameLabel}
             {channelControls}
             <MenuButton root={MenuItem.root()
                 .setRuntimeChildrenProcedure(installTrackHeaderMenu(service, audioUnitBoxAdapter, trackBoxAdapter))}
@@ -62,6 +64,15 @@ export const TrackHeader = ({lifecycle, service, trackBoxAdapter, audioUnitBoxAd
     )
     const audioUnitEditing = project.userEditingManager.audioUnit
     lifecycle.ownAll(
+        Events.subscribeDblDwn(nameLabel, async event => {
+            const {status, error, value} = await Promises.tryCatch(Surface.get(nameLabel)
+                .requestFloatingTextInput(event, trackBoxAdapter.targetDeviceName.unwrapOrElse("")))
+            if (status === "rejected") {
+                if (!Errors.isAbort(error)) {return panic(error)}
+            } else {
+                project.editing.modify(() => trackBoxAdapter.targetDeviceName = value)
+            }
+        }),
         Events.subscribe(element, "pointerdown", () => {
             if (!audioUnitEditing.isEditing(audioUnitBoxAdapter.box.editing)) {
                 audioUnitEditing.edit(audioUnitBoxAdapter.box.editing)

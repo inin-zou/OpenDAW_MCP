@@ -71,6 +71,32 @@ export class TrackBoxAdapter implements BoxAdapter {
         )
     }
 
+    set targetDeviceName(value: string) {
+        this.#box.target.targetVertex.ifSome(targetVertex => {
+            const vertex = targetVertex.box
+            if (vertex instanceof AudioUnitBox) {
+                const adapter = this.#context.boxAdapters.adapterFor(vertex, AudioUnitBoxAdapter)
+                return adapter.input.getValue().ifSome(({labelField}) => labelField.setValue(value))
+            } else if ("label" in vertex && vertex.label instanceof StringField) {
+                return vertex.label.setValue(value)
+            }
+        })
+    }
+
+    get targetDeviceName(): Option<string> {
+        return this.#box.target.targetVertex.flatMap(targetVertex => {
+            const vertex = targetVertex.box
+            if (vertex instanceof AudioUnitBox) {
+                const adapter = this.#context.boxAdapters.adapterFor(vertex, AudioUnitBoxAdapter)
+                return adapter.input.label
+            } else if ("label" in vertex && vertex.label instanceof StringField) {
+                return Option.wrap(vertex.label.getValue())
+            } else {
+                return Option.wrap(vertex.name)
+            }
+        })
+    }
+
     #catchupAndSubscribeTargetDeviceName(observer: Observer<Option<string>>): Subscription {
         const targetVertex = this.#box.target.targetVertex
         if (targetVertex.nonEmpty()) {
