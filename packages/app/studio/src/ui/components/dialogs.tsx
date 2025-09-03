@@ -300,7 +300,7 @@ export namespace Dialogs {
                     cancelable={false}
                     error>
                 <div style={{padding: "1em 0", maxWidth: "50vw"}}>
-                    <p>Caching Issue detected. Please clear browser cache and reload!</p>
+                    <p>Caching Issue detected. A new version is in place. Please reload or clear your browsers cache.</p>
                     {document.scripts.length > 1 &&
                         <p style={{color: Colors.red, fontWeight: "bolder"}}>Browser extensions detected! Please disable
                             before reload!</p>}
