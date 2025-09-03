@@ -2,7 +2,7 @@ import {Option, Provider, UUID} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {Project, WorkerAgents} from "@opendaw/studio-core"
 import {StudioService} from "@/service/StudioService.ts"
-import {ProjectSession} from "./project/ProjectSession"
+import {ProjectProfile} from "./project/ProjectProfile"
 import {ProjectMeta} from "@/project/ProjectMeta.ts"
 
 export class Recovery {
@@ -12,7 +12,7 @@ export class Recovery {
 
     constructor(service: StudioService) {this.#service = service}
 
-    async restoreSession(): Promise<Option<ProjectSession>> {
+    async restoreSession(): Promise<Option<ProjectProfile>> {
         const backupResult = await Promises.tryCatch(WorkerAgents.Opfs.list(Recovery.#RESTORE_FILE_PATH))
         if (backupResult.status === "rejected" || backupResult.value.length === 0) {return Option.None}
         const readResult = await Promises.tryCatch(Promise.all([
@@ -29,13 +29,13 @@ export class Recovery {
         console.debug(`delete backup: "${deleteResult.status}"`)
         if (readResult.status === "rejected") {return Option.None}
         const [uuid, project, meta, saved] = readResult.value
-        const session = new ProjectSession(this.#service, uuid, project, meta, Option.None, saved)
+        const session = new ProjectProfile(uuid, project, meta, Option.None, saved)
         console.debug(`restore ${session}, saved: ${saved}`)
         return Option.wrap(session)
     }
 
     createBackupCommand(): Option<Provider<Promise<void>>> {
-        return this.#service.sessionService.getValue().map((session: ProjectSession) => async () => {
+        return this.#service.sessionService.getValue().map((session: ProjectProfile) => async () => {
             console.debug("temp storing project")
             const {project, meta, uuid} = session
             return Promises.tryCatch(Promise.all([

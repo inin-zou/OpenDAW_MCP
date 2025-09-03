@@ -8,14 +8,14 @@ import {
     unitValue,
     UUID
 } from "@opendaw/lib-std"
+import {AudioFileBox} from "@opendaw/studio-boxes"
+import {MainThreadSampleLoader, Project, SampleStorage, WorkerAgents} from "@opendaw/studio-core"
 import {StudioService} from "@/service/StudioService"
 import {ProjectMeta} from "@/project/ProjectMeta"
-import {AudioFileBox} from "@opendaw/studio-boxes"
-import JSZip from "jszip"
-import {ProjectSession} from "@/project/ProjectSession"
+import {ProjectProfile} from "@/project/ProjectProfile"
 import {ProjectDecoder} from "@opendaw/studio-adapters"
 import {SampleUtils} from "@/project/SampleUtils"
-import {Project, SampleStorage, MainThreadSampleLoader, WorkerAgents} from "@opendaw/studio-core"
+import type JSZip from "jszip"
 
 export namespace ProjectPaths {
     export const Folder = "projects/v1"
@@ -29,7 +29,7 @@ export namespace ProjectPaths {
 }
 
 export namespace Projects {
-    export const saveProject = async ({uuid, project, meta, cover}: ProjectSession): Promise<void> => {
+    export const saveProject = async ({uuid, project, meta, cover}: ProjectProfile): Promise<void> => {
         return Promise.all([
             WorkerAgents.Opfs.write(ProjectPaths.projectFile(uuid), new Uint8Array(project.toArrayBuffer())),
             WorkerAgents.Opfs.write(ProjectPaths.projectMeta(uuid), new TextEncoder().encode(JSON.stringify(meta))),
@@ -82,8 +82,9 @@ export namespace Projects {
 
     export const deleteProject = async (uuid: UUID.Format) => WorkerAgents.Opfs.delete(ProjectPaths.projectFolder(uuid))
 
-    export const exportBundle = async ({uuid, project, meta, cover}: ProjectSession,
+    export const exportBundle = async ({uuid, project, meta, cover}: ProjectProfile,
                                        progress: MutableObservableValue<unitValue>): Promise<ArrayBuffer> => {
+        const {default: JSZip} = await import("jszip")
         const zip = new JSZip()
         zip.file("version", "1")
         zip.file("uuid", uuid, {binary: true})
@@ -107,7 +108,8 @@ export namespace Projects {
         return blob.arrayBuffer()
     }
 
-    export const importBundle = async (service: StudioService, arrayBuffer: ArrayBuffer): Promise<ProjectSession> => {
+    export const importBundle = async (service: StudioService, arrayBuffer: ArrayBuffer): Promise<ProjectProfile> => {
+        const {default: JSZip} = await import("jszip")
         const zip = await JSZip.loadAsync(arrayBuffer)
         if (await asDefined(zip.file("version")).async("text") !== "1") {throw "Unknown bundle version"}
         const uuid = UUID.validate(await asDefined(zip.file("uuid")).async("uint8array"))
@@ -130,6 +132,6 @@ export namespace Projects {
         const cover: Option<ArrayBuffer> = isDefined(coverFile)
             ? Option.wrap(await coverFile.async("arraybuffer"))
             : Option.None
-        return new ProjectSession(service, UUID.generate(), project, meta, cover)
+        return new ProjectProfile(UUID.generate(), project, meta, cover)
     }
 }
