@@ -2,12 +2,13 @@ import {MenuItem} from "@/ui/model/menu-item"
 import {StudioService} from "@/service/StudioService"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {RouteLocation} from "@opendaw/lib-jsx"
-import {isDefined, panic} from "@opendaw/lib-std"
+import {isDefined, panic, warn} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
 import {CloudAuthManager} from "@/clouds/CloudAuthManager"
 import {Promises} from "@opendaw/lib-runtime"
+import {CloudSync} from "@/clouds/CloudSync"
 
 export const initAppMenu = (service: StudioService) => {
     return MenuItem.root()
@@ -62,36 +63,63 @@ export const initAppMenu = (service: StudioService) => {
                         )),
                     MenuItem.default({label: "Cloud Services"})
                         .setRuntimeChildrenProcedure(parent => {
-                            parent.addMenuItem(MenuItem.default({label: "Dropbox", icon: IconSymbol.Dropbox})
-                                .setTriggerProcedure(async () => {
-                                    console.debug("create CloudAuthManager and authenticate...")
-                                    const manager = await CloudAuthManager.create()
-                                    const {status, error, value: handler} = await Promises.tryCatch(manager.dropbox())
-                                    if (status === "rejected") {
-                                        console.debug(`Promise rejected with '${error}'`)
-                                        return
-                                    }
-                                    const path = "test.txt"
-                                    console.debug("upload tiny file to Dropbox", path)
-                                    const uploadResult = await Promises.tryCatch(handler.upload(path, new TextEncoder().encode("Hello World").buffer))
-                                    if (uploadResult.status === "rejected") {
-                                        console.error(uploadResult.error)
-                                        return
-                                    }
-                                    console.debug("upload result", uploadResult.value)
-                                    const listResult = await Promises.tryCatch(handler.list(""))
-                                    if (listResult.status === "rejected") {
-                                        console.error(listResult.error)
-                                        return
-                                    }
-                                    console.debug("list result", listResult.value)
-                                    const downloadResult = await Promises.tryCatch(handler.download(path))
-                                    if (downloadResult.status === "rejected") {
-                                        console.error(downloadResult.error)
-                                        return
-                                    }
-                                    console.debug("download result", downloadResult.value, new TextDecoder().decode(downloadResult.value))
-                                })
+                            parent.addMenuItem(
+                                MenuItem.default({label: "Dropbox Sync", icon: IconSymbol.Dropbox})
+                                    .setTriggerProcedure(async () => {
+                                        const manager = await CloudAuthManager.create()
+                                        const {status, error, value: handler} = await Promises.tryCatch(manager.dropbox())
+                                        if (status === "rejected") {
+                                            console.debug(`Promise rejected with '${error}'`)
+                                            return
+                                        }
+                                        {
+                                            const p = document.createElement("code")
+                                            p.style.padding = "1em 0"
+                                            p.style.overflow = "hidden"
+                                            p.style.whiteSpace = "nowrap"
+                                            p.style.textOverflow = "ellipsis"
+                                            p.style.minWidth = "30em"
+                                            p.style.maxWidth = "30em"
+                                            const monolog = Dialogs.processMonolog("Cloud Sync", p)
+                                            const {status, error} =
+                                                await Promises.tryCatch(CloudSync
+                                                    .run(handler, service.audioContext, text => p.textContent = text))
+                                            if (status === "rejected") {return warn(String(error))}
+                                            monolog.close()
+                                        }
+                                    }),
+                                MenuItem.default({label: "Dropbox IO Test", icon: IconSymbol.Dropbox, hidden: true})
+                                    .setTriggerProcedure(async () => {
+                                        console.debug("create CloudAuthManager and authenticate...")
+                                        const manager = await CloudAuthManager.create()
+                                        const {status, error, value: handler} = await Promises.tryCatch(manager.dropbox())
+                                        if (status === "rejected") {
+                                            console.debug(`Promise rejected with '${error}'`)
+                                            return
+                                        }
+                                        const path = "some-folder/test.txt"
+                                        console.debug("upload tiny file to Dropbox", path)
+                                        const buffer = new TextEncoder().encode("Hello World").buffer
+                                        const uploadResult = await Promises.tryCatch(handler.upload(path, buffer))
+                                        if (uploadResult.status === "rejected") {
+                                            console.error(uploadResult.error)
+                                            return
+                                        }
+                                        console.debug("upload result", uploadResult.value)
+                                        const listResult = await Promises.tryCatch(handler.list(""))
+                                        if (listResult.status === "rejected") {
+                                            console.error(listResult.error)
+                                            return
+                                        }
+                                        console.debug("list result", listResult.value)
+                                        const downloadResult = await Promises.tryCatch(handler.download(path))
+                                        if (downloadResult.status === "rejected") {
+                                            console.error(downloadResult.error)
+                                            return
+                                        }
+                                        const text = new TextDecoder().decode(downloadResult.value)
+                                        console.debug("download result", downloadResult.value, text)
+                                    })
                             )
                         }),
                     MenuItem.default({label: "Debug", separatorBefore: true})

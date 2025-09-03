@@ -66,12 +66,8 @@
             const channel = new BroadcastChannel('auth-callback');
             channel.postMessage({type: 'auth-callback', code: code});
             channel.close();
-            container.innerHTML = `
-                        <div class="success">✓</div>
-                        <h1>Authentication Successful!</h1>
-                        <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">Window will close in three seconds...</p>
-                    `;
-            setTimeout(() => window.close(), 3000);
+            window.onbeforeunload = null
+            window.close();
         } catch (error) {
             container.innerHTML = `
                     <div class="error">⚠️</div>

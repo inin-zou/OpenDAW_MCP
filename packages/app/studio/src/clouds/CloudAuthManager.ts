@@ -1,12 +1,6 @@
 import {asDefined, isDefined, isUndefined, panic, warn} from "@opendaw/lib-std"
 import {Dialogs} from "@/ui/components/dialogs"
-
-export interface CloudStorageHandler {
-    upload(path: string, data: ArrayBuffer | Blob): Promise<void>;
-    download(path: string): Promise<ArrayBuffer>;
-    list(path?: string): Promise<string[]>;
-    delete(path: string): Promise<void>;
-}
+import {CloudStorageHandler} from "@/clouds/CloudStorageHandler"
 
 export class CloudAuthManager {
     static async create(): Promise<CloudAuthManager> {
@@ -60,7 +54,7 @@ export class CloudAuthManager {
         }
         const {resolve, reject, promise} = Promise.withResolvers<CloudStorageHandler>()
         const channel = new BroadcastChannel("auth-callback")
-        const dialog = Dialogs.processMonolog("Dropbox", undefined, () => reject(null))
+        const dialog = Dialogs.processMonolog("Cloud Authentification", undefined, () => reject(null))
         channel.onmessage = async (event: MessageEvent<any>) => {
             const data = asDefined(event.data, "No data")
             console.debug("[CloudAuth] Received via BroadcastChannel:", this.id, data)

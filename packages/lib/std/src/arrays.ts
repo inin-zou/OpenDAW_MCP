@@ -96,6 +96,18 @@ export class Arrays {
         array.length = index
         return array
     }
+    static subtract<T>(array: ReadonlyArray<T>,
+                       excludeArray: ReadonlyArray<T>,
+                       compareFn: (a: T, b: T) => boolean): Array<T> {
+        return array.filter(item => !excludeArray.some(excludeItem => compareFn(item, excludeItem)))
+    }
+    static merge<T>(baseArray: ReadonlyArray<T>,
+                    mergeIntoArray: ReadonlyArray<T>,
+                    compareFn: (a: T, b: T) => boolean): Array<T> {
+        return [...(baseArray
+            .filter(baseItem => !mergeIntoArray
+                .some(mergeItem => compareFn(baseItem, mergeItem)))), ...mergeIntoArray]
+    }
     static* iterate<T>(array: ArrayLike<T>): Generator<T> {
         for (let i: int = 0; i < array.length; i++) {
             yield array[i]
