@@ -66,27 +66,40 @@ export const initAppMenu = (service: StudioService) => {
                             parent.addMenuItem(
                                 MenuItem.default({label: "Dropbox Sync", icon: IconSymbol.Dropbox})
                                     .setTriggerProcedure(async () => {
+                                        const approveResult = await Promises.tryCatch(Dialogs.approve({
+                                            headline: "openDAW and your data",
+                                            message: "openDAW will never store or share your personal account details. " +
+                                                "Dropbox requires permission to read “basic account info” such as your " +
+                                                "name and email, but openDAW does not use or retain this information. " +
+                                                "We only access the files you choose to synchronize.",
+                                            approveText: "Connect",
+                                            cancelText: "Cancel",
+                                            reverse: true,
+                                            maxWidth: "30em"
+                                        }))
+                                        if (approveResult.status === "rejected") {return}
                                         const manager = await CloudAuthManager.create()
-                                        const {status, error, value: handler} = await Promises.tryCatch(manager.dropbox())
-                                        if (status === "rejected") {
-                                            console.debug(`Promise rejected with '${error}'`)
+                                        const dropboxResult = await Promises.tryCatch(manager.dropbox())
+                                        if (dropboxResult.status === "rejected") {
+                                            console.debug(`Promise rejected with '${(dropboxResult.error)}'`)
                                             return
                                         }
-                                        {
-                                            const p = document.createElement("code")
-                                            p.style.padding = "1em 0"
-                                            p.style.overflow = "hidden"
-                                            p.style.whiteSpace = "nowrap"
-                                            p.style.textOverflow = "ellipsis"
-                                            p.style.minWidth = "30em"
-                                            p.style.maxWidth = "30em"
-                                            const monolog = Dialogs.processMonolog("Cloud Sync", p)
-                                            const {status, error} =
-                                                await Promises.tryCatch(CloudSync
-                                                    .run(handler, service.audioContext, text => p.textContent = text))
-                                            if (status === "rejected") {return warn(String(error))}
-                                            monolog.close()
-                                        }
+                                        const cloudHandler = dropboxResult.value
+                                        const p = document.createElement("code")
+                                        Object.assign(p.style, {
+                                            padding: "1em 0",
+                                            overflow: "hidden",
+                                            whiteSpace: "nowrap",
+                                            textOverflow: "ellipsis",
+                                            minWidth: "30em",
+                                            maxWidth: "30em"
+                                        })
+                                        const monolog = Dialogs.processMonolog("Cloud Sync", p)
+                                        const syncResult =
+                                            await Promises.tryCatch(CloudSync
+                                                .run(cloudHandler, service.audioContext, text => p.textContent = text))
+                                        if (syncResult.status === "rejected") {return warn(String(syncResult.error))}
+                                        monolog.close()
                                     }),
                                 MenuItem.default({label: "Dropbox IO Test", icon: IconSymbol.Dropbox, hidden: true})
                                     .setTriggerProcedure(async () => {

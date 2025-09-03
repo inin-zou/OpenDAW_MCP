@@ -69,10 +69,11 @@ export namespace Dialogs {
         reverse?: boolean
         message: string
         origin?: Element
+        maxWidth?: string
     }
 
     export const approve =
-        ({headline, message, approveText, cancelText, reverse, origin}: ApproveCreation): Promise<void> => {
+        ({headline, message, approveText, cancelText, reverse, origin, maxWidth}: ApproveCreation): Promise<void> => {
             reverse ??= false
             const {resolve, reject, promise} = Promise.withResolvers<void>()
             const buttons: Array<Button> = [{
@@ -96,7 +97,7 @@ export namespace Dialogs {
                         icon={IconSymbol.System}
                         cancelable={true}
                         buttons={buttons}>
-                    <div style={{padding: "1em 0"}}>
+                    <div style={{padding: "1em 0", maxWidth}}>
                         <p>{message}</p>
                     </div>
                 </Dialog>

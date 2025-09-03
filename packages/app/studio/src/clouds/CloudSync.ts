@@ -33,11 +33,10 @@ export namespace CloudSync {
         const uploadedSampleResults: ReadonlyArray<PromiseSettledResult<Sample>> =
             await Promises.allSettledWithLimit(unsyncedSamples.map(sample =>
                 async () => {
-                    log(`loading '${sample.name}'`)
+                    log(`uploading '${sample.name}'`)
                     const file = await SampleStorage.load(UUID.parse(sample.uuid), audioContext)
                         .then(([{frames: channels, numberOfChannels, numberOfFrames: numFrames, sampleRate}]) =>
                             encodeWavFloat({channels, numberOfChannels, numFrames, sampleRate}))
-                    log(`uploading '${sample.name}'`)
                     await cloudHandler.upload(`${SamplePath}/${sample.uuid}`, file)
                     return sample
                 }))
