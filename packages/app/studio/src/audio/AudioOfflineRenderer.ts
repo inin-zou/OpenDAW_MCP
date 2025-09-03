@@ -1,4 +1,4 @@
-import {encodeWavFloat, Project, AudioWorklets} from "@opendaw/studio-core"
+import {AudioWorklets, encodeWavFloat, Project} from "@opendaw/studio-core"
 import {PPQN} from "@opendaw/lib-dsp"
 import {DefaultObservableValue, int, Option, panic, TimeSpan} from "@opendaw/lib-std"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
@@ -6,7 +6,6 @@ import {Promises, Wait} from "@opendaw/lib-runtime"
 import {AnimationFrame, Errors, Files} from "@opendaw/lib-dom"
 import {ProjectMeta} from "@/project/ProjectMeta"
 import {ExportStemsConfiguration} from "@opendaw/studio-adapters"
-import JSZip from "jszip"
 import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
 
 export namespace AudioOfflineRenderer {
@@ -59,6 +58,7 @@ export namespace AudioOfflineRenderer {
     }
 
     const saveZipFile = async (buffer: AudioBuffer, meta: ProjectMeta, trackNames: ReadonlyArray<string>) => {
+        const {default: JSZip} = await import("jszip")
         const dialogHandler = Dialogs.processMonolog("Creating Zip File...")
         const numStems = buffer.numberOfChannels >> 1
         const zip = new JSZip()

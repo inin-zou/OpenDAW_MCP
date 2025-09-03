@@ -1,17 +1,17 @@
 import {
-    Arrays,
-    assert,
     ByteArrayInput,
     int,
     Notifier,
-    Nullable,
     Observer,
     Option,
     Progress,
     Subscription,
     Terminable,
+    Terminator,
     UUID
 } from "@opendaw/lib-std"
+import {BPMTools} from "@opendaw/lib-dsp"
+import {Peaks, SamplePeaks} from "@opendaw/lib-fusion"
 import {
     AudioData,
     mergeChunkPlanes,
@@ -20,50 +20,14 @@ import {
     SampleLoaderState,
     SampleMetaData
 } from "@opendaw/studio-adapters"
-import {Peaks, SamplePeaks, SamplePeakWorker} from "@opendaw/lib-fusion"
+import {SampleStorage} from "./samples/SampleStorage"
 import {RenderQuantum} from "./RenderQuantum"
 import {WorkerAgents} from "./WorkerAgents"
-import {SampleStorage} from "./samples/SampleStorage"
-import {BPMTools} from "@opendaw/lib-dsp"
-
-class PeaksWriter implements Peaks, Peaks.Stage {
-    readonly data: ReadonlyArray<Int32Array>
-    readonly stages: ReadonlyArray<Peaks.Stage>
-    readonly dataOffset: int = 0
-    readonly shift: int = 7
-    readonly dataIndex: Int32Array
-
-    numFrames: int = 0 | 0
-
-    constructor(readonly numChannels: int) {
-        this.data = Arrays.create(() => new Int32Array(1 << 20), numChannels) // TODO auto-resize
-        this.dataIndex = new Int32Array(numChannels)
-        this.stages = [this]
-    }
-
-    get numPeaks(): int {return Math.ceil(this.numFrames / (1 << this.shift))}
-    unitsEachPeak(): int {return 1 << this.shift}
-
-    append(frames: ReadonlyArray<Float32Array>): void {
-        for (let channel = 0; channel < this.numChannels; ++channel) {
-            const channelFrames = frames[channel]
-            assert(channelFrames.length === RenderQuantum, "Invalid number of frames.")
-            let min = Number.POSITIVE_INFINITY
-            let max = Number.NEGATIVE_INFINITY
-            for (let i = 0; i < RenderQuantum; ++i) {
-                const frame = channelFrames[i]
-                min = Math.min(frame, min)
-                max = Math.max(frame, max)
-            }
-            this.data[channel][this.dataIndex[channel]++] = SamplePeakWorker.pack(min, max)
-        }
-        this.numFrames += RenderQuantum
-    }
-
-    nearest(_unitsPerPixel: number): Nullable<Peaks.Stage> {return this.stages.at(0) ?? null}
-}
+import {PeaksWriter} from "./PeaksWriter"
 
 export class RecordingWorklet extends AudioWorkletNode implements Terminable, SampleLoader {
+    readonly #terminator: Terminator = new Terminator()
+
     readonly uuid: UUID.Format = UUID.generate()
 
     readonly #output: Array<ReadonlyArray<Float32Array>>
@@ -74,7 +38,7 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
     #data: Option<AudioData> = Option.None
     #peaks: Option<Peaks> = Option.None
     #isRecording: boolean = true
-    #truncateLatency: int
+    #limitSamples: int = Number.POSITIVE_INFINITY
     #state: SampleLoaderState = {type: "record"}
 
     constructor(context: BaseAudioContext, config: RingBuffer.Config, outputLatency: number) {
@@ -86,26 +50,36 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
         })
 
         this.#peakWriter = new PeaksWriter(config.numberOfChannels)
-        this.#truncateLatency = Math.floor((outputLatency ?? 0) * this.context.sampleRate / RenderQuantum)
+        this.#peaks = Option.wrap(this.#peakWriter)
         this.#output = []
         this.#notifier = new Notifier<SampleLoaderState>()
         this.#reader = RingBuffer.reader(config, array => {
             if (this.#isRecording) {
-                if (this.#truncateLatency === 0) {
-                    this.#output.push(array)
+                this.#output.push(array)
+                const latencyInSamples = (outputLatency * this.context.sampleRate) | 0
+                if (this.numberOfFrames >= latencyInSamples) {
                     this.#peakWriter.append(array)
-                } else {
-                    if (--this.#truncateLatency === 0) {
-                        this.#peaks = Option.wrap(this.#peakWriter)
-                    }
+                }
+                const need = this.numberOfFrames - latencyInSamples
+                if (need >= this.#limitSamples) {
+                    this.#finalize().catch(error => console.warn(error))
                 }
             }
         })
     }
 
+    own<T extends Terminable>(terminable: T): T {return this.#terminator.own(terminable)}
+
+    limit(count: int): void {this.#limitSamples = count}
+
+    // TODO this is a bit hacky, we wait for the latency to pass,
+    //  therefore we need to fake the Peak properties. The best implementation would know an offset (latency)
+    //  and get all recorded data.
+    setFillLength(value: int): void {this.#peakWriter.numFrames = value}
+
     get numberOfFrames(): int {return this.#output.length * RenderQuantum}
     get data(): Option<AudioData> {return this.#data}
-    get peaks(): Option<Peaks> {return this.#peaks}
+    get peaks(): Option<Peaks> {return this.#peaks.isEmpty() ? Option.wrap(this.#peakWriter) : this.#peaks}
     get state(): SampleLoaderState {return this.#state}
 
     invalidate(): void {}
@@ -118,38 +92,41 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
         return this.#notifier.subscribe(observer)
     }
 
-    async finalize() {
-        this.#reader.stop()
-        this.#isRecording = false
-        if (this.#output.length === 0) {return}
-        const sample_rate = this.context.sampleRate
-        const numberOfFrames = this.#output.length * RenderQuantum
-        const numberOfChannels = this.channelCount
-        const frames = mergeChunkPlanes(this.#output, RenderQuantum, numberOfFrames)
-        const audioData: AudioData = {
-            sampleRate: sample_rate,
-            numberOfChannels,
-            numberOfFrames,
-            frames
-        }
-        this.#data = Option.wrap(audioData)
-        const shifts = SamplePeaks.findBestFit(numberOfFrames)
-        const peaks = await WorkerAgents
-            .Peak.generateAsync(Progress.Empty, shifts, frames, numberOfFrames, numberOfChannels)
-        this.#peaks = Option.wrap(SamplePeaks.from(new ByteArrayInput(peaks)))
-        const bpm = BPMTools.detect(frames[0], sample_rate)
-        const duration = numberOfFrames / sample_rate
-        const meta: SampleMetaData = {name: "Recording", bpm, sample_rate, duration}
-        await SampleStorage.store(this.uuid, audioData, peaks as ArrayBuffer, meta)
-        this.#setState({type: "loaded"})
-    }
-
     terminate(): void {
         this.#reader.stop()
         this.#isRecording = false
+        this.#terminator.terminate()
     }
 
     toString(): string {return `{RecordingWorklet}`}
+
+    async #finalize() {
+        this.#isRecording = false
+        this.#reader.stop()
+        if (this.#output.length === 0) {return}
+        const totalSamples: int = this.#limitSamples
+        const sample_rate = this.context.sampleRate
+        const numberOfChannels = this.channelCount
+        const frames = mergeChunkPlanes(this.#output, RenderQuantum, this.#output.length * RenderQuantum)
+            .map(frame => frame.slice(-totalSamples))
+        const audioData: AudioData = {
+            sampleRate: sample_rate,
+            numberOfChannels,
+            numberOfFrames: totalSamples,
+            frames
+        }
+        this.#data = Option.wrap(audioData)
+        const shifts = SamplePeaks.findBestFit(totalSamples)
+        const peaks = await WorkerAgents
+            .Peak.generateAsync(Progress.Empty, shifts, frames, totalSamples, numberOfChannels)
+        this.#peaks = Option.wrap(SamplePeaks.from(new ByteArrayInput(peaks)))
+        const bpm = BPMTools.detect(frames[0], sample_rate)
+        const duration = totalSamples / sample_rate
+        const meta: SampleMetaData = {name: "Recording", bpm, sample_rate, duration}
+        await SampleStorage.store(this.uuid, audioData, peaks as ArrayBuffer, meta)
+        this.#setState({type: "loaded"})
+        this.terminate()
+    }
 
     #setState(value: SampleLoaderState): void {
         this.#state = value

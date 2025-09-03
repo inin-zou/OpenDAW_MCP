@@ -32,7 +32,7 @@ import {MidiDeviceAccess} from "@/midi/devices/MidiDeviceAccess"
 import {SamplePlayback} from "@/service/SamplePlayback"
 import {Shortcuts} from "@/service/Shortcuts"
 import {ProjectMeta} from "@/project/ProjectMeta"
-import {ProjectSession} from "@/project/ProjectSession"
+import {ProjectProfile} from "@/project/ProjectProfile"
 import {SessionService} from "./SessionService"
 import {StudioSignal} from "./StudioSignal"
 import {Projects} from "@/project/Projects"
@@ -132,7 +132,7 @@ export class StudioService implements ProjectEnv {
                 readonly buildInfo: BuildInfo) {
         this.samplePlayback = new SamplePlayback(audioContext)
         const lifeTime = new Terminator()
-        const observer = (optSession: Option<ProjectSession>) => {
+        const observer = (optSession: Option<ProjectProfile>) => {
             const root = RouteLocation.get().path === "/"
             if (root) {this.layout.screen.setValue(null)}
             lifeTime.terminate()
@@ -149,11 +149,9 @@ export class StudioService implements ProjectEnv {
                     loopState.subscribe(value => editing.modify(() => loopEnabled.setValue(value.getValue()))),
                     userEditingManager.timeline.catchupAndSubscribe(option => option
                         .ifSome(() => this.panelLayout.showIfAvailable(PanelType.ContentEditor))),
-                    timelineBox.durationInPulses.catchupAndSubscribe(owner => range.maxUnits = owner.getValue() + PPQN.Bar),
-                    {terminate: () => session.saveMidiConfiguration()}
+                    timelineBox.durationInPulses.catchupAndSubscribe(owner => range.maxUnits = owner.getValue() + PPQN.Bar)
                 )
                 range.showUnitInterval(0, PPQN.fromSignature(16, 1))
-                session.loadMidiConfiguration().then()
 
                 // -------------------------------
                 // Show views if content available
@@ -274,16 +272,16 @@ export class StudioService implements ProjectEnv {
     }
 
     cleanSlate(): void {
-        this.sessionService.setValue(Option.wrap(new ProjectSession(this,
-            UUID.generate(), Project.new(this), ProjectMeta.init("Untitled"), Option.None)))
+        this.sessionService.setValue(Option.wrap(
+            new ProjectProfile(UUID.generate(), Project.new(this), ProjectMeta.init("Untitled"), Option.None)))
     }
 
     async save(): Promise<void> {return this.sessionService.save()}
     async saveAs(): Promise<void> {return this.sessionService.saveAs()}
     async browse(): Promise<void> {return this.sessionService.browse()}
     async loadTemplate(name: string): Promise<unknown> {return this.sessionService.loadTemplate(name)}
-    async exportZip() {return this.sessionService.exportZip()}
-    async importZip() {return this.sessionService.importZip()}
+    async exportZip() {return this.sessionService.exportBundle()}
+    async importZip() {return this.sessionService.importBundle()}
     async deleteProject(uuid: UUID.Format, meta: ProjectMeta): Promise<void> {
         if (this.sessionService.getValue().ifSome(session => UUID.equals(session.uuid, uuid)) === true) {
             await this.closeProject()
@@ -424,7 +422,7 @@ export class StudioService implements ProjectEnv {
     }
 
     get project(): Project {return this.session.project}
-    get session(): ProjectSession {return this.sessionService.getValue().unwrap("No session available")}
+    get session(): ProjectProfile {return this.sessionService.getValue().unwrap("No session available")}
     get hasProjectSession(): boolean {return this.sessionService.getValue().nonEmpty()}
 
     subscribeSignal<T extends StudioSignal["type"]>(

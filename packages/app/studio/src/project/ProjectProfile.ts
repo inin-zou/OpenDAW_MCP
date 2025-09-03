@@ -1,14 +1,9 @@
 import {ProjectMeta} from "./ProjectMeta"
 import {Notifier, Observer, Option, Subscription, UUID} from "@opendaw/lib-std"
 import {Projects} from "@/project/Projects"
-import {Dialogs} from "@/ui/components/dialogs"
-import {Promises} from "@opendaw/lib-runtime"
-import {MidiDeviceAccess} from "@/midi/devices/MidiDeviceAccess"
-import {StudioService} from "@/service/StudioService"
 import {Project} from "@opendaw/studio-core"
 
-export class ProjectSession {
-    readonly #service: StudioService
+export class ProjectProfile {
     readonly #uuid: UUID.Format
     readonly #project: Project
     readonly #meta: ProjectMeta
@@ -20,13 +15,11 @@ export class ProjectSession {
     #saved: boolean
     #hasChanges: boolean = false
 
-    constructor(service: StudioService,
-                uuid: UUID.Format,
+    constructor(uuid: UUID.Format,
                 project: Project,
                 meta: ProjectMeta,
                 cover: Option<ArrayBuffer>,
                 hasBeenSaved: boolean = false) {
-        this.#service = service
         this.#uuid = uuid
         this.#project = project
         this.#meta = meta
@@ -43,24 +36,20 @@ export class ProjectSession {
 
     async save(): Promise<void> {
         this.updateModifyDate()
-        this.saveMidiConfiguration()
         return this.#saved
             ? Projects.saveProject(this).then(() => {this.#hasChanges = false})
             : Promise.reject("Project has not been saved")
     }
 
-    async saveAs(meta: ProjectMeta): Promise<Option<ProjectSession>> {
+    async saveAs(meta: ProjectMeta): Promise<Option<ProjectProfile>> {
         Object.assign(this.meta, meta)
         this.updateModifyDate()
         if (this.#saved) {
             // Copy project
             const uuid = UUID.generate()
-            const midiConnections = this.#service.midiLearning.toJSON()
             const project = this.project.copy()
             const meta = ProjectMeta.copy(this.meta)
-            const session = new ProjectSession(this.#service, uuid, project, meta, Option.None, true)
-            this.#service.midiLearning.fromJSON(midiConnections)
-            session.saveMidiConfiguration()
+            const session = new ProjectProfile(uuid, project, meta, Option.None, true)
             await Projects.saveProject(session)
             return Option.wrap(session)
         } else {
@@ -81,11 +70,6 @@ export class ProjectSession {
         return this.#metaUpdated.subscribe(observer)
     }
 
-    catchSubscribeMetaData(observer: Observer<ProjectMeta>): Subscription {
-        observer(this.meta)
-        return this.subscribeMetaData(observer)
-    }
-
     updateCover(cover: Option<ArrayBuffer>): void {
         this.#cover = cover
         this.#hasChanges = true
@@ -99,29 +83,6 @@ export class ProjectSession {
     }
 
     updateModifyDate(): void {this.meta.modified = new Date().toISOString()}
-
-    saveMidiConfiguration(): void {
-        const key = UUID.toString(this.#uuid)
-        console.debug(`saveMidiConfiguration(${key})`)
-        this.#service.midiLearning.saveToLocalStorage(key)
-    }
-
-    async loadMidiConfiguration(): Promise<void> {
-        const key = UUID.toString(this.#uuid)
-        const hasMidi = this.#service.midiLearning.loadFromLocalStorage(key)
-        console.debug(`loadMidiConfiguration(${key}) - hasMidi: ${hasMidi}`)
-        if (!MidiDeviceAccess.available().getValue() && hasMidi) {
-            const {status} = await Promises.tryCatch(Dialogs.approve({
-                headline: "Midi Configuration Found",
-                approveText: "Connect",
-                message: "Connect your midi-device and click 'connect'.",
-                reverse: true
-            }))
-            if (status === "resolved") {
-                MidiDeviceAccess.available().setValue(true)
-            }
-        }
-    }
 
     toString(): string {
         return `{uuid: ${UUID.toString(this.uuid)}, meta: ${JSON.stringify(this.meta)}}`

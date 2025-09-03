@@ -1,4 +1,4 @@
-import {ProjectSession} from "@/project/ProjectSession"
+import {ProjectProfile} from "@/project/ProjectProfile"
 import {
     DefaultObservableValue,
     MutableObservableValue,
@@ -16,23 +16,24 @@ import {StudioService} from "./StudioService"
 import {Promises} from "@opendaw/lib-runtime"
 import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes.ts"
 import {Errors, Files} from "@opendaw/lib-dom"
-import {Project} from "@opendaw/studio-core"
+import {Project, ProjectEnv} from "@opendaw/studio-core"
+import {ProjectBundle} from "@/project/ProjectBundle"
 
-export class SessionService implements MutableObservableValue<Option<ProjectSession>> {
+export class SessionService implements MutableObservableValue<Option<ProjectProfile>> {
     readonly #service: StudioService
-    readonly #session: DefaultObservableValue<Option<ProjectSession>>
+    readonly #session: DefaultObservableValue<Option<ProjectProfile>>
 
     constructor(service: StudioService) {
         this.#service = service
-        this.#session = new DefaultObservableValue<Option<ProjectSession>>(Option.None)
+        this.#session = new DefaultObservableValue<Option<ProjectProfile>>(Option.None)
     }
 
-    getValue(): Option<ProjectSession> {return this.#session.getValue()}
-    setValue(value: Option<ProjectSession>): void {this.#session.setValue(value)}
-    subscribe(observer: Observer<ObservableValue<Option<ProjectSession>>>): Terminable {
+    getValue(): Option<ProjectProfile> {return this.#session.getValue()}
+    setValue(value: Option<ProjectProfile>): void {this.#session.setValue(value)}
+    subscribe(observer: Observer<ObservableValue<Option<ProjectProfile>>>): Terminable {
         return this.#session.subscribe(observer)
     }
-    catchupAndSubscribe(observer: Observer<ObservableValue<Option<ProjectSession>>>): Terminable {
+    catchupAndSubscribe(observer: Observer<ObservableValue<Option<ProjectProfile>>>): Terminable {
         observer(this)
         return this.#session.subscribe(observer)
     }
@@ -66,7 +67,7 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
         console.debug(UUID.toString(uuid))
         const project = await Projects.loadProject(this.#service, uuid)
         const cover = await Projects.loadCover(uuid)
-        this.#setSession(this.#service, uuid, project, meta, cover, true)
+        this.#setSession(uuid, project, meta, cover, true)
     }
 
     async loadTemplate(name: string): Promise<unknown> {
@@ -78,7 +79,7 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
                 const uuid = UUID.generate()
                 const project = Project.load(this.#service, arrayBuffer)
                 const meta = ProjectMeta.init(name)
-                this.#setSession(this.#service, uuid, project, meta, Option.None)
+                this.#setSession(uuid, project, meta, Option.None)
             })
             .catch(reason => {
                 console.warn("Could not load template", reason)
@@ -87,11 +88,11 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
             .finally(() => handler.close())
     }
 
-    async exportZip() {
+    async exportBundle() {
         return this.#session.getValue().ifSome(async session => {
             const progress = new DefaultObservableValue(0.0)
             const processDialog = Dialogs.progress("Bundling Project...", progress)
-            const arrayBuffer = await Projects.exportBundle(session, progress)
+            const arrayBuffer = await ProjectBundle.encode(session, progress)
             processDialog.close()
             const {status} = await Promises.tryCatch(Dialogs.approve({
                 headline: "Save Project Bundle",
@@ -113,10 +114,13 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
         })
     }
 
-    async importZip() {
+    async importBundle() {
         try {
             const [file] = await Files.open({types: [FilePickerAcceptTypes.ProjectBundleFileType]})
-            const session = await Projects.importBundle(this.#service, await file.arrayBuffer())
+            const env: ProjectEnv = this.#service
+            const arrayBuffer = await file.arrayBuffer()
+            const exclude = this.#session.getValue().map(({uuid}) => uuid).unwrapOrUndefined()
+            const session = await ProjectBundle.decode(env, arrayBuffer, exclude)
             this.#session.setValue(Option.wrap(session))
         } catch (error) {
             if (!Errors.isAbort(error)) {
@@ -146,7 +150,7 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
         try {
             const [file] = await Files.open({types: [FilePickerAcceptTypes.ProjectFileType]})
             const project = Project.load(this.#service, await file.arrayBuffer())
-            this.#setSession(this.#service, UUID.generate(), project, ProjectMeta.init(file.name), Option.None)
+            this.#setSession(UUID.generate(), project, ProjectMeta.init(file.name), Option.None)
         } catch (error) {
             if (!Errors.isAbort(error)) {
                 Dialogs.info({headline: "Could not load project", message: String(error)}).finally()
@@ -155,14 +159,14 @@ export class SessionService implements MutableObservableValue<Option<ProjectSess
     }
 
     fromProject(project: Project, name: string): void {
-        this.#setSession(this.#service, UUID.generate(), project, ProjectMeta.init(name), Option.None)
+        this.#setSession(UUID.generate(), project, ProjectMeta.init(name), Option.None)
     }
 
-    #setSession(...args: ConstructorParameters<typeof ProjectSession>): void {
+    #setSession(...args: ConstructorParameters<typeof ProjectProfile>): void {
         this.#session.setValue(Option.wrap(this.#createSession(...args)))
     }
 
-    #createSession(...args: ConstructorParameters<typeof ProjectSession>): ProjectSession {
-        return new ProjectSession(...args)
+    #createSession(...args: ConstructorParameters<typeof ProjectProfile>): ProjectProfile {
+        return new ProjectProfile(...args)
     }
 }

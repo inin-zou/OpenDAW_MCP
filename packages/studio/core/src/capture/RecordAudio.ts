@@ -1,5 +1,5 @@
-import {Option, quantizeFloor, Terminable, Terminator, UUID} from "@opendaw/lib-std"
-import {dbToGain, PPQN} from "@opendaw/lib-dsp"
+import {int, Option, quantizeCeil, quantizeFloor, Terminable, Terminator, UUID} from "@opendaw/lib-std"
+import {dbToGain, ppqn, PPQN} from "@opendaw/lib-dsp"
 import {AudioFileBox, AudioRegionBox, TrackBox} from "@opendaw/studio-boxes"
 import {SampleManager, TrackType} from "@opendaw/studio-adapters"
 import {Project} from "../Project"
@@ -32,58 +32,62 @@ export namespace RecordAudio {
         const streamGain = audioContext.createGain()
         streamGain.gain.value = dbToGain(gainDb)
         streamSource.connect(streamGain)
-        let writing: Option<{ fileBox: AudioFileBox, regionBox: AudioRegionBox }> = Option.None
-        const resizeRegion = () => {
-            if (writing.isEmpty()) {return}
-            const {regionBox} = writing.unwrap()
-            editing.modify(() => {
-                if (regionBox.isAttached()) {
-                    const {duration, loopDuration} = regionBox
-                    const newDuration = Math.floor(PPQN.samplesToPulses(
-                        recordingWorklet.numberOfFrames, project.timelineBox.bpm.getValue(), audioContext.sampleRate))
-                    duration.setValue(newDuration)
-                    loopDuration.setValue(newDuration)
-                } else {
-                    terminator.terminate()
-                    writing = Option.None
-                }
-            }, false)
-        }
+        recordingWorklet.own(Terminable.create(() => {
+            streamGain.disconnect()
+            streamSource.disconnect()
+        }))
+        let recordingData: Option<{ fileBox: AudioFileBox, regionBox: AudioRegionBox }> = Option.None
+        const createRecordingData = (position: ppqn) => editing.modify(() => {
+            const fileDateString = new Date()
+                .toISOString()
+                .replaceAll("T", "-")
+                .replaceAll(".", "-")
+                .replaceAll(":", "-")
+                .replaceAll("Z", "")
+            const fileName = `Recording-${fileDateString}`
+            const fileBox = AudioFileBox.create(boxGraph, uuid, box => box.fileName.setValue(fileName))
+            const regionBox = AudioRegionBox.create(boxGraph, UUID.generate(), box => {
+                box.file.refer(fileBox)
+                box.regions.refer(trackBox.regions)
+                box.position.setValue(position)
+                box.hue.setValue(ColorCodes.forTrackType(TrackType.Audio))
+                box.label.setValue("Recording")
+            })
+            return {fileBox, regionBox}
+        })
+        const {bpm, env: {audioContext: {sampleRate}}} = project
         terminator.ownAll(
             Terminable.create(() => {
-                if(recordingWorklet.numberOfFrames === 0) {
+                if (recordingWorklet.numberOfFrames === 0 || recordingData.isEmpty()) {
+                    console.debug("Abort recording audio.")
                     sampleManager.remove(uuid)
+                    recordingWorklet.terminate()
+                } else {
+                    const {regionBox: {duration}} = recordingData.unwrap("No recording data available")
+                    recordingWorklet.limit(PPQN.pulsesToSamples(duration.getValue(), bpm, sampleRate) | 0)
                 }
-                recordingWorklet.finalize().then()
-                streamGain.disconnect()
-                streamSource.disconnect()
             }),
             engine.position.catchupAndSubscribe(owner => {
-                if (writing.isEmpty() && engine.isRecording.getValue()) {
+                if (!engine.isRecording.getValue()) {return}
+                if (recordingData.isEmpty()) {
                     streamGain.connect(recordingWorklet)
-                    writing = editing.modify(() => {
-                        const position = quantizeFloor(owner.getValue(), beats)
-                        const fileDateString = new Date()
-                            .toISOString()
-                            .replaceAll("T", "-")
-                            .replaceAll(".", "-")
-                            .replaceAll(":", "-")
-                            .replaceAll("Z", "")
-                        const fileName = `Recording-${fileDateString}`
-                        const fileBox = AudioFileBox.create(boxGraph, uuid, box => box.fileName.setValue(fileName))
-                        const regionBox = AudioRegionBox.create(boxGraph, UUID.generate(), box => {
-                            box.file.refer(fileBox)
-                            box.regions.refer(trackBox.regions)
-                            box.position.setValue(position)
-                            box.hue.setValue(ColorCodes.forTrackType(TrackType.Audio))
-                            box.label.setValue("Recording")
-                        })
-                        return {fileBox, regionBox}
-                    })
+                    recordingData = createRecordingData(quantizeFloor(owner.getValue(), beats))
                 }
-                resizeRegion()
-            }),
-            Terminable.create(() => resizeRegion())
+                const {regionBox} = recordingData.unwrap()
+                editing.modify(() => {
+                    if (regionBox.isAttached()) {
+                        const {duration, loopDuration} = regionBox
+                        const newDuration = quantizeCeil(engine.position.getValue(), beats) - regionBox.position.getValue()
+                        duration.setValue(newDuration)
+                        loopDuration.setValue(newDuration)
+                        const totalSamples: int = PPQN.pulsesToSamples(newDuration, project.bpm, sampleRate) | 0
+                        recordingWorklet.setFillLength(totalSamples)
+                    } else {
+                        terminator.terminate()
+                        recordingData = Option.None
+                    }
+                }, false)
+            })
         )
         return terminator
     }
