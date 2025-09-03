@@ -58,6 +58,7 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
                 this.#output.push(array)
                 const latencyInSamples = (outputLatency * this.context.sampleRate) | 0
                 if(this.numberOfFrames > latencyInSamples) {
+                    // TODO This is not good enough.
                     this.#peakWriter.append(array)
                 }
                 const need = this.numberOfFrames - latencyInSamples
