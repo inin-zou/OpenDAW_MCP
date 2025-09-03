@@ -55,6 +55,7 @@ export namespace RecordAudio {
             })
             return {fileBox, regionBox}
         })
+        const {bpm, env: {audioContext: {sampleRate}}} = project
         terminator.ownAll(
             Terminable.create(() => {
                 if (recordingWorklet.numberOfFrames === 0 || recordingData.isEmpty()) {
@@ -63,10 +64,7 @@ export namespace RecordAudio {
                     recordingWorklet.terminate()
                 } else {
                     const {regionBox: {duration}} = recordingData.unwrap("No recording data available")
-                    const {bpm, env: {audioContext: {sampleRate}}} = project
-                    const totalSamples: int = PPQN.pulsesToSamples(duration.getValue(), bpm, sampleRate) | 0
-                    console.debug(`we need ${totalSamples} to fill the region`)
-                    recordingWorklet.limit(totalSamples)
+                    recordingWorklet.limit(PPQN.pulsesToSamples(duration.getValue(), bpm, sampleRate) | 0)
                 }
             }),
             engine.position.catchupAndSubscribe(owner => {
@@ -82,6 +80,8 @@ export namespace RecordAudio {
                         const newDuration = quantizeCeil(engine.position.getValue(), beats) - regionBox.position.getValue()
                         duration.setValue(newDuration)
                         loopDuration.setValue(newDuration)
+                        const totalSamples: int = PPQN.pulsesToSamples(newDuration, project.bpm, sampleRate) | 0
+                        recordingWorklet.setFillLength(totalSamples)
                     } else {
                         terminator.terminate()
                         recordingData = Option.None

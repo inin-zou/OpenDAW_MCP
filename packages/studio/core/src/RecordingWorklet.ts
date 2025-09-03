@@ -57,8 +57,7 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
             if (this.#isRecording) {
                 this.#output.push(array)
                 const latencyInSamples = (outputLatency * this.context.sampleRate) | 0
-                if(this.numberOfFrames > latencyInSamples) {
-                    // TODO This is not good enough.
+                if (this.numberOfFrames >= latencyInSamples) {
                     this.#peakWriter.append(array)
                 }
                 const need = this.numberOfFrames - latencyInSamples
@@ -72,6 +71,11 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
     own<T extends Terminable>(terminable: T): T {return this.#terminator.own(terminable)}
 
     limit(count: int): void {this.#limitSamples = count}
+
+    // TODO this is a bit hacky, we wait for the latency to pass,
+    //  therefore we need to fake the Peak properties. The best implementation would know an offset (latency)
+    //  and get all recorded data.
+    setFillLength(value: int): void {this.#peakWriter.numFrames = value}
 
     get numberOfFrames(): int {return this.#output.length * RenderQuantum}
     get data(): Option<AudioData> {return this.#data}
@@ -87,6 +91,14 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
         }
         return this.#notifier.subscribe(observer)
     }
+
+    terminate(): void {
+        this.#reader.stop()
+        this.#isRecording = false
+        this.#terminator.terminate()
+    }
+
+    toString(): string {return `{RecordingWorklet}`}
 
     async #finalize() {
         this.#isRecording = false
@@ -115,14 +127,6 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
         this.#setState({type: "loaded"})
         this.terminate()
     }
-
-    terminate(): void {
-        this.#reader.stop()
-        this.#isRecording = false
-        this.#terminator.terminate()
-    }
-
-    toString(): string {return `{RecordingWorklet}`}
 
     #setState(value: SampleLoaderState): void {
         this.#state = value

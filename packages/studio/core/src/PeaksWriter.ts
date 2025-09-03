@@ -3,21 +3,24 @@ import {Arrays, assert, int, Nullable} from "@opendaw/lib-std"
 import {RenderQuantum} from "./RenderQuantum"
 
 export class PeaksWriter implements Peaks, Peaks.Stage {
-    readonly data: ReadonlyArray<Int32Array>
+    readonly data: Array<Int32Array>
     readonly stages: ReadonlyArray<Peaks.Stage>
     readonly dataOffset: int = 0
     readonly shift: int = 7
     readonly dataIndex: Int32Array
 
-    numFrames: int = 0 | 0
+    #numFrames: int = 0 | 0
 
     constructor(readonly numChannels: int) {
-        this.data = Arrays.create(() => new Int32Array(1 << 20), numChannels) // TODO auto-resize
+        this.data = Arrays.create(() => new Int32Array(1 << 10), numChannels)
         this.dataIndex = new Int32Array(numChannels)
         this.stages = [this]
+
     }
 
-    get numPeaks(): int {return Math.ceil(this.numFrames / (1 << this.shift))}
+    set numFrames(value: int) {this.#numFrames = value}
+    get numFrames(): int {return this.#numFrames}
+    get numPeaks(): int {return Math.ceil(this.#numFrames / (1 << this.shift))}
 
     unitsEachPeak(): int {return 1 << this.shift}
 
@@ -32,9 +35,14 @@ export class PeaksWriter implements Peaks, Peaks.Stage {
                 min = Math.min(frame, min)
                 max = Math.max(frame, max)
             }
-            this.data[channel][this.dataIndex[channel]++] = SamplePeakWorker.pack(min, max)
+            const channelData = this.data[channel]
+            channelData[this.dataIndex[channel]++] = SamplePeakWorker.pack(min, max)
+            if (this.dataIndex[channel] === channelData.length) {
+                const newArray = new Int32Array(channelData.length << 1)
+                newArray.set(channelData, 0)
+                this.data[channel] = newArray
+            }
         }
-        this.numFrames += RenderQuantum
     }
 
     nearest(_unitsPerPixel: number): Nullable<Peaks.Stage> {return this.stages.at(0) ?? null}
