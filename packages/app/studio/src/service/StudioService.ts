@@ -280,8 +280,8 @@ export class StudioService implements ProjectEnv {
     async saveAs(): Promise<void> {return this.sessionService.saveAs()}
     async browse(): Promise<void> {return this.sessionService.browse()}
     async loadTemplate(name: string): Promise<unknown> {return this.sessionService.loadTemplate(name)}
-    async exportZip() {return this.sessionService.exportZip()}
-    async importZip() {return this.sessionService.importZip()}
+    async exportZip() {return this.sessionService.exportBundle()}
+    async importZip() {return this.sessionService.importBundle()}
     async deleteProject(uuid: UUID.Format, meta: ProjectMeta): Promise<void> {
         if (this.sessionService.getValue().ifSome(session => UUID.equals(session.uuid, uuid)) === true) {
             await this.closeProject()

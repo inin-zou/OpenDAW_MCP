@@ -16,7 +16,8 @@ import {StudioService} from "./StudioService"
 import {Promises} from "@opendaw/lib-runtime"
 import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes.ts"
 import {Errors, Files} from "@opendaw/lib-dom"
-import {Project} from "@opendaw/studio-core"
+import {Project, ProjectEnv} from "@opendaw/studio-core"
+import {ProjectBundle} from "@/project/ProjectBundle"
 
 export class SessionService implements MutableObservableValue<Option<ProjectProfile>> {
     readonly #service: StudioService
@@ -87,11 +88,11 @@ export class SessionService implements MutableObservableValue<Option<ProjectProf
             .finally(() => handler.close())
     }
 
-    async exportZip() {
+    async exportBundle() {
         return this.#session.getValue().ifSome(async session => {
             const progress = new DefaultObservableValue(0.0)
             const processDialog = Dialogs.progress("Bundling Project...", progress)
-            const arrayBuffer = await Projects.exportBundle(session, progress)
+            const arrayBuffer = await ProjectBundle.encode(session, progress)
             processDialog.close()
             const {status} = await Promises.tryCatch(Dialogs.approve({
                 headline: "Save Project Bundle",
@@ -113,10 +114,13 @@ export class SessionService implements MutableObservableValue<Option<ProjectProf
         })
     }
 
-    async importZip() {
+    async importBundle() {
         try {
             const [file] = await Files.open({types: [FilePickerAcceptTypes.ProjectBundleFileType]})
-            const session = await Projects.importBundle(this.#service, await file.arrayBuffer())
+            const env: ProjectEnv = this.#service
+            const arrayBuffer = await file.arrayBuffer()
+            const exclude = this.#session.getValue().map(({uuid}) => uuid).unwrapOrUndefined()
+            const session = await ProjectBundle.decode(env, arrayBuffer, exclude)
             this.#session.setValue(Option.wrap(session))
         } catch (error) {
             if (!Errors.isAbort(error)) {
