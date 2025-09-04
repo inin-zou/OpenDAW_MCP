@@ -1,6 +1,6 @@
 {
   "name": "@opendaw/lib-fusion",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "license": "LGPL-3.0-or-later",
@@ -22,9 +22,9 @@
     "test": "echo \"No tests to run\""
   },
   "dependencies": {
-    "@opendaw/lib-box": "^0.0.23",
-    "@opendaw/lib-runtime": "^0.0.23",
-    "@opendaw/lib-std": "^0.0.23"
+    "@opendaw/lib-box": "^0.0.24",
+    "@opendaw/lib-runtime": "^0.0.24",
+    "@opendaw/lib-std": "^0.0.24"
   },
   "devDependencies": {
     "@opendaw/eslint-config": "^0.0.18",
