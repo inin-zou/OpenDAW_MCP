@@ -1,6 +1,6 @@
 import "./main.sass"
 import {App} from "@/ui/App.tsx"
-import {panic, Procedure, unitValue, UUID} from "@opendaw/lib-std"
+import {panic, Procedure, RuntimeNotifier, unitValue, UUID} from "@opendaw/lib-std"
 import {StudioService} from "@/service/StudioService"
 import {AudioData, SampleMetaData} from "@opendaw/studio-adapters"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
@@ -20,14 +20,7 @@ import {AnimationFrame, Browser, Events, Keyboard} from "@opendaw/lib-dom"
 import {AudioOutputDevice} from "@/audio/AudioOutputDevice"
 import {FontLoader} from "@/ui/FontLoader"
 import {ErrorHandler} from "@/errors/ErrorHandler.ts"
-import {
-    AudioWorklets,
-    MainThreadSampleManager,
-    RuntimeNotification,
-    SampleProvider,
-    SampleStorage,
-    WorkerAgents
-} from "@opendaw/studio-core"
+import {AudioWorklets, MainThreadSampleManager, SampleProvider, SampleStorage, WorkerAgents} from "@opendaw/studio-core"
 
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
 import WorkletsUrl from "@opendaw/studio-core/processors.js?worker&url"
@@ -94,7 +87,7 @@ requestAnimationFrame(async () => {
         replaceChildren(surface.ground, App(service))
         AnimationFrame.start()
         installCursors()
-        RuntimeNotification.install({
+        RuntimeNotifier.install({
             info: (request) => Dialogs.info(request),
             approve: (request) => Dialogs.approve(request)
         })
