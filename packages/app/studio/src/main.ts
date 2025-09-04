@@ -29,7 +29,6 @@ import {
 } from "@opendaw/studio-core"
 
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
-import WorkletsUrl from "@opendaw/studio-core/processors.js?worker&url"
 
 window.name = "main"
 
@@ -54,7 +53,7 @@ const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`).then
         console.debug("requesting custom sampleRate", sampleRate ?? "'No (Firefox)'")
         const context = new AudioContext({sampleRate, latencyHint: 0})
         console.debug(`AudioContext state: ${context.state}, sampleRate: ${context.sampleRate}`)
-        const audioWorklets = await Promises.tryCatch(AudioWorklets.install(context, WorkletsUrl))
+        const audioWorklets = await Promises.tryCatch(AudioWorklets.install(context))
         if (audioWorklets.status === "rejected") {
             return panic(audioWorklets.error)
         }

@@ -8,8 +8,6 @@ import {ProjectMeta} from "./project/ProjectMeta"
 import {encodeWavFloat} from "./Wav"
 import {AudioWorklets} from "./AudioWorklets"
 
-const WorkletsUrl = new URL("./processors.js", import.meta.url)
-
 export namespace AudioOfflineRenderer {
     export const start = async (source: Project,
                                 meta: ProjectMeta,
@@ -26,7 +24,7 @@ export namespace AudioOfflineRenderer {
         const numSamples = PPQN.pulsesToSamples(durationInPulses, project.bpm, sampleRate)
         const context = new OfflineAudioContext(numStems * 2, numSamples, sampleRate)
         const durationInSeconds = numSamples / sampleRate
-        const worklets = await AudioWorklets.install(context, WorkletsUrl.toString())
+        const worklets = await AudioWorklets.install(context)
         const engineWorklet = worklets.createEngine(project, optExportConfiguration.unwrapOrUndefined())
         engineWorklet.play()
         engineWorklet.connect(context.destination)

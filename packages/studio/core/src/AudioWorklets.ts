@@ -6,9 +6,11 @@ import {MeterWorklet} from "./MeterWorklet"
 import {RecordingWorklet} from "./RecordingWorklet"
 import {RenderQuantum} from "./RenderQuantum"
 
+const WorkletsUrl = new URL("./processors.js", import.meta.url)
+
 export class AudioWorklets {
-    static async install(context: BaseAudioContext, workletURL: string): Promise<AudioWorklets> {
-        return context.audioWorklet.addModule(workletURL).then(() => {
+    static async install(context: BaseAudioContext): Promise<AudioWorklets> {
+        return context.audioWorklet.addModule(WorkletsUrl).then(() => {
             const worklets = new AudioWorklets(context)
             this.#map.set(context, worklets)
             return worklets
