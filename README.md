@@ -179,7 +179,7 @@ Before starting, ensure you have the following installed on your system:
 
 ### Flow Charts
 
-<img width="6551" height="5971" alt="image" src="https://github.com/user-attachments/assets/09aaf742-6175-42ba-946b-a66e5f5dac72" />
+<img width="6551" height="7057" alt="image" src="https://github.com/user-attachments/assets/266a9fb2-4b72-4752-bcf1-85fda2ff2cf1" />
 
 ---
 
