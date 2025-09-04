@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-<a href="https://www.gnu.org/licenses/gpl-3.0.html" rel="nofollow"><img src="https://img.shields.io/badge/license-GPLv3-blue.svg" alt="License: GPLv3"></a>
+<a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="nofollow"><img src="https://img.shields.io/badge/license-AGPLv3-blue.svg" alt="License: AGPLv3"></a>
 <a href="https://discord.gg/ZRm8du7vn4" rel="nofollow"><img src="https://img.shields.io/discord/1241019312328675399?label=Discord&logo=discord&logoColor=white" alt="discord server"></a>
 <a href="https://github.com/andremichelle/opendaw" rel="nofollow"><img src="https://img.shields.io/github/stars/andremichelle/opendaw" alt="stars"></a>
 </p>
@@ -24,7 +24,7 @@ on [Patreon](https://www.patreon.com/join/openDAW) or [ko-fi](https://ko-fi.com/
 
 We are committed to transparency and community-driven development.
 
-The source code for openDAW is available under GPL3 (links below).
+The source code for openDAW is available under **AGPL v3 (or later)**
 
 ### Built on Trust and Transparency
 
@@ -220,16 +220,16 @@ participate, visit our [Contribute](https://opendaw.org/contribute) page.
 
 openDAW is available **under two alternative license terms**:
 
-| Option                    | When to choose it                                                                                              | Obligations                                                                                                                                                                      |
-|---------------------------|----------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **A. GPL v3 (or later)**  | You are happy for the entire work that includes openDAW to be released under GPL-compatible open-source terms. | – Must distribute complete corresponding source code under GPL.<br>– Must keep copyright & licence notices.<br>– May run openDAW privately in any software, open or closed (§0). |
-| **B. Commercial Licence** | You wish to incorporate openDAW into **closed-source** or otherwise licence-incompatible software.             | – Pay the agreed fee.<br>– No copyleft requirement for your own source code.<br>– Other terms as per the signed agreement.                                                       |
+| Option                      | When to choose it                                                                                                  | Obligations                                                                                                                                                                                             |
+|-----------------------------|----------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **A. AGPL v3 (or later)**   | You are happy for the entire work that includes openDAW to be released under AGPL-compatible open-source terms.      | – Must distribute complete corresponding source code under AGPL.<br>– Must keep copyright & licence notices.<br>– Applies both to distribution **and** to public use via network/SaaS (§13).<br>– May run openDAW privately in any software, open or closed (§0). |
+| **B. Commercial Licence**   | You wish to incorporate openDAW into **closed-source** or otherwise licence-incompatible software or SaaS offerings. | – Pay the agreed fee.<br>– No copyleft requirement for your own source code.<br>– Other terms as per the signed agreement.                                                                                |
 
 > **How to obtain the Commercial License**  
 > Email `andre.michelle@opendaw.org` with your company name, product description, and expected distribution volume.
 
-If you redistribute openDAW or a derivative work **without** a commercial license, the GPL v3 terms apply automatically.
+If you redistribute or run modified versions of openDAW for public use **without** a commercial license, the AGPL v3 terms apply automatically.
 
 ## License
 
-[GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt) © 2025 André Michelle
+[AGPL v3 (or later)](https://www.gnu.org/licenses/agpl-3.0.txt) © 2025 André Michelle
