@@ -30,6 +30,7 @@ export * from "./project/ProjectPaths"
 export * from "./project/ProjectProfile"
 
 export * from "./AudioDevices"
+export * from "./AudioOfflineRenderer"
 export * from "./AudioUnitOrdering"
 export * from "./ColorCodes"
 export * from "./Colors"

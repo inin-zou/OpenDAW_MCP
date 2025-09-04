@@ -29,7 +29,6 @@ import {Workspace} from "@/ui/workspace/Workspace.ts"
 import {PanelType} from "@/ui/workspace/PanelType.ts"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {BuildInfo} from "@/BuildInfo.ts"
-import {MidiDeviceAccess} from "@/midi/devices/MidiDeviceAccess"
 import {SamplePlayback} from "@/service/SamplePlayback"
 import {Shortcuts} from "@/service/Shortcuts"
 import {ProjectProfileService} from "./ProjectProfileService"
@@ -49,6 +48,7 @@ import {MetaDataSchema} from "@opendaw/lib-dawproject"
 import {Recovery} from "@/Recovery.ts"
 import {MIDILearning} from "@/midi/devices/MIDILearning"
 import {
+    AudioOfflineRenderer,
     AudioWorklets,
     DawProject,
     DawProjectImport,
@@ -63,7 +63,6 @@ import {
     RestartWorklet,
     SampleAPI
 } from "@opendaw/studio-core"
-import {AudioOfflineRenderer} from "@/audio/AudioOfflineRenderer"
 import {ProjectDialogs} from "@/project/ProjectDialogs"
 import {AudioImporter} from "@/audio/AudioImport"
 
@@ -112,8 +111,6 @@ export class StudioService implements ProjectEnv {
     readonly #signals = new Notifier<StudioSignal>()
 
     #factoryFooterLabel: Option<Provider<FooterLabel>> = Option.None
-
-    #midi: Option<MidiDeviceAccess> = Option.None
 
     constructor(readonly audioContext: AudioContext,
                 readonly audioWorklets: AudioWorklets,
@@ -238,8 +235,6 @@ export class StudioService implements ProjectEnv {
     }
 
     get sampleRate(): number {return this.audioContext.sampleRate}
-
-    get midi(): Option<MidiDeviceAccess> {return this.#midi}
 
     panicEngine(): void {this.runIfProject(({engine}) => engine.panic())}
 

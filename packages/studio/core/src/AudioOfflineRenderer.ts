@@ -1,11 +1,14 @@
-import {AudioWorklets, encodeWavFloat, Project, ProjectMeta} from "@opendaw/studio-core"
-import {PPQN} from "@opendaw/lib-dsp"
 import {DefaultObservableValue, int, Option, panic, RuntimeNotifier, TimeSpan} from "@opendaw/lib-std"
-import {Dialogs} from "@/ui/components/dialogs.tsx"
-import {Promises, Wait} from "@opendaw/lib-runtime"
+import {PPQN} from "@opendaw/lib-dsp"
 import {AnimationFrame, Errors, Files} from "@opendaw/lib-dom"
+import {Promises, Wait} from "@opendaw/lib-runtime"
 import {ExportStemsConfiguration} from "@opendaw/studio-adapters"
-import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
+import {Project} from "./project/Project"
+import {ProjectMeta} from "./project/ProjectMeta"
+import {encodeWavFloat} from "./Wav"
+import {AudioWorklets} from "./AudioWorklets"
+
+const WorkletsUrl = new URL("./processors.js", import.meta.url)
 
 export namespace AudioOfflineRenderer {
     export const start = async (source: Project,
@@ -23,7 +26,7 @@ export namespace AudioOfflineRenderer {
         const numSamples = PPQN.pulsesToSamples(durationInPulses, project.bpm, sampleRate)
         const context = new OfflineAudioContext(numStems * 2, numSamples, sampleRate)
         const durationInSeconds = numSamples / sampleRate
-        const worklets = await AudioWorklets.install(context, WorkletsUrl)
+        const worklets = await AudioWorklets.install(context, WorkletsUrl.toString())
         const engineWorklet = worklets.createEngine(project, optExportConfiguration.unwrapOrUndefined())
         engineWorklet.play()
         engineWorklet.connect(context.destination)
@@ -42,12 +45,12 @@ export namespace AudioOfflineRenderer {
     }
 
     const saveWavFile = async (buffer: AudioBuffer, meta: ProjectMeta) => {
-        const approveResult = await Promises.tryCatch(Dialogs.approve({
+        const approved = await RuntimeNotifier.approve({
             headline: "Save Wav-File",
             message: "",
             approveText: "Save"
-        }))
-        if (!approveResult.value) {return}
+        })
+        if (!approved) {return}
         const wavFile = encodeWavFloat(buffer)
         const suggestedName = `${meta.name}.wav`
         const saveResult = await Promises.tryCatch(Files.save(wavFile, {suggestedName}))
@@ -58,7 +61,7 @@ export namespace AudioOfflineRenderer {
 
     const saveZipFile = async (buffer: AudioBuffer, meta: ProjectMeta, trackNames: ReadonlyArray<string>) => {
         const {default: JSZip} = await import("jszip")
-        const dialogHandler = Dialogs.processMonolog("Creating Zip File...")
+        const dialog = RuntimeNotifier.progress({headline: "Creating Zip File..."})
         const numStems = buffer.numberOfChannels >> 1
         const zip = new JSZip()
         for (let stemIndex = 0; stemIndex < numStems; stemIndex++) {
@@ -72,13 +75,13 @@ export namespace AudioOfflineRenderer {
             compression: "DEFLATE",
             compressionOptions: {level: 6}
         })
-        dialogHandler.close()
-        const approveResult = await Promises.tryCatch(Dialogs.approve({
+        dialog.terminate()
+        const approved = await RuntimeNotifier.approve({
             headline: "Save Zip",
             message: `Size: ${arrayBuffer.byteLength >> 20}M`,
             approveText: "Save"
-        }))
-        if (!approveResult.value) {return}
+        })
+        if (!approved) {return}
         const saveResult = await Promises.tryCatch(Files.save(arrayBuffer, {suggestedName: `${meta.name}.zip`}))
         if (saveResult.status === "rejected") {
             panic(String(saveResult.error))

@@ -1,4 +1,5 @@
 import {
+    byte,
     Lazy,
     MutableObservableOption,
     MutableObservableValue,
@@ -8,10 +9,12 @@ import {
     Observer,
     Option,
     Subscription,
+    Terminator,
     warn
 } from "@opendaw/lib-std"
 import {MidiData} from "@opendaw/lib-midi"
 import {Promises} from "@opendaw/lib-runtime"
+import {MIDIMessageSubscriber} from "@opendaw/app-studio/src/midi/devices/MIDIMessageSubscriber"
 
 export class MidiDevices {
     static canRequestMidiAccess(): boolean {return "requestMIDIAccess" in navigator}
@@ -34,6 +37,17 @@ export class MidiDevices {
     }
 
     static get(): ObservableOption<MIDIAccess> {return this.#midiAccess}
+
+    static subscribeMessageEvents(observer: Observer<MIDIMessageEvent>, channel?: byte): Subscription {
+        return this.get().match({
+            none: () => {
+                const terminator = new Terminator()
+                terminator.own(this.available().subscribe(() => terminator.own(this.subscribeMessageEvents(observer, channel))))
+                return terminator
+            },
+            some: midi => MIDIMessageSubscriber.subscribeMessageEvents(midi, observer, channel)
+        })
+    }
 
     static inputs(): Option<ReadonlyArray<MIDIInput>> {
         return this.get().map(({inputs}) => Array.from(inputs.values()))
