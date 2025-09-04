@@ -1,9 +1,9 @@
 import {asDefined, int} from "@opendaw/lib-std"
 import {ExportStemsConfiguration, RingBuffer} from "@opendaw/studio-adapters"
+import {Project} from "./project/Project"
 import {EngineWorklet} from "./EngineWorklet"
 import {MeterWorklet} from "./MeterWorklet"
 import {RecordingWorklet} from "./RecordingWorklet"
-import {Project} from "./Project"
 import {RenderQuantum} from "./RenderQuantum"
 
 export class AudioWorklets {

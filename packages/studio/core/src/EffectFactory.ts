@@ -1,7 +1,7 @@
 import {EffectPointerType, IconSymbol} from "@opendaw/studio-adapters"
 import {Field} from "@opendaw/lib-box"
 import {int} from "@opendaw/lib-std"
-import {Project} from "./Project"
+import {Project} from "./project/Project"
 import {EffectBox} from "./EffectBox"
 
 export interface EffectFactory {

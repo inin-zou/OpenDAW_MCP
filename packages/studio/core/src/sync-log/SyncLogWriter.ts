@@ -1,6 +1,6 @@
 import {Func, isDefined, Observer, Subscription, Terminable} from "@opendaw/lib-std"
 import {BoxGraph, Update} from "@opendaw/lib-box"
-import {Project} from "../Project"
+import {Project} from "../project/Project"
 import {Commit} from "./Commit"
 
 export class SyncLogWriter implements Terminable {

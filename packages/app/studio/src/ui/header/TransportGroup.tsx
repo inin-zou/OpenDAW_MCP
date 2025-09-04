@@ -74,7 +74,7 @@ export const TransportGroup = ({lifecycle, service}: Construct) => {
                 countInLifecycle.terminate()
             }
         }),
-        service.sessionService.catchupAndSubscribe(owner => element.classList.toggle("disabled", owner.getValue().isEmpty()))
+        service.profileService.catchupAndSubscribe(owner => element.classList.toggle("disabled", owner.getValue().isEmpty()))
     )
     return element
 }

@@ -3,7 +3,7 @@ import {Promises} from "@opendaw/lib-runtime"
 import {AudioUnitBox} from "@opendaw/studio-boxes"
 import {AudioUnitType} from "@opendaw/studio-enums"
 import {InstrumentFactories} from "../InstrumentFactories"
-import {Project} from "../Project"
+import {Project} from "../project/Project"
 
 export class Recording {
     static get isRecording(): boolean {return this.#isRecording}

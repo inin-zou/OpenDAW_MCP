@@ -35,14 +35,14 @@ import {
 import {LiveStreamBroadcaster, LiveStreamReceiver} from "@opendaw/lib-fusion"
 import {AudioUnitType} from "@opendaw/studio-enums"
 import {ProjectEnv} from "./ProjectEnv"
-import {Mixer} from "./Mixer"
+import {Mixer} from "../Mixer"
 import {ProjectApi} from "./ProjectApi"
 import {ProjectMigration} from "./ProjectMigration"
-import {CaptureDevices} from "./capture/CaptureDevices"
-import {EngineFacade} from "./EngineFacade"
-import {EngineWorklet} from "./EngineWorklet"
-import {AudioWorklets} from "./AudioWorklets"
-import {Recording} from "./capture/Recording"
+import {CaptureDevices} from "../capture/CaptureDevices"
+import {EngineFacade} from "../EngineFacade"
+import {EngineWorklet} from "../EngineWorklet"
+import {AudioWorklets} from "../AudioWorklets"
+import {Recording} from "../capture/Recording"
 
 export type RestartWorklet = { unload: Procedure<unknown>, load: Procedure<EngineWorklet> }
 

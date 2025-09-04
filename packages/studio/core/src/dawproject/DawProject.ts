@@ -1,7 +1,7 @@
 import {Xml} from "@opendaw/lib-xml"
 import {asDefined, isDefined, panic, UUID} from "@opendaw/lib-std"
 import {FileReferenceSchema, MetaDataSchema, ProjectSchema} from "@opendaw/lib-dawproject"
-import {Project} from "../Project"
+import {Project} from "../project/Project"
 import {DawProjectExporter} from "./DawProjectExporter"
 
 export namespace DawProject {

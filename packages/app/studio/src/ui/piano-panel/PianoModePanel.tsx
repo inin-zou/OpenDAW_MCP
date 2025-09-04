@@ -21,7 +21,7 @@ type Construct = {
 }
 
 export const PianoModePanel = ({lifecycle, service}: Construct) => {
-    if (!service.hasProjectSession) {return "No session."}
+    if (!service.hasProfile) {return "No session."}
     const {project} = service
     const {rootBoxAdapter, engine: {position}, editing} = project
     const pianoMode = rootBoxAdapter.pianoMode

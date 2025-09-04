@@ -1,7 +1,7 @@
 import {ppqn} from "@opendaw/lib-dsp"
 import {int, Nullable, ObservableValue, Observer, Subscription, Terminable, UUID} from "@opendaw/lib-std"
 import {ClipNotification, NoteSignal} from "@opendaw/studio-adapters"
-import {Project} from "./Project"
+import {Project} from "./project/Project"
 
 export interface Engine extends Terminable {
     play(): void

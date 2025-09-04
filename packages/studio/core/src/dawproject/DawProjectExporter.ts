@@ -43,7 +43,7 @@ import {
     TrackBox,
     ValueRegionBox
 } from "@opendaw/studio-boxes"
-import {Project} from "../Project"
+import {Project} from "../project/Project"
 import {AudioUnitExportLayout} from "./AudioUnitExportLayout"
 import {ColorCodes} from "../ColorCodes"
 import {Html} from "@opendaw/lib-dom"

@@ -72,9 +72,6 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
 
     limit(count: int): void {this.#limitSamples = count}
 
-    // TODO this is a bit hacky, we wait for the latency to pass,
-    //  therefore we need to fake the Peak properties. The best implementation would know an offset (latency)
-    //  and get all recorded data.
     setFillLength(value: int): void {this.#peakWriter.numFrames = value}
 
     get numberOfFrames(): int {return this.#output.length * RenderQuantum}

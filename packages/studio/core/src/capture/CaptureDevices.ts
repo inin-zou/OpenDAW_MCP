@@ -1,6 +1,6 @@
 import {asInstanceOf, isDefined, Nullish, Option, SortedSet, Subscription, Terminable, UUID} from "@opendaw/lib-std"
 import {AudioUnitBox, BoxVisitor, CaptureAudioBox, CaptureMidiBox} from "@opendaw/studio-boxes"
-import {Project} from "../Project"
+import {Project} from "../project/Project"
 import {Capture} from "./Capture"
 import {CaptureMidi} from "./CaptureMidi"
 import {CaptureAudio} from "./CaptureAudio"

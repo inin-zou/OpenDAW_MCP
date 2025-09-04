@@ -1,6 +1,5 @@
 import {
     ByteArrayInput,
-    Exec,
     int,
     Notifier,
     Observer,
@@ -10,12 +9,11 @@ import {
     Terminable,
     UUID
 } from "@opendaw/lib-std"
-import {Peaks, SamplePeaks} from "@opendaw/lib-fusion"
 import {Promises} from "@opendaw/lib-runtime"
+import {Peaks, SamplePeaks} from "@opendaw/lib-fusion"
 import {AudioData, SampleLoader, SampleLoaderState, SampleMetaData} from "@opendaw/studio-adapters"
-import JSZip from "jszip"
-import {MainThreadSampleManager} from "./MainThreadSampleManager"
 import {WorkerAgents} from "../WorkerAgents"
+import {MainThreadSampleManager} from "./MainThreadSampleManager"
 import {SampleStorage} from "./SampleStorage"
 
 export class MainThreadSampleLoader implements SampleLoader {
@@ -60,30 +58,6 @@ export class MainThreadSampleLoader implements SampleLoader {
     get meta(): Option<SampleMetaData> {return this.#meta}
     get peaks(): Option<Peaks> {return this.#peaks}
     get state(): SampleLoaderState {return this.#state}
-
-    async pipeFilesInto(zip: JSZip): Promise<void> {
-        const exec: Exec = async () => {
-            const path = `${SampleStorage.Folder}/${UUID.toString(this.#uuid)}`
-            zip.file("audio.wav", await WorkerAgents.Opfs.read(`${path}/audio.wav`), {binary: true})
-            zip.file("peaks.bin", await WorkerAgents.Opfs.read(`${path}/peaks.bin`), {binary: true})
-            zip.file("meta.json", await WorkerAgents.Opfs.read(`${path}/meta.json`))
-        }
-        if (this.#state.type === "loaded") {
-            return exec()
-        } else {
-            return new Promise<void>((resolve, reject) => {
-                const subscription = this.#notifier.subscribe((state) => {
-                    if (state.type === "loaded") {
-                        resolve()
-                        subscription.terminate()
-                    } else if (state.type === "error") {
-                        reject(state.reason)
-                        subscription.terminate()
-                    }
-                })
-            }).then(() => exec())
-        }
-    }
 
     toString(): string {return `{MainThreadSampleLoader}`}
 

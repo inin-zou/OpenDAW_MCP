@@ -14,7 +14,7 @@ import {ppqn} from "@opendaw/lib-dsp"
 import {ClipNotification, NoteSignal} from "@opendaw/studio-adapters"
 import {Engine} from "./Engine"
 import {EngineWorklet} from "./EngineWorklet"
-import {Project} from "./Project"
+import {Project} from "./project/Project"
 
 export class EngineFacade implements Engine {
     readonly #terminator: Terminator = new Terminator()

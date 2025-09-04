@@ -20,7 +20,7 @@ export class SampleService {
     }
 
     requestTapes(): void {
-        if (!this.#service.hasProjectSession) {return}
+        if (!this.#service.hasProfile) {return}
         const project = this.#service.project
         const {editing, boxGraph, rootBoxAdapter} = project
         editing.modify(() => {

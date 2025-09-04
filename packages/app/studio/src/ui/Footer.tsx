@@ -24,9 +24,9 @@ export const Footer = ({lifecycle, service}: Construct) => {
         <div className="name"
              title="Project"
              ondblclick={(event) => {
-                 const optSession = service.sessionService.getValue()
-                 if (optSession.isEmpty()) {return}
-                 const session = optSession.unwrap()
+                 const optProfile = service.profileService.getValue()
+                 if (optProfile.isEmpty()) {return}
+                 const session = optProfile.unwrap()
                  const name = session.meta.name
                  if (isDefined(name)) {
                      Surface.get(labelName).requestFloatingTextInput(event, name)
@@ -34,14 +34,14 @@ export const Footer = ({lifecycle, service}: Construct) => {
                  }
              }}/>
     )
-    const sessionLifecycle = lifecycle.own(new Terminator())
-    lifecycle.own(service.sessionService.catchupAndSubscribe(owner => {
-        sessionLifecycle.terminate()
+    const profileLifecycle = lifecycle.own(new Terminator())
+    lifecycle.own(service.profileService.catchupAndSubscribe(owner => {
+        profileLifecycle.terminate()
         const optSession = owner.getValue()
         if (optSession.nonEmpty()) {
             const session = optSession.unwrap()
             const observer = (meta: ProjectMeta) => labelName.textContent = meta.name
-            sessionLifecycle.own(session.subscribeMetaData(observer))
+            profileLifecycle.own(session.subscribeMetaData(observer))
             observer(session.meta)
         } else {
             labelName.textContent = "⏏︎"

@@ -2,7 +2,7 @@ import {byte, Notifier, Option, quantizeCeil, quantizeFloor, Terminable, Termina
 import {PPQN} from "@opendaw/lib-dsp"
 import {NoteEventBox, NoteEventCollectionBox, NoteRegionBox, TrackBox} from "@opendaw/studio-boxes"
 import {NoteSignal, TrackType} from "@opendaw/studio-adapters"
-import {Project} from "../Project"
+import {Project} from "../project/Project"
 import {Capture} from "./Capture"
 import {RecordTrack} from "./RecordTrack"
 import {ColorCodes} from "../ColorCodes"

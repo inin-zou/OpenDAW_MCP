@@ -17,7 +17,7 @@ export const VUMeterPanel = ({lifecycle, service}: Construct) => {
     const peakL = lifecycle.own(new DefaultObservableValue(0.0))
     const peakR = lifecycle.own(new DefaultObservableValue(0.0))
     const runtime = lifecycle.own(new Terminator())
-    lifecycle.own(service.sessionService.catchupAndSubscribe((owner) => {
+    lifecycle.own(service.profileService.catchupAndSubscribe((owner) => {
         runtime.terminate()
         owner.getValue().match({
             none: () => {

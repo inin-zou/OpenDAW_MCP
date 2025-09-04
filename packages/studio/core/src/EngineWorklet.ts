@@ -30,7 +30,7 @@ import {
     NoteSignal
 } from "@opendaw/studio-adapters"
 import {BoxIO} from "@opendaw/studio-boxes"
-import {Project} from "./Project"
+import {Project} from "./project/Project"
 import {Engine} from "./Engine"
 
 export class EngineWorklet extends AudioWorkletNode implements Engine {

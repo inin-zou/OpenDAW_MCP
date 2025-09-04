@@ -2,7 +2,7 @@ import {int, Option, quantizeCeil, quantizeFloor, Terminable, Terminator, UUID} 
 import {dbToGain, ppqn, PPQN} from "@opendaw/lib-dsp"
 import {AudioFileBox, AudioRegionBox, TrackBox} from "@opendaw/studio-boxes"
 import {SampleManager, TrackType} from "@opendaw/studio-adapters"
-import {Project} from "../Project"
+import {Project} from "../project/Project"
 import {RecordingWorklet} from "../RecordingWorklet"
 import {Capture} from "./Capture"
 import {RecordTrack} from "./RecordTrack"

@@ -19,12 +19,12 @@ export const initAppMenu = (service: StudioService) => {
                     MenuItem.default({
                         label: "Save",
                         shortcut: [ModfierKeys.System.Cmd, "S"],
-                        selectable: service.hasProjectSession
+                        selectable: service.hasProfile
                     }).setTriggerProcedure(() => service.save()),
                     MenuItem.default({
                         label: "Save As...",
                         shortcut: [ModfierKeys.System.Cmd, ModfierKeys.System.Shift, "S"],
-                        selectable: service.hasProjectSession
+                        selectable: service.hasProfile
                     }).setTriggerProcedure(() => service.saveAs()),
                     MenuItem.default({label: "Import"})
                         .setRuntimeChildrenProcedure(parent => parent.addMenuItem(
@@ -47,15 +47,15 @@ export const initAppMenu = (service: StudioService) => {
                                 }
                             })
                         )),
-                    MenuItem.default({label: "Export", selectable: service.hasProjectSession})
+                    MenuItem.default({label: "Export", selectable: service.hasProfile})
                         .setRuntimeChildrenProcedure(parent => parent.addMenuItem(
-                            MenuItem.default({label: "Mixdown...", selectable: service.hasProjectSession})
+                            MenuItem.default({label: "Mixdown...", selectable: service.hasProfile})
                                 .setTriggerProcedure(() => service.exportMixdown()),
-                            MenuItem.default({label: "Stems...", selectable: service.hasProjectSession})
+                            MenuItem.default({label: "Stems...", selectable: service.hasProfile})
                                 .setTriggerProcedure(() => service.exportStems()),
-                            MenuItem.default({label: "Project Bundle...", selectable: service.hasProjectSession})
+                            MenuItem.default({label: "Project Bundle...", selectable: service.hasProfile})
                                 .setTriggerProcedure(() => service.exportZip()),
-                            MenuItem.default({label: "DAWproject...", selectable: service.hasProjectSession})
+                            MenuItem.default({label: "DAWproject...", selectable: service.hasProfile})
                                 .setTriggerProcedure(async () => service.exportDawproject())
                         )),
                     MenuItem.default({label: "Debug", separatorBefore: true})
@@ -72,10 +72,10 @@ export const initAppMenu = (service: StudioService) => {
                                 }).setTriggerProcedure(() => SyncLogService.append(service)),
                                 MenuItem.default({
                                     label: "Show Boxes...",
-                                    selectable: service.hasProjectSession,
+                                    selectable: service.hasProfile,
                                     separatorBefore: true
                                 }).setTriggerProcedure(() => Dialogs.debugBoxes(service.project.boxGraph)),
-                                MenuItem.default({label: "Validate Project...", selectable: service.hasProjectSession})
+                                MenuItem.default({label: "Validate Project...", selectable: service.hasProfile})
                                     .setTriggerProcedure(() => service.verifyProject()),
                                 MenuItem.default({
                                     label: "Load file...",
@@ -83,7 +83,7 @@ export const initAppMenu = (service: StudioService) => {
                                 }).setTriggerProcedure(() => service.loadFile()),
                                 MenuItem.default({
                                     label: "Save file...",
-                                    selectable: service.hasProjectSession
+                                    selectable: service.hasProfile
                                 }).setTriggerProcedure(() => service.saveFile()),
                                 MenuItem.header({label: "Pages", icon: IconSymbol.Box}),
                                 MenuItem.default({label: "・ Icons"})

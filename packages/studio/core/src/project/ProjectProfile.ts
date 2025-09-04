@@ -1,6 +1,6 @@
 import {EmptyExec, Notifier, Observer, Option, Subscription, UUID} from "@opendaw/lib-std"
 import {ProjectMeta} from "./ProjectMeta"
-import {Project} from "../Project"
+import {Project} from "./Project"
 import {WorkerAgents} from "../WorkerAgents"
 import {ProjectPaths} from "./ProjectPaths"
 

@@ -1,9 +1,9 @@
 import {assert, ByteArrayInput, Hash, int, tryCatch} from "@opendaw/lib-std"
 import {Updates} from "@opendaw/lib-box"
 import {Wait} from "@opendaw/lib-runtime"
-import {Project} from "../Project"
+import {Project} from "../project/Project"
 import {Commit, CommitType} from "./Commit"
-import {ProjectEnv} from "../ProjectEnv"
+import {ProjectEnv} from "../project/ProjectEnv"
 
 export class SyncLogReader {
     static async unwrap(env: ProjectEnv, buffer: ArrayBuffer): Promise<{
