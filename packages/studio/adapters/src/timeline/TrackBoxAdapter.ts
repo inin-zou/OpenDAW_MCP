@@ -107,7 +107,7 @@ export class TrackBoxAdapter implements BoxAdapter {
             } else if ("label" in vertex && vertex.label instanceof StringField) {
                 return vertex.label.catchupAndSubscribe(owner => observer(Option.wrap(owner.getValue())))
             } else {
-                // TODO This is a workaround. We need to find a way to dig into the box for a name
+                // This will probably not happen. It is just a fallback.
                 observer(Option.wrap(vertex.name))
                 return Terminable.Empty
             }

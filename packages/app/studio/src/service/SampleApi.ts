@@ -12,6 +12,14 @@ const headers: RequestInit = {
     credentials: "include"
 }
 
+// TODO This should be the interface the studio works with. It will be implemented for different services.
+export interface FutureSampleApi {
+    all(): Promise<ReadonlyArray<Sample>>
+    get(uuid: UUID.Format): Promise<Sample>
+    load(context: AudioContext, uuid: UUID.Format, progress: Procedure<unitValue>): Promise<[AudioData, Sample]>
+    upload(arrayBuffer: ArrayBuffer, metaData: SampleMetaData): Promise<void>
+}
+
 export namespace SampleApi {
     export const ApiRoot = "https://api.opendaw.studio/samples"
     export const FileRoot = "https://assets.opendaw.studio/samples"
@@ -30,8 +38,8 @@ export namespace SampleApi {
 
     export const load = async (context: AudioContext,
                                uuid: UUID.Format,
-                               progress: Procedure<unitValue>): Promise<[AudioData, SampleMetaData]> => {
-        console.debug(`fetch ${UUID.toString(uuid)}`)
+                               progress: Procedure<unitValue>): Promise<[AudioData, Sample]> => {
+        console.debug(`load ${UUID.toString(uuid)}`)
         return get(uuid)
             .then(({uuid, name, bpm}) => Promises.retry(() => network.limitFetch(`${FileRoot}/${uuid}`, headers))
                 .then(response => {
@@ -55,6 +63,7 @@ export namespace SampleApi {
                 })
                 .then(arrayBuffer => context.decodeAudioData(arrayBuffer))
                 .then(audioBuffer => ([fromAudioBuffer(audioBuffer), {
+                    uuid,
                     bpm,
                     name,
                     duration: audioBuffer.duration,

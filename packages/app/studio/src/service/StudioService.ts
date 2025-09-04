@@ -77,12 +77,6 @@ range.showUnitInterval(0, PPQN.fromSignature(16, 1))
 
 const snapping = new Snapping(range)
 
-export type Session = {
-    readonly uuid: Readonly<UUID.Format>
-    readonly project: Project
-    readonly meta: ProjectMeta
-}
-
 export class StudioService implements ProjectEnv {
     readonly layout = {
         systemOpen: new DefaultObservableValue<boolean>(false),
@@ -103,7 +97,7 @@ export class StudioService implements ProjectEnv {
         primaryVisible: new DefaultObservableValue(true)
     } as const
     readonly menu = initAppMenu(this)
-    readonly sessionService = new ProjectProfileService(this)
+    readonly profileService = new ProjectProfileService(this)
     readonly panelLayout = new PanelContents(createPanelFactory(this))
     readonly spotlightDataSupplier = new SpotlightDataSupplier()
     readonly samplePlayback: SamplePlayback
@@ -132,13 +126,13 @@ export class StudioService implements ProjectEnv {
                 readonly buildInfo: BuildInfo) {
         this.samplePlayback = new SamplePlayback(audioContext)
         const lifeTime = new Terminator()
-        const observer = (optSession: Option<ProjectProfile>) => {
+        const observer = (optProfile: Option<ProjectProfile>) => {
             const root = RouteLocation.get().path === "/"
             if (root) {this.layout.screen.setValue(null)}
             lifeTime.terminate()
-            if (optSession.nonEmpty()) {
-                const session = optSession.unwrap()
-                const {project, meta} = session
+            if (optProfile.nonEmpty()) {
+                const profile = optProfile.unwrap()
+                const {project, meta} = profile
                 console.debug(`switch to %c${meta.name}%c`, "color: hsl(25, 69%, 63%)", "color: inherit")
                 const {timelineBox, editing, userEditingManager} = project
                 const loopState = this.transport.loop
@@ -199,7 +193,7 @@ export class StudioService implements ProjectEnv {
                 this.layout.screen.setValue("dashboard")
             }
         }
-        this.sessionService.catchupAndSubscribe(owner => observer(owner.getValue()))
+        this.profileService.catchupAndSubscribe(owner => observer(owner.getValue()))
 
         ConsoleCommands.exportAccessor("box.graph.boxes",
             () => this.runIfProject(({boxGraph}) => boxGraph.debugBoxes()))
@@ -214,7 +208,7 @@ export class StudioService implements ProjectEnv {
         if (!Browser.isLocalHost()) {
             window.addEventListener("beforeunload", (event: Event) => {
                 if (!navigator.onLine) {event.preventDefault()}
-                if (this.hasProjectSession && (this.session.hasChanges() || !this.project.editing.isEmpty())) {
+                if (this.hasProfile && (this.profile.hasChanges() || !this.project.editing.isEmpty())) {
                     event.preventDefault()
                 }
             })
@@ -241,7 +235,7 @@ export class StudioService implements ProjectEnv {
 
         this.recovery.restoreSession().then(optSession => {
             if (optSession.nonEmpty()) {
-                this.sessionService.setValue(optSession)
+                this.profileService.setValue(optSession)
             }
         }, EmptyExec)
     }
@@ -254,12 +248,12 @@ export class StudioService implements ProjectEnv {
 
     async closeProject() {
         RouteLocation.get().navigateTo("/")
-        if (!this.hasProjectSession) {
+        if (!this.hasProfile) {
             this.switchScreen("dashboard")
             return
         }
         if (this.project.editing.isEmpty()) {
-            this.sessionService.setValue(Option.None)
+            this.profileService.setValue(Option.None)
         } else {
             try {
                 await Dialogs.approve({headline: "Closing Project?", message: "You will lose all progress!"})
@@ -267,23 +261,23 @@ export class StudioService implements ProjectEnv {
                 if (!Errors.isAbort(error)) {panic(String(error))}
                 return
             }
-            this.sessionService.setValue(Option.None)
+            this.profileService.setValue(Option.None)
         }
     }
 
     cleanSlate(): void {
-        this.sessionService.setValue(Option.wrap(
+        this.profileService.setValue(Option.wrap(
             new ProjectProfile(UUID.generate(), Project.new(this), ProjectMeta.init("Untitled"), Option.None)))
     }
 
-    async save(): Promise<void> {return this.sessionService.save()}
-    async saveAs(): Promise<void> {return this.sessionService.saveAs()}
-    async browse(): Promise<void> {return this.sessionService.browse()}
-    async loadTemplate(name: string): Promise<unknown> {return this.sessionService.loadTemplate(name)}
-    async exportZip() {return this.sessionService.exportBundle()}
-    async importZip() {return this.sessionService.importBundle()}
+    async save(): Promise<void> {return this.profileService.save()}
+    async saveAs(): Promise<void> {return this.profileService.saveAs()}
+    async browse(): Promise<void> {return this.profileService.browse()}
+    async loadTemplate(name: string): Promise<unknown> {return this.profileService.loadTemplate(name)}
+    async exportZip() {return this.profileService.exportBundle()}
+    async importZip() {return this.profileService.importBundle()}
     async deleteProject(uuid: UUID.Format, meta: ProjectMeta): Promise<void> {
-        if (this.sessionService.getValue().ifSome(session => UUID.equals(session.uuid, uuid)) === true) {
+        if (this.profileService.getValue().ifSome(profile => UUID.equals(profile.uuid, uuid)) === true) {
             await this.closeProject()
         }
         const {status} = await Promises.tryCatch(Projects.deleteProject(uuid))
@@ -293,7 +287,7 @@ export class StudioService implements ProjectEnv {
     }
 
     async exportMixdown() {
-        return this.sessionService.getValue()
+        return this.profileService.getValue()
             .ifSome(async ({project, meta}) => {
                 await this.audioContext.suspend()
                 await AudioOfflineRenderer.start(project, meta, Option.None)
@@ -302,7 +296,7 @@ export class StudioService implements ProjectEnv {
     }
 
     async exportStems() {
-        return this.sessionService.getValue()
+        return this.profileService.getValue()
             .ifSome(async ({project, meta}) => {
                 const {
                     status,
@@ -365,8 +359,8 @@ export class StudioService implements ProjectEnv {
             })
     }
 
-    async saveFile() {return await this.sessionService.saveFile()}
-    async loadFile() {return this.sessionService.loadFile()}
+    async saveFile() {return await this.profileService.saveFile()}
+    async loadFile() {return this.profileService.loadFile()}
 
     async importDawproject() {
         const {status, value, error} =
@@ -391,12 +385,12 @@ export class StudioService implements ProjectEnv {
                 name: resource.name,
                 arrayBuffer: resource.buffer
             })))
-        this.sessionService.fromProject(Project.skeleton(this, skeleton), "Dawproject")
+        this.profileService.fromProject(Project.skeleton(this, skeleton), "Dawproject")
     }
 
     async exportDawproject() {
-        if (!this.hasProjectSession) {return}
-        const {project, meta} = this.session
+        if (!this.hasProfile) {return}
+        const {project, meta} = this.profile
         const {status, error, value: zip} = await Promises.tryCatch(DawProject.encode(project, Xml.element({
             title: meta.name,
             year: new Date().getFullYear().toString(),
@@ -415,15 +409,15 @@ export class StudioService implements ProjectEnv {
         }
     }
 
-    fromProject(project: Project, name: string): void {this.sessionService.fromProject(project, name)}
+    fromProject(project: Project, name: string): void {this.profileService.fromProject(project, name)}
 
     runIfProject<R>(procedure: Func<Project, R>): Option<R> {
-        return this.sessionService.getValue().map(({project}) => procedure(project))
+        return this.profileService.getValue().map(({project}) => procedure(project))
     }
 
-    get project(): Project {return this.session.project}
-    get session(): ProjectProfile {return this.sessionService.getValue().unwrap("No session available")}
-    get hasProjectSession(): boolean {return this.sessionService.getValue().nonEmpty()}
+    get project(): Project {return this.profile.project}
+    get profile(): ProjectProfile {return this.profileService.getValue().unwrap("No profile available")}
+    get hasProfile(): boolean {return this.profileService.getValue().nonEmpty()}
 
     subscribeSignal<T extends StudioSignal["type"]>(
         observer: Observer<Extract<StudioSignal, { type: T }>>, type: T): Subscription {
@@ -448,7 +442,7 @@ export class StudioService implements ProjectEnv {
     resetPeaks(): void {this.#signals.notify({type: "reset-peaks"})}
 
     async verifyProject() {
-        if (!this.hasProjectSession) {return}
+        if (!this.hasProfile) {return}
         const {boxGraph, rootBox, userInterfaceBox, masterBusBox, timelineBox} = this.project
         assert(rootBox.isAttached(), "[verify] rootBox is not attached")
         assert(userInterfaceBox.isAttached(), "[verify] userInterfaceBox is not attached")

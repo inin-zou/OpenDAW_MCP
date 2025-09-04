@@ -103,7 +103,7 @@ export class NoteEventCollectionBoxAdapter implements BoxAdapter, SelectableLoca
     selectable(): Iterable<NoteEventBoxAdapter> {return this.#events.asArray()}
 
     selectableAt(coordinates: Coordinates<ppqn, int>): Iterable<NoteEventBoxAdapter> {
-        for (const element of this.#events.asArray()) { // TODO Optimise
+        for (const element of this.#events.asArray()) { // TODO Use optimized data structures
             if (element.position <= coordinates.u && coordinates.u < element.complete && element.pitch === coordinates.v) {
                 return Iterables.one(element)
             }
@@ -113,7 +113,7 @@ export class NoteEventCollectionBoxAdapter implements BoxAdapter, SelectableLoca
 
     selectablesBetween(begin: Coordinates<ppqn, int>, end: Coordinates<ppqn, int>): Iterable<NoteEventBoxAdapter> {
         const events: Array<NoteEventBoxAdapter> = []
-        for (const element of this.#events.asArray()) { // TODO Optimise
+        for (const element of this.#events.asArray()) { // TODO Use optimized data structures
             if (Intervals.intersect1D(element.position, element.complete, begin.u, end.u)
                 && Intervals.intersect1D(element.pitch, element.pitch, begin.v, end.v)) {
                 events.push(element)

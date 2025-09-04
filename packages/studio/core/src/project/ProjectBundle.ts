@@ -1,12 +1,14 @@
-import {asDefined, isDefined, MutableObservableValue, Option, panic, unitValue, UUID} from "@opendaw/lib-std"
+import {asDefined, Exec, isDefined, MutableObservableValue, Option, panic, unitValue, UUID} from "@opendaw/lib-std"
 import {AudioFileBox} from "@opendaw/studio-boxes"
-import {ProjectProfile} from "./ProjectProfile"
-import {ProjectPaths} from "./ProjectPaths"
-import {MainThreadSampleLoader} from "../samples/MainThreadSampleLoader"
+import {SampleLoader} from "@opendaw/studio-adapters"
+import {Project} from "../Project"
 import {ProjectEnv} from "../ProjectEnv"
+import {ProjectPaths} from "./ProjectPaths"
+import {ProjectProfile} from "./ProjectProfile"
 import {WorkerAgents} from "../WorkerAgents"
 import {SampleStorage} from "../samples/SampleStorage"
-import {Project} from "../Project"
+import {MainThreadSampleLoader} from "../samples/MainThreadSampleLoader"
+import JSZip from "jszip"
 
 export namespace ProjectBundle {
     export const encode = async ({uuid, project, meta, cover}: ProjectProfile,
@@ -23,10 +25,9 @@ export namespace ProjectBundle {
         let boxIndex = 0
         const blob = await Promise.all(boxes
             .map(async ({address: {uuid}}) => {
-                // TODO get rid of cast. pipeFilesInto needs to be somewhere else.
-                const handler: MainThreadSampleLoader = project.sampleManager.getOrCreate(uuid) as MainThreadSampleLoader
+                const handler: SampleLoader = project.sampleManager.getOrCreate(uuid) as MainThreadSampleLoader
                 const folder = asDefined(samples.folder(UUID.toString(uuid)), "Could not create folder for sample")
-                return handler.pipeFilesInto(folder).then(() => progress.setValue(++boxIndex / boxes.length * 0.75))
+                return pipeSampleLoaderInto(handler, folder).then(() => progress.setValue(++boxIndex / boxes.length * 0.75))
             })).then(() => zip.generateAsync({
             type: "blob",
             compression: "DEFLATE",
@@ -68,5 +69,29 @@ export namespace ProjectBundle {
             ? Option.wrap(await coverFile.async("arraybuffer"))
             : Option.None
         return new ProjectProfile(bundleUUID, project, meta, cover)
+    }
+
+    const pipeSampleLoaderInto = async (loader: SampleLoader, zip: JSZip): Promise<void> => {
+        const exec: Exec = async () => {
+            const path = `${SampleStorage.Folder}/${UUID.toString(loader.uuid)}`
+            zip.file("audio.wav", await WorkerAgents.Opfs.read(`${path}/audio.wav`), {binary: true})
+            zip.file("peaks.bin", await WorkerAgents.Opfs.read(`${path}/peaks.bin`), {binary: true})
+            zip.file("meta.json", await WorkerAgents.Opfs.read(`${path}/meta.json`))
+        }
+        if (loader.state.type === "loaded") {
+            return exec()
+        } else {
+            return new Promise<void>((resolve, reject) => {
+                const subscription = loader.subscribe(state => {
+                    if (state.type === "loaded") {
+                        resolve()
+                        subscription.terminate()
+                    } else if (state.type === "error") {
+                        reject(state.reason)
+                        subscription.terminate()
+                    }
+                })
+            }).then(() => exec())
+        }
     }
 }

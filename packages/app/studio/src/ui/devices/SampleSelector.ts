@@ -56,7 +56,7 @@ export class SampleSelector {
     }
 
     newSample(sample: Sample) {
-        if (!this.#service.hasProjectSession) {return}
+        if (!this.#service.hasProfile) {return}
         const {project: {boxGraph, editing}} = this.#service
         const {uuid: uuidAsString, name} = sample
         const uuid = UUID.parse(uuidAsString)
@@ -65,7 +65,7 @@ export class SampleSelector {
     }
 
     replaceSample(replacement: Option<AudioFileBox>) {
-        if (!this.#service.hasProjectSession) {return}
+        if (!this.#service.hasProfile) {return}
         const {project: {editing}} = this.#service
         editing.modify(() => this.#strategy.replace(replacement))
     }

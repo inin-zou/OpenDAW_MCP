@@ -62,7 +62,7 @@ export const Dashboard = ({service}: Construct) => {
                         <ProjectBrowser service={service}
                                         select={async ([uuid, meta]) => {
                                             const handler = Dialogs.processMonolog("Loading...")
-                                            await service.sessionService.loadExisting(uuid, meta)
+                                            await service.profileService.loadExisting(uuid, meta)
                                             handler.close()
                                         }}/>
                     </div>

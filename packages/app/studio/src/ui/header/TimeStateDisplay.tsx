@@ -44,7 +44,7 @@ export const TimeStateDisplay = ({lifecycle, service}: Construct) => {
     // Bar, Bar+Beats, Bar+Beats+SemiQuaver, Bar+Beats+SemiQuaver+Ticks
     const timeUnits = ["Bar", "Beats", "SemiQuaver", "Ticks"] // Bar+Beats
     const timeUnitIndex = new DefaultObservableValue(1)
-    const sessionService = service.sessionService
+    const sessionService = service.profileService
     const projectActiveLifeTime = lifecycle.own(new Terminator())
     const projectProfileObserver = (owner: ObservableValue<Option<ProjectProfile>>) => {
         projectActiveLifeTime.terminate()

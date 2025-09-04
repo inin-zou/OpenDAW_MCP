@@ -101,7 +101,7 @@ export const Header = ({lifecycle, service}: Construct) => {
             <RadioGroup lifecycle={lifecycle}
                         model={new class implements ObservableValue<Nullable<Workspace.ScreenKeys>> {
                             setValue(value: Nullable<Workspace.ScreenKeys>): void {
-                                if (service.hasProjectSession) {service.switchScreen(value)}
+                                if (service.hasProfile) {service.switchScreen(value)}
                             }
                             getValue(): Nullable<Workspace.ScreenKeys> {
                                 return service.layout.screen.getValue()

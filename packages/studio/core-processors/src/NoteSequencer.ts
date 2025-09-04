@@ -39,7 +39,9 @@ export class NoteSequencer implements NoteEventSource, Terminable {
     readonly #context: EngineContext
     readonly #adapter: AudioUnitBoxAdapter
 
-    // readonly #noteBroadcaster: NoteBroadcaster TODO We can actually remove this entirely?
+    // TODO We can actually remove this entirely?
+    //  I actually think we need that and send instrument notes to a specific address (append field).
+    // readonly #noteBroadcaster: NoteBroadcaster
     readonly #random: Random
     readonly #externalNotes: Set<ExternalNote>
     readonly #retainer: EventSpanRetainer<Id<NoteEvent>>

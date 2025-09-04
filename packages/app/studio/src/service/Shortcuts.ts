@@ -58,27 +58,27 @@ export class Shortcuts {
                 if (code === "Digit0") {
                     await service.closeProject()
                 } else if (code === "Digit1") {
-                    if (service.hasProjectSession) {
+                    if (service.hasProfile) {
                         service.switchScreen("default")
                     }
                 } else if (code === "Digit2") {
-                    if (service.hasProjectSession) {
+                    if (service.hasProfile) {
                         service.switchScreen("mixer")
                     }
                 } else if (code === "Digit3") {
-                    if (service.hasProjectSession) {
+                    if (service.hasProfile) {
                         service.switchScreen("modular")
                     }
                 } else if (code === "Digit4") {
-                    if (service.hasProjectSession) {
+                    if (service.hasProfile) {
                         service.switchScreen("piano")
                     }
                 } else if (code === "Digit5") {
-                    if (service.hasProjectSession) {
+                    if (service.hasProfile) {
                         service.switchScreen("project")
                     }
                 } else if (code === "Digit6") {
-                    if (service.hasProjectSession) {
+                    if (service.hasProfile) {
                         service.switchScreen("meter")
                     }
                 }

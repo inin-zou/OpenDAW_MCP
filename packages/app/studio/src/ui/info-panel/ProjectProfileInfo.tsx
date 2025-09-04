@@ -12,10 +12,10 @@ type Construct = {
     service: StudioService
 }
 
-export const ProjectInfo = ({lifecycle, service}: Construct) => {
-    if (!service.hasProjectSession) {return "No session."}
-    const {session} = service
-    const {meta, cover} = session
+export const ProjectProfileInfo = ({lifecycle, service}: Construct) => {
+    if (!service.hasProfile) {return "No session."}
+    const {profile} = service
+    const {meta, cover} = profile
     const inputName: HTMLInputElement = (
         <input type="text" className="default"
                placeholder="Type in your's project name"
@@ -49,14 +49,14 @@ export const ProjectInfo = ({lifecycle, service}: Construct) => {
             if (event.code === "Enter" && event.target instanceof HTMLInputElement) {event.target.blur()}
         }),
         Events.subscribe(inputName, "blur",
-            () => session.updateMetaData("name", inputName.value)),
+            () => profile.updateMetaData("name", inputName.value)),
         Events.subscribe(inputDescription, "blur",
-            () => session.updateMetaData("description", inputDescription.value)),
+            () => profile.updateMetaData("description", inputDescription.value)),
         Events.subscribe(inputTags, "blur",
-            () => session.updateMetaData("tags", inputTags.value.split(",").map(x => x.trim()))),
+            () => profile.updateMetaData("tags", inputTags.value.split(",").map(x => x.trim()))),
         Events.subscribe(inputName, "input", () => Html.limitChars(inputDescription, "value", 128)),
         Events.subscribe(inputDescription, "input", () => Html.limitChars(inputDescription, "value", 512)),
-        coverModel.subscribe(owner => session.updateCover(owner))
+        coverModel.subscribe(owner => profile.updateCover(owner))
     )
     return (
         <div className={className}>

@@ -24,7 +24,7 @@ export const NotePadPanel = ({lifecycle, service}: Construct) => {
         const innerText = notepad.innerText
         if (innerText === template) {return}
         markdownText.setValue(innerText)
-        service.session.updateMetaData("notepad", innerText)
+        service.profile.updateMetaData("notepad", innerText)
     }
     const update = () => {
         Html.empty(notepad)
@@ -38,8 +38,8 @@ export const NotePadPanel = ({lifecycle, service}: Construct) => {
             renderMarkdown(notepad, text)
         }
     }
-    if ((service.session.meta.notepad?.length ?? 0) > 0) {
-        markdownText.setValue(service.session.meta.notepad!)
+    if ((service.profile.meta.notepad?.length ?? 0) > 0) {
+        markdownText.setValue(service.profile.meta.notepad!)
     } else {
         markdownText.setValue(template)
     }

@@ -9,7 +9,7 @@ import {Modular} from "@/ui/modular/Modular.tsx"
 import {DevicePanel} from "@/ui/devices/panel/DevicePanel.tsx"
 import {PanelType} from "@/ui/workspace/PanelType.ts"
 import {Dashboard} from "@/ui/Dashboard.tsx"
-import {ProjectInfo} from "@/ui/info-panel/ProjectInfo.tsx"
+import {ProjectProfileInfo} from "@/ui/info-panel/ProjectProfileInfo.tsx"
 import {BrowserPanel} from "@/ui/browse/BrowserPanel.tsx"
 import {NotePadPanel} from "@/ui/NotePadPanel"
 import {FlexSpace} from "./FlexSpace"
@@ -38,7 +38,7 @@ export const createPanelFactory = (service: StudioService): PanelContentFactory 
             case PanelType.VUMeter:
                 return (<VUMeterPanel lifecycle={lifecycle} service={service}/>)
             case PanelType.ProjectInfo:
-                return (<ProjectInfo lifecycle={lifecycle} service={service}/>)
+                return (<ProjectProfileInfo lifecycle={lifecycle} service={service}/>)
             case PanelType.MidiFall:
                 return (<PianoModePanel lifecycle={lifecycle} service={service}/>)
             case PanelType.EmptyFlexSpace:

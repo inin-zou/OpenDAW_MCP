@@ -1,16 +1,16 @@
 import css from "./DevicePanel.sass?inline"
 import {asDefined, Lifecycle, ObservableValue, Option, Terminable, Terminator, UUID} from "@opendaw/lib-std"
 import {appendChildren, createElement} from "@opendaw/lib-jsx"
-import {Session, StudioService} from "@/service/StudioService"
+import {StudioService} from "@/service/StudioService"
 import {AudioUnitBox, BoxVisitor, PlayfieldSampleBox} from "@opendaw/studio-boxes"
 import {
     AudioEffectDeviceAdapter,
     AudioUnitInputAdapter,
     DeviceHost,
     Devices,
+    IndexedBoxAdapterCollection,
     MidiEffectDeviceAdapter,
-    PlayfieldSampleBoxAdapter,
-    IndexedBoxAdapterCollection
+    PlayfieldSampleBoxAdapter
 } from "@opendaw/studio-adapters"
 import {ScrollModel} from "@/ui/components/ScrollModel.ts"
 import {Orientation, Scroller} from "@/ui/components/Scroller"
@@ -24,7 +24,7 @@ import {NoEffectPlaceholder} from "@/ui/devices/panel/NoEffectPlaceholder"
 import {DeviceMount} from "@/ui/devices/panel/DeviceMount"
 import {Box} from "@opendaw/lib-box"
 import {Pointers} from "@opendaw/studio-enums"
-import {Project} from "@opendaw/studio-core"
+import {Project, ProjectProfile} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "DevicePanel")
 
@@ -88,7 +88,7 @@ export const DevicePanel = ({lifecycle, service}: Construct) => {
         Html.empty(audioEffectsContainer)
         Html.empty(channelStripContainer)
         chainLifecycle.terminate()
-        const session = service.sessionService.getValue()
+        const session = service.profileService.getValue()
         if (session.isEmpty()) {return}
         const {project} = session.unwrap()
         const optEditing = project.userInterfaceBox.editingDeviceChain.targetVertex
@@ -184,7 +184,7 @@ export const DevicePanel = ({lifecycle, service}: Construct) => {
     }
 
     const chainLifeTime = lifecycle.own(new Terminator())
-    lifecycle.own(service.sessionService.catchupAndSubscribe((owner: ObservableValue<Option<Session>>) => {
+    lifecycle.own(service.profileService.catchupAndSubscribe((owner: ObservableValue<Option<ProjectProfile>>) => {
         chainLifeTime.terminate()
         owner.getValue().ifSome(({project: {userInterfaceBox}}) =>
             userInterfaceBox?.editingDeviceChain.catchupAndSubscribe((pointer) => {

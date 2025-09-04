@@ -33,7 +33,7 @@ export class Recovery {
     }
 
     createBackupCommand(): Option<Provider<Promise<void>>> {
-        return this.#service.sessionService.getValue().map((session: ProjectProfile) => async () => {
+        return this.#service.profileService.getValue().map((session: ProjectProfile) => async () => {
             console.debug("temp storing project")
             const {project, meta, uuid} = session
             return Promises.tryCatch(Promise.all([
