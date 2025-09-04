@@ -19,11 +19,17 @@ import {AnimationFrame, Browser, Events, Keyboard} from "@opendaw/lib-dom"
 import {AudioOutputDevice} from "@/audio/AudioOutputDevice"
 import {FontLoader} from "@/ui/FontLoader"
 import {ErrorHandler} from "@/errors/ErrorHandler.ts"
-import {AudioWorklets, MainThreadSampleManager, SampleProvider, SampleStorage, WorkerAgents} from "@opendaw/studio-core"
+import {
+    AudioWorklets,
+    MainThreadSampleManager,
+    OpenSampleAPI,
+    SampleProvider,
+    SampleStorage,
+    WorkerAgents
+} from "@opendaw/studio-core"
 
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
 import WorkletsUrl from "@opendaw/studio-core/processors.js?worker&url"
-import {OpenSampleAPI} from "@/service/OpenSampleAPI"
 
 window.name = "main"
 

@@ -5,13 +5,13 @@ import {Events, Files} from "@opendaw/lib-dom"
 import {Promises} from "@opendaw/lib-runtime"
 import {StudioService} from "@/service/StudioService"
 import {AnyDragData} from "@/ui/AnyDragData"
-import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes.ts"
 import {ContextMenu} from "@/ui/ContextMenu"
 import {MenuItem} from "@/ui/model/menu-item"
 import {PointerField} from "@opendaw/lib-box"
 import {Pointers} from "@opendaw/studio-enums"
 import {DragAndDrop} from "@/ui/DragAndDrop"
 import {Sample} from "@opendaw/studio-adapters"
+import {FilePickerAcceptTypes} from "@opendaw/studio-core"
 
 export interface SampleSelectStrategy {
     hasSample(): boolean

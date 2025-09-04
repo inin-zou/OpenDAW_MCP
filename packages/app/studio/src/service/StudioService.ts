@@ -54,6 +54,7 @@ import {
     DawProjectImport,
     EngineFacade,
     EngineWorklet,
+    FilePickerAcceptTypes,
     MainThreadSampleManager,
     Project,
     ProjectEnv,
@@ -65,7 +66,6 @@ import {
 import {AudioOfflineRenderer} from "@/audio/AudioOfflineRenderer"
 import {ProjectDialogs} from "@/project/ProjectDialogs"
 import {AudioImporter} from "@/audio/AudioImport"
-import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes"
 
 /**
  * I am just piling stuff after stuff in here to boot the environment.

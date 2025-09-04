@@ -8,8 +8,7 @@ import {
     unitValue,
     UUID
 } from "@opendaw/lib-std"
-import {encodeWavFloat, SampleStorage} from "@opendaw/studio-core"
-import {OpenSampleAPI} from "@/service/OpenSampleAPI"
+import {encodeWavFloat, OpenSampleAPI, SampleStorage} from "@opendaw/studio-core"
 
 export type PlaybackEvent = {
     type: "idle"

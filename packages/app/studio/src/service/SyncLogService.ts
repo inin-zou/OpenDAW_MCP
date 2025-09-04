@@ -1,9 +1,8 @@
-import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes.ts"
 import {FooterLabel} from "@/service/FooterLabel"
 import {asDefined, Exec, isDefined} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {StudioService} from "@/service/StudioService"
-import {Commit, SyncLogReader, SyncLogWriter} from "@opendaw/studio-core"
+import {Commit, FilePickerAcceptTypes, SyncLogReader, SyncLogWriter} from "@opendaw/studio-core"
 
 export namespace SyncLogService {
     export const start = async (service: StudioService) => {

@@ -1,13 +1,11 @@
-import {panic, UUID} from "@opendaw/lib-std"
+import {panic, RuntimeNotifier, UUID} from "@opendaw/lib-std"
 import {Errors} from "@opendaw/lib-dom"
 import {BoxGraph} from "@opendaw/lib-box"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioFileBox} from "@opendaw/studio-boxes"
 import {Sample, SampleManager} from "@opendaw/studio-adapters"
-import {SampleAPI, SampleStorage} from "@opendaw/studio-core"
+import {SampleAPI, SampleImporter, SampleStorage} from "@opendaw/studio-core"
 import {SampleDialogs} from "@/ui/browse/SampleDialogs"
-import {Dialogs} from "@/ui/components/dialogs"
-import {SampleImporter} from "@/project/SampleImporter"
 
 export namespace SampleUtils {
     export const verify = async (boxGraph: BoxGraph,
@@ -34,7 +32,7 @@ export namespace SampleUtils {
                     if (status === "rejected") {
                         if (Errors.isAbort(error)) {continue} else {return panic(String(error))}
                     }
-                    await Dialogs.info({
+                    await RuntimeNotifier.info({
                         headline: "Replaced Sample",
                         message: `${sample.name} has been replaced`
                     })

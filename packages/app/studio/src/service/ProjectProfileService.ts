@@ -13,9 +13,15 @@ import {Projects} from "@/project/Projects"
 import {Dialogs} from "@/ui/components/dialogs"
 import {StudioService} from "./StudioService"
 import {Promises} from "@opendaw/lib-runtime"
-import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes.ts"
 import {Errors, Files} from "@opendaw/lib-dom"
-import {Project, ProjectBundle, ProjectEnv, ProjectMeta, ProjectProfile} from "@opendaw/studio-core"
+import {
+    FilePickerAcceptTypes,
+    Project,
+    ProjectBundle,
+    ProjectEnv,
+    ProjectMeta,
+    ProjectProfile
+} from "@opendaw/studio-core"
 
 export class ProjectProfileService implements MutableObservableValue<Option<ProjectProfile>> {
     readonly #service: StudioService

@@ -4,8 +4,7 @@ import {StudioService} from "@/service/StudioService.ts"
 import {Files, Html} from "@opendaw/lib-dom"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {estimateBpm} from "@opendaw/lib-dsp"
-import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes.ts"
-import {encodeWavFloat} from "@opendaw/studio-core"
+import {encodeWavFloat, FilePickerAcceptTypes} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "SampleUploadPage")
 

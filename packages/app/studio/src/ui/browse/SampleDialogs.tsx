@@ -6,8 +6,7 @@ import {Dialogs} from "@/ui/components/dialogs"
 import {isDefined, UUID} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {Errors, Files} from "@opendaw/lib-dom"
-import {SampleImporter} from "@/project/SampleImporter"
-import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes"
+import {FilePickerAcceptTypes, SampleImporter} from "@opendaw/studio-core"
 
 export namespace SampleDialogs {
     export const nativeFileBrowser = async (multiple: boolean = true) =>

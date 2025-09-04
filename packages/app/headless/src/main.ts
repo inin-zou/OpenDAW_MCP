@@ -4,13 +4,12 @@ import {PPQN} from "@opendaw/lib-dsp"
 import {AnimationFrame, Browser} from "@opendaw/lib-dom"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioData, SampleMetaData} from "@opendaw/studio-adapters"
-import {AudioWorklets, MainThreadSampleManager, Project, WorkerAgents} from "@opendaw/studio-core"
+import {AudioWorklets, MainThreadSampleManager, OpenSampleAPI, Project, WorkerAgents} from "@opendaw/studio-core"
 import {testFeatures} from "./features"
 
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
 import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
 import {createExampleProject} from "./ExampleProject"
-import {OpenSampleAPI} from "@opendaw/app-studio/src/service/OpenSampleAPI"
 
 (async () => {
     console.debug("openDAW -> headless")
