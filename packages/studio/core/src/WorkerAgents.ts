@@ -3,10 +3,11 @@ import type {OpfsProtocol, SamplePeakProtocol} from "@opendaw/lib-fusion"
 import {Entry} from "@opendaw/lib-fusion"
 import {Communicator, Messenger} from "@opendaw/lib-runtime"
 
+const WorkerUrl = new URL("./workers.js", import.meta.url)
+
 export class WorkerAgents {
-    static install(workerURL: string): void {
-        console.debug("workerURL", workerURL)
-        this.messenger = Option.wrap(Messenger.for(new Worker(workerURL, {type: "module"})))
+    static install(): void {
+        this.messenger = Option.wrap(Messenger.for(new Worker(WorkerUrl, {type: "module"})))
     }
 
     static messenger: Option<Messenger> = Option.None

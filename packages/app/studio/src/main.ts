@@ -28,18 +28,20 @@ import {
     WorkerAgents
 } from "@opendaw/studio-core"
 
+// This must be here to fight a vite bug
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
-import WorkletsUrl from "@opendaw/studio-core/processors.js?url" // This must be here to fight a vite bug
+import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
 
 window.name = "main"
 
 const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`).then(x => x.json().then(x => x as BuildInfo))
 
 ;(async () => {
-        console.debug("WorkletsUrl", WorkletsUrl)
         if (!window.crossOriginIsolated) {return panic("window must be crossOriginIsolated")}
         console.debug("booting...")
-        WorkerAgents.install(WorkersUrl)
+        console.debug("WorkersUrl", WorkersUrl)
+        console.debug("WorkletsUrl", WorkletsUrl)
+        WorkerAgents.install()
         await FontLoader.load()
         const testFeaturesResult = await Promises.tryCatch(testFeatures())
         if (testFeaturesResult.status === "rejected") {

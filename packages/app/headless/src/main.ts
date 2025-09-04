@@ -7,19 +7,21 @@ import {AudioData, SampleMetaData} from "@opendaw/studio-adapters"
 import {AudioWorklets, MainThreadSampleManager, OpenSampleAPI, Project, WorkerAgents} from "@opendaw/studio-core"
 import {testFeatures} from "./features"
 
+// This must be here to fight a vite bug
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
-import WorkletsUrl from "@opendaw/studio-core/processors.js?url" // This must be here to fight a vite bug
+import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
 import {createExampleProject} from "./ExampleProject"
 
 (async () => {
+    assert(crossOriginIsolated, "window must be crossOriginIsolated")
+    console.debug("booting...")
+    console.debug("WorkersUrl", WorkersUrl)
     console.debug("WorkletsUrl", WorkletsUrl)
     console.debug("openDAW -> headless")
     console.debug("Agent", Browser.userAgent)
     console.debug("isLocalHost", Browser.isLocalHost())
-    assert(crossOriginIsolated, "window must be crossOriginIsolated")
-    console.debug("booting...")
     document.body.textContent = "booting..."
-    WorkerAgents.install(WorkersUrl)
+    WorkerAgents.install()
     {
         const {status, error} = await Promises.tryCatch(testFeatures())
         if (status === "rejected") {
