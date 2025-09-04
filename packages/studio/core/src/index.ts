@@ -18,6 +18,11 @@ export * from "./dawproject/DawProjectExporter"
 export * from "./dawproject/DawProjectImport"
 export * from "./dawproject/DawProjectImport"
 
+export * from "./project/ProjectBundle"
+export * from "./project/ProjectMeta"
+export * from "./project/ProjectPaths"
+export * from "./project/ProjectProfile"
+
 export * from "./AudioDevices"
 export * from "./AudioUnitOrdering"
 export * from "./ColorCodes"

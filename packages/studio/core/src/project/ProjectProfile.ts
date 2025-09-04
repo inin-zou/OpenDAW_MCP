@@ -1,7 +1,8 @@
+import {EmptyExec, Notifier, Observer, Option, Subscription, UUID} from "@opendaw/lib-std"
 import {ProjectMeta} from "./ProjectMeta"
-import {Notifier, Observer, Option, Subscription, UUID} from "@opendaw/lib-std"
-import {Projects} from "@/project/Projects"
-import {Project} from "@opendaw/studio-core"
+import {Project} from "../Project"
+import {WorkerAgents} from "../WorkerAgents"
+import {ProjectPaths} from "./ProjectPaths"
 
 export class ProjectProfile {
     readonly #uuid: UUID.Format
@@ -37,7 +38,7 @@ export class ProjectProfile {
     async save(): Promise<void> {
         this.updateModifyDate()
         return this.#saved
-            ? Projects.saveProject(this).then(() => {this.#hasChanges = false})
+            ? ProjectProfile.#writeFiles(this).then(() => {this.#hasChanges = false})
             : Promise.reject("Project has not been saved")
     }
 
@@ -50,11 +51,10 @@ export class ProjectProfile {
             const project = this.project.copy()
             const meta = ProjectMeta.copy(this.meta)
             const session = new ProjectProfile(uuid, project, meta, Option.None, true)
-            await Projects.saveProject(session)
+            await ProjectProfile.#writeFiles(session)
             return Option.wrap(session)
         } else {
-            // Save project
-            return Projects.saveProject(this).then(() => {
+            return ProjectProfile.#writeFiles(this).then(() => {
                 this.#saved = true
                 this.#hasChanges = false
                 this.#metaUpdated.notify(this.meta)
@@ -86,5 +86,16 @@ export class ProjectProfile {
 
     toString(): string {
         return `{uuid: ${UUID.toString(this.uuid)}, meta: ${JSON.stringify(this.meta)}}`
+    }
+
+    static async #writeFiles({uuid, project, meta, cover}: ProjectProfile): Promise<void> {
+        return Promise.all([
+            WorkerAgents.Opfs.write(ProjectPaths.projectFile(uuid), new Uint8Array(project.toArrayBuffer())),
+            WorkerAgents.Opfs.write(ProjectPaths.projectMeta(uuid), new TextEncoder().encode(JSON.stringify(meta))),
+            cover.match({
+                none: () => Promise.resolve(),
+                some: x => WorkerAgents.Opfs.write(ProjectPaths.projectCover(uuid), new Uint8Array(x))
+            })
+        ]).then(EmptyExec)
     }
 }

@@ -1,4 +1,3 @@
-import {ProjectProfile} from "@/project/ProjectProfile"
 import {
     DefaultObservableValue,
     MutableObservableValue,
@@ -10,48 +9,46 @@ import {
 } from "@opendaw/lib-std"
 import {ProjectDialogs} from "@/project/ProjectDialogs"
 import {Projects} from "@/project/Projects"
-import {ProjectMeta} from "@/project/ProjectMeta"
 import {Dialogs} from "@/ui/components/dialogs"
 import {StudioService} from "./StudioService"
 import {Promises} from "@opendaw/lib-runtime"
 import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes.ts"
 import {Errors, Files} from "@opendaw/lib-dom"
-import {Project, ProjectEnv} from "@opendaw/studio-core"
-import {ProjectBundle} from "@/project/ProjectBundle"
+import {Project, ProjectBundle, ProjectEnv, ProjectMeta, ProjectProfile} from "@opendaw/studio-core"
 
-export class SessionService implements MutableObservableValue<Option<ProjectProfile>> {
+export class ProjectProfileService implements MutableObservableValue<Option<ProjectProfile>> {
     readonly #service: StudioService
-    readonly #session: DefaultObservableValue<Option<ProjectProfile>>
+    readonly #profile: DefaultObservableValue<Option<ProjectProfile>>
 
     constructor(service: StudioService) {
         this.#service = service
-        this.#session = new DefaultObservableValue<Option<ProjectProfile>>(Option.None)
+        this.#profile = new DefaultObservableValue<Option<ProjectProfile>>(Option.None)
     }
 
-    getValue(): Option<ProjectProfile> {return this.#session.getValue()}
-    setValue(value: Option<ProjectProfile>): void {this.#session.setValue(value)}
+    getValue(): Option<ProjectProfile> {return this.#profile.getValue()}
+    setValue(value: Option<ProjectProfile>): void {this.#profile.setValue(value)}
     subscribe(observer: Observer<ObservableValue<Option<ProjectProfile>>>): Terminable {
-        return this.#session.subscribe(observer)
+        return this.#profile.subscribe(observer)
     }
     catchupAndSubscribe(observer: Observer<ObservableValue<Option<ProjectProfile>>>): Terminable {
         observer(this)
-        return this.#session.subscribe(observer)
+        return this.#profile.subscribe(observer)
     }
 
     async save(): Promise<void> {
-        return this.#session.getValue()
-            .ifSome(session => session.saved() ? session.save() : this.saveAs())
+        return this.#profile.getValue()
+            .ifSome(profile => profile.saved() ? profile.save() : this.saveAs())
     }
 
     async saveAs(): Promise<void> {
-        return this.#session.getValue().ifSome(async session => {
+        return this.#profile.getValue().ifSome(async profile => {
             const {status, value: meta} = await Promises.tryCatch(ProjectDialogs.showSaveDialog({
                 headline: "Save Project",
-                meta: session.meta
+                meta: profile.meta
             }))
             if (status === "rejected") {return}
-            const optSession = await session.saveAs(meta)
-            optSession.ifSome(session => this.#session.setValue(Option.wrap(session)))
+            const optProfile = await profile.saveAs(meta)
+            optProfile.ifSome(profile => this.#profile.setValue(Option.wrap(profile)))
         })
     }
 
@@ -67,7 +64,7 @@ export class SessionService implements MutableObservableValue<Option<ProjectProf
         console.debug(UUID.toString(uuid))
         const project = await Projects.loadProject(this.#service, uuid)
         const cover = await Projects.loadCover(uuid)
-        this.#setSession(uuid, project, meta, cover, true)
+        this.#setProfile(uuid, project, meta, cover, true)
     }
 
     async loadTemplate(name: string): Promise<unknown> {
@@ -79,7 +76,7 @@ export class SessionService implements MutableObservableValue<Option<ProjectProf
                 const uuid = UUID.generate()
                 const project = Project.load(this.#service, arrayBuffer)
                 const meta = ProjectMeta.init(name)
-                this.#setSession(uuid, project, meta, Option.None)
+                this.#setProfile(uuid, project, meta, Option.None)
             })
             .catch(reason => {
                 console.warn("Could not load template", reason)
@@ -89,10 +86,10 @@ export class SessionService implements MutableObservableValue<Option<ProjectProf
     }
 
     async exportBundle() {
-        return this.#session.getValue().ifSome(async session => {
+        return this.#profile.getValue().ifSome(async profile => {
             const progress = new DefaultObservableValue(0.0)
             const processDialog = Dialogs.progress("Bundling Project...", progress)
-            const arrayBuffer = await ProjectBundle.encode(session, progress)
+            const arrayBuffer = await ProjectBundle.encode(profile, progress)
             processDialog.close()
             const {status} = await Promises.tryCatch(Dialogs.approve({
                 headline: "Save Project Bundle",
@@ -102,7 +99,7 @@ export class SessionService implements MutableObservableValue<Option<ProjectProf
             if (status === "rejected") {return}
             try {
                 await Files.save(arrayBuffer, {
-                    suggestedName: `${session.meta.name}.odb`,
+                    suggestedName: `${profile.meta.name}.odb`,
                     types: [FilePickerAcceptTypes.ProjectBundleFileType],
                     startIn: "desktop"
                 })
@@ -119,9 +116,9 @@ export class SessionService implements MutableObservableValue<Option<ProjectProf
             const [file] = await Files.open({types: [FilePickerAcceptTypes.ProjectBundleFileType]})
             const env: ProjectEnv = this.#service
             const arrayBuffer = await file.arrayBuffer()
-            const exclude = this.#session.getValue().map(({uuid}) => uuid).unwrapOrUndefined()
-            const session = await ProjectBundle.decode(env, arrayBuffer, exclude)
-            this.#session.setValue(Option.wrap(session))
+            const exclude = this.#profile.getValue().map(({uuid}) => uuid).unwrapOrUndefined()
+            const profile = await ProjectBundle.decode(env, arrayBuffer, exclude)
+            this.#profile.setValue(Option.wrap(profile))
         } catch (error) {
             if (!Errors.isAbort(error)) {
                 Dialogs.info({headline: "Could not load project", message: String(error)}).finally()
@@ -130,8 +127,8 @@ export class SessionService implements MutableObservableValue<Option<ProjectProf
     }
 
     async saveFile() {
-        this.#session.getValue().ifSome(async session => {
-            const arrayBuffer = session.project.toArrayBuffer() as ArrayBuffer
+        this.#profile.getValue().ifSome(async profile => {
+            const arrayBuffer = profile.project.toArrayBuffer() as ArrayBuffer
             try {
                 const fileName = await Files.save(arrayBuffer, {
                     suggestedName: "project.od",
@@ -150,7 +147,7 @@ export class SessionService implements MutableObservableValue<Option<ProjectProf
         try {
             const [file] = await Files.open({types: [FilePickerAcceptTypes.ProjectFileType]})
             const project = Project.load(this.#service, await file.arrayBuffer())
-            this.#setSession(UUID.generate(), project, ProjectMeta.init(file.name), Option.None)
+            this.#setProfile(UUID.generate(), project, ProjectMeta.init(file.name), Option.None)
         } catch (error) {
             if (!Errors.isAbort(error)) {
                 Dialogs.info({headline: "Could not load project", message: String(error)}).finally()
@@ -159,14 +156,14 @@ export class SessionService implements MutableObservableValue<Option<ProjectProf
     }
 
     fromProject(project: Project, name: string): void {
-        this.#setSession(UUID.generate(), project, ProjectMeta.init(name), Option.None)
+        this.#setProfile(UUID.generate(), project, ProjectMeta.init(name), Option.None)
     }
 
-    #setSession(...args: ConstructorParameters<typeof ProjectProfile>): void {
-        this.#session.setValue(Option.wrap(this.#createSession(...args)))
+    #setProfile(...args: ConstructorParameters<typeof ProjectProfile>): void {
+        this.#profile.setValue(Option.wrap(this.#createProfile(...args)))
     }
 
-    #createSession(...args: ConstructorParameters<typeof ProjectProfile>): ProjectProfile {
+    #createProfile(...args: ConstructorParameters<typeof ProjectProfile>): ProjectProfile {
         return new ProjectProfile(...args)
     }
 }

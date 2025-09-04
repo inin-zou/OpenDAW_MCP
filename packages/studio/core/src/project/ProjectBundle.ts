@@ -1,8 +1,12 @@
-import {ProjectProfile} from "@/project/ProjectProfile"
 import {asDefined, isDefined, MutableObservableValue, Option, panic, unitValue, UUID} from "@opendaw/lib-std"
 import {AudioFileBox} from "@opendaw/studio-boxes"
-import {MainThreadSampleLoader, Project, ProjectEnv, SampleStorage, WorkerAgents} from "@opendaw/studio-core"
-import {ProjectPaths} from "@/project/ProjectPaths"
+import {ProjectProfile} from "./ProjectProfile"
+import {ProjectPaths} from "./ProjectPaths"
+import {MainThreadSampleLoader} from "../samples/MainThreadSampleLoader"
+import {ProjectEnv} from "../ProjectEnv"
+import {WorkerAgents} from "../WorkerAgents"
+import {SampleStorage} from "../samples/SampleStorage"
+import {Project} from "../Project"
 
 export namespace ProjectBundle {
     export const encode = async ({uuid, project, meta, cover}: ProjectProfile,

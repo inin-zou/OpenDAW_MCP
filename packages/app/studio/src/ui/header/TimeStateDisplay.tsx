@@ -18,10 +18,10 @@ import {parseTimeSignature, PPQN} from "@opendaw/lib-dsp"
 import {DblClckTextInput} from "@/ui/wrapper/DblClckTextInput.tsx"
 import {ContextMenu} from "@/ui/ContextMenu.ts"
 import {MenuItem} from "@/ui/model/menu-item.ts"
-import {ProjectProfile} from "@/project/ProjectProfile"
 import {Dragging, Html} from "@opendaw/lib-dom"
 import {FlexSpacer} from "@/ui/components/FlexSpacer.tsx"
 import {Propagation} from "@opendaw/lib-box"
+import {ProjectProfile} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "TimeStateDisplay")
 
@@ -46,7 +46,7 @@ export const TimeStateDisplay = ({lifecycle, service}: Construct) => {
     const timeUnitIndex = new DefaultObservableValue(1)
     const sessionService = service.sessionService
     const projectActiveLifeTime = lifecycle.own(new Terminator())
-    const sessionObserver = (owner: ObservableValue<Option<ProjectProfile>>) => {
+    const projectProfileObserver = (owner: ObservableValue<Option<ProjectProfile>>) => {
         projectActiveLifeTime.terminate()
         const optSession = owner.getValue()
         if (optSession.isEmpty()) {return}
@@ -92,7 +92,7 @@ export const TimeStateDisplay = ({lifecycle, service}: Construct) => {
             </div>
         </Frag>
     )
-    lifecycle.own(sessionService.catchupAndSubscribe(sessionObserver))
+    lifecycle.own(sessionService.catchupAndSubscribe(projectProfileObserver))
     const bpmDisplay: HTMLElement = (
         <div className="number-display">
             <div>{bpmDigit}</div>

@@ -1,25 +1,11 @@
-import {EmptyExec, Option, tryCatch, UUID} from "@opendaw/lib-std"
+import {Option, tryCatch, UUID} from "@opendaw/lib-std"
 import {AudioFileBox} from "@opendaw/studio-boxes"
-import {Project, WorkerAgents} from "@opendaw/studio-core"
+import {Project, ProjectMeta, ProjectPaths, WorkerAgents} from "@opendaw/studio-core"
 import {StudioService} from "@/service/StudioService"
-import {ProjectMeta} from "@/project/ProjectMeta"
-import {ProjectProfile} from "@/project/ProjectProfile"
 import {ProjectDecoder} from "@opendaw/studio-adapters"
 import {SampleUtils} from "@/project/SampleUtils"
-import {ProjectPaths} from "@/project/ProjectPaths"
 
 export namespace Projects {
-    export const saveProject = async ({uuid, project, meta, cover}: ProjectProfile): Promise<void> => {
-        return Promise.all([
-            WorkerAgents.Opfs.write(ProjectPaths.projectFile(uuid), new Uint8Array(project.toArrayBuffer())),
-            WorkerAgents.Opfs.write(ProjectPaths.projectMeta(uuid), new TextEncoder().encode(JSON.stringify(meta))),
-            cover.match({
-                none: () => Promise.resolve(),
-                some: x => WorkerAgents.Opfs.write(ProjectPaths.projectCover(uuid), new Uint8Array(x))
-            })
-        ]).then(EmptyExec)
-    }
-
     export const loadCover = async (uuid: UUID.Format): Promise<Option<ArrayBuffer>> => {
         return WorkerAgents.Opfs.read(ProjectPaths.projectCover(uuid))
             .then(array => Option.wrap(array.buffer as ArrayBuffer), () => Option.None)

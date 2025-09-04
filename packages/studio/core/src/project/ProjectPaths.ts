@@ -10,5 +10,3 @@ export namespace ProjectPaths {
     export const projectCover = (uuid: UUID.Format): string => `${(projectFolder(uuid))}/${ProjectCoverFile}`
     export const projectFolder = (uuid: UUID.Format): string => `${Folder}/${UUID.toString(uuid)}`
 }
-
-// TODO Move all over to SDK

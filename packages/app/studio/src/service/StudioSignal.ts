@@ -1,5 +1,5 @@
-import {ProjectMeta} from "@/project/ProjectMeta"
 import {Sample} from "@opendaw/studio-adapters"
+import {ProjectMeta} from "@opendaw/studio-core"
 
 export type StudioSignal =
     | {

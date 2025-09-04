@@ -1,9 +1,7 @@
 import {Option, Provider, UUID} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
-import {Project, WorkerAgents} from "@opendaw/studio-core"
+import {Project, ProjectMeta, ProjectProfile, WorkerAgents} from "@opendaw/studio-core"
 import {StudioService} from "@/service/StudioService.ts"
-import {ProjectProfile} from "./project/ProjectProfile"
-import {ProjectMeta} from "@/project/ProjectMeta.ts"
 
 export class Recovery {
     static readonly #RESTORE_FILE_PATH = ".backup"

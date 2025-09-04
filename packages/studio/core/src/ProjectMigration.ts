@@ -11,7 +11,6 @@ import {
 } from "@opendaw/studio-boxes"
 import {asDefined, asInstanceOf, UUID} from "@opendaw/lib-std"
 import {AudioUnitType} from "@opendaw/studio-enums"
-import {Capture} from "./capture/Capture"
 
 export class ProjectMigration {
     static migrate({boxGraph, mandatoryBoxes}: ProjectDecoder.Skeleton): void {

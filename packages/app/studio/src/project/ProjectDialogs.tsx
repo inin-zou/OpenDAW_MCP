@@ -3,12 +3,11 @@ import {ExportStemsConfiguration, IconSymbol} from "@opendaw/studio-adapters"
 import {Surface} from "@/ui/surface/Surface"
 import {createElement} from "@opendaw/lib-jsx"
 import {isDefined, Objects, Terminator, UUID} from "@opendaw/lib-std"
-import {ProjectMeta} from "@/project/ProjectMeta"
 import {StudioService} from "@/service/StudioService"
 import {ProjectBrowser} from "@/project/ProjectBrowser"
 import {EditableExportStemsConfiguration, ExportStemsConfigurator} from "@/service/ExportStemsConfigurator"
 import {Errors} from "@opendaw/lib-dom"
-import {Project} from "@opendaw/studio-core"
+import {Project, ProjectMeta} from "@opendaw/studio-core"
 
 export namespace ProjectDialogs {
     export const showSaveDialog = async ({headline, meta}: {

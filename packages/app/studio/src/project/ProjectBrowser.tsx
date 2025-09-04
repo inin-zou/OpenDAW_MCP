@@ -6,8 +6,8 @@ import {Icon} from "@/ui/components/Icon"
 import {IconSymbol} from "@opendaw/studio-adapters"
 import {Dialogs} from "@/ui/components/dialogs"
 import {Await, createElement, DomElement, Frag, Group} from "@opendaw/lib-jsx"
-import {ProjectMeta} from "@/project/ProjectMeta"
 import {Html} from "@opendaw/lib-dom"
+import {ProjectMeta} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "ProjectBrowser")
 

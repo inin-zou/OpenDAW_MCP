@@ -2,11 +2,11 @@ import css from "./Footer.sass?inline"
 import {createElement} from "@opendaw/lib-jsx"
 import {isDefined, Lifecycle, Terminator, TimeSpan} from "@opendaw/lib-std"
 import {StudioService} from "@/service/StudioService"
-import {ProjectMeta} from "@/project/ProjectMeta"
 import {Surface} from "@/ui/surface/Surface"
 import {Events, Html} from "@opendaw/lib-dom"
 import {Runtime} from "@opendaw/lib-runtime"
 import {FooterLabel} from "@/service/FooterLabel"
+import {ProjectMeta} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "footer")
 

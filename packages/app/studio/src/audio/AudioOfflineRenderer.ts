@@ -1,10 +1,9 @@
-import {AudioWorklets, encodeWavFloat, Project} from "@opendaw/studio-core"
+import {AudioWorklets, encodeWavFloat, Project, ProjectMeta} from "@opendaw/studio-core"
 import {PPQN} from "@opendaw/lib-dsp"
 import {DefaultObservableValue, int, Option, panic, TimeSpan} from "@opendaw/lib-std"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {Promises, Wait} from "@opendaw/lib-runtime"
 import {AnimationFrame, Errors, Files} from "@opendaw/lib-dom"
-import {ProjectMeta} from "@/project/ProjectMeta"
 import {ExportStemsConfiguration} from "@opendaw/studio-adapters"
 import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
 

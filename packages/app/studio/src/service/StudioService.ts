@@ -31,9 +31,7 @@ import {BuildInfo} from "@/BuildInfo.ts"
 import {MidiDeviceAccess} from "@/midi/devices/MidiDeviceAccess"
 import {SamplePlayback} from "@/service/SamplePlayback"
 import {Shortcuts} from "@/service/Shortcuts"
-import {ProjectMeta} from "@/project/ProjectMeta"
-import {ProjectProfile} from "@/project/ProjectProfile"
-import {SessionService} from "./SessionService"
+import {ProjectProfileService} from "./ProjectProfileService"
 import {StudioSignal} from "./StudioSignal"
 import {Projects} from "@/project/Projects"
 import {SampleDialogs} from "@/ui/browse/SampleDialogs"
@@ -58,6 +56,8 @@ import {
     MainThreadSampleManager,
     Project,
     ProjectEnv,
+    ProjectMeta,
+    ProjectProfile,
     RestartWorklet
 } from "@opendaw/studio-core"
 import {AudioOfflineRenderer} from "@/audio/AudioOfflineRenderer"
@@ -103,7 +103,7 @@ export class StudioService implements ProjectEnv {
         primaryVisible: new DefaultObservableValue(true)
     } as const
     readonly menu = initAppMenu(this)
-    readonly sessionService = new SessionService(this)
+    readonly sessionService = new ProjectProfileService(this)
     readonly panelLayout = new PanelContents(createPanelFactory(this))
     readonly spotlightDataSupplier = new SpotlightDataSupplier()
     readonly samplePlayback: SamplePlayback
