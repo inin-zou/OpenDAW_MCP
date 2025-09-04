@@ -131,6 +131,7 @@ evolves.
 
 - [ ] Add at least one more synthesizer
 - [ ] Add several effect devices
+- [ ] Start Modular System
 - [ ] Polish UI
 
 #### 2026/Q3
