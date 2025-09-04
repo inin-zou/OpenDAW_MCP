@@ -6,11 +6,11 @@ import {Promises} from "@opendaw/lib-runtime"
 import {AudioData, SampleMetaData} from "@opendaw/studio-adapters"
 import {AudioWorklets, MainThreadSampleManager, Project, WorkerAgents} from "@opendaw/studio-core"
 import {testFeatures} from "./features"
-import {SampleApi} from "./SampleApi"
 
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
 import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
 import {createExampleProject} from "./ExampleProject"
+import {SampleApi} from "./SampleApi"
 
 (async () => {
     console.debug("openDAW -> headless")
@@ -65,6 +65,5 @@ import {createExampleProject} from "./ExampleProject"
                 console.debug(`AudioContext resumed (${context.state})`)), {capture: true, once: true})
     }
     AnimationFrame.start()
-    document.querySelector("#preloader")?.remove()
     document.body.textContent = "Ready."
 })()

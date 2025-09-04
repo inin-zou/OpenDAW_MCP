@@ -9,6 +9,7 @@
     "build": "turbo build",
     "dev:studio": "turbo run dev --filter=@opendaw/app-studio",
     "dev:headless": "turbo run dev --filter=@opendaw/app-headless",
+    "dev:recording": "turbo run dev --filter=@opendaw/app-recording",
     "test": "turbo run test --concurrency=1",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",

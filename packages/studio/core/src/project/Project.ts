@@ -3,6 +3,7 @@ import {
     Option,
     panic,
     Procedure,
+    safeExecute,
     Terminable,
     TerminableOwner,
     Terminator,
@@ -150,7 +151,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
         console.debug(`Project was created on ${this.rootBoxAdapter.created.toString()}`)
     }
 
-    startAudioWorklet(worklets: AudioWorklets, restart: RestartWorklet): EngineWorklet {
+    startAudioWorklet(worklets: AudioWorklets, restart?: RestartWorklet): EngineWorklet {
         console.debug(`start AudioWorklet`)
         const lifecycle = this.#terminator.spawn()
         const engine: EngineWorklet = lifecycle.own(worklets.createEngine(this))
@@ -159,9 +160,9 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
             // we will only accept the first error
             engine.removeEventListener("error", handler)
             engine.removeEventListener("processorerror", handler)
-            restart.unload(event)
+            safeExecute(restart?.unload, event)
             lifecycle.terminate()
-            restart.load(this.startAudioWorklet(worklets, restart))
+            safeExecute(restart?.load, this.startAudioWorklet(worklets, restart))
         }
         engine.addEventListener("error", handler)
         engine.addEventListener("processorerror", handler)
