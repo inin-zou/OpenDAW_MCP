@@ -15,8 +15,8 @@
           * layout channels
           * adjust pre-gain?
         * MIDI Controller (values)
-        * Put Recording.start into class Project
-        * Stop (~~start~~) recording at quantized positions
+        * ~~Put Recording.start into class Project~~
+        * ~~Stop (~~start~~) recording at quantized positions~~
         * Find a way to overlay, replace, mix on existing regions
         * Find a way to handle loops/jumps while recording
     * Level #2

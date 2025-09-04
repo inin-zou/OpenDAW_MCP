@@ -1,6 +1,6 @@
 import css from "./ProjectBrowser.sass?inline"
 import {StudioService} from "@/service/StudioService"
-import {EmptyExec, Procedure, StringComparator, TimeSpan, UUID} from "@opendaw/lib-std"
+import {Procedure, StringComparator, TimeSpan, UUID} from "@opendaw/lib-std"
 import {Projects} from "@/project/Projects"
 import {Icon} from "@/ui/components/Icon"
 import {IconSymbol} from "@opendaw/studio-adapters"
@@ -53,7 +53,11 @@ export const ProjectBrowser = ({service, select}: Construct) => {
                                            Dialogs.approve({
                                                headline: "Delete Project?",
                                                message: "Are you sure? This cannot be undone."
-                                           }).then(() => service.deleteProject(uuid, meta).then(() => row.remove()), EmptyExec)
+                                           }).then(approved => {
+                                               if (approved) {
+                                                   service.deleteProject(uuid, meta).then(() => row.remove())
+                                               }
+                                           })
                                        }
                                        return row
                                    })}

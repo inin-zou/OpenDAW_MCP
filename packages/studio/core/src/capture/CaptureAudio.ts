@@ -1,20 +1,11 @@
-import {
-    abort,
-    Func,
-    isDefined,
-    isUndefined,
-    MutableObservableOption,
-    Option,
-    safeExecute,
-    Terminable,
-    warn
-} from "@opendaw/lib-std"
+import {abort, Func, isDefined, isUndefined, MutableObservableOption, Option, Terminable, warn} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioUnitBox, CaptureAudioBox} from "@opendaw/studio-boxes"
 import {Capture} from "./Capture"
 import {CaptureDevices} from "./CaptureDevices"
 import {RecordAudio} from "./RecordAudio"
 import {AudioDevices} from "../AudioDevices"
+import {RuntimeNotification} from "../RuntimeNotification"
 
 export class CaptureAudio extends Capture<CaptureAudioBox> {
     readonly #stream: MutableObservableOption<MediaStream>
@@ -72,9 +63,12 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         const {project} = this.manager
         const {env: {audioContext}} = project
         if (isUndefined(audioContext.outputLatency)) {
-            const approved = await safeExecute(project.env.dialogs?.approve, "Warning",
-                "Your browser does not support 'output latency'. This will cause timing issue while recording.",
-                "Ignore", "Cancel")
+            const approved = RuntimeNotification.approve({
+                headline: "Warning",
+                message: "Your browser does not support 'output latency'. This will cause timing issue while recording.",
+                approveText: "Ignore",
+                cancelText: "Cancel"
+            })
             if (!approved) {
                 return abort("Recording cancelled")
             }

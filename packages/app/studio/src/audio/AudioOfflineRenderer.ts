@@ -47,7 +47,7 @@ export namespace AudioOfflineRenderer {
             message: "",
             approveText: "Save"
         }))
-        if (approveResult.status === "rejected") {return}
+        if (!approveResult.value) {return}
         const wavFile = encodeWavFloat(buffer)
         const suggestedName = `${meta.name}.wav`
         const saveResult = await Promises.tryCatch(Files.save(wavFile, {suggestedName}))
@@ -78,7 +78,7 @@ export namespace AudioOfflineRenderer {
             message: `Size: ${arrayBuffer.byteLength >> 20}M`,
             approveText: "Save"
         }))
-        if (approveResult.status === "rejected") {return}
+        if (!approveResult.value) {return}
         const saveResult = await Promises.tryCatch(Files.save(arrayBuffer, {suggestedName: `${meta.name}.zip`}))
         if (saveResult.status === "rejected") {
             panic(String(saveResult.error))

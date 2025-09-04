@@ -71,23 +71,24 @@ export namespace Dialogs {
         origin?: Element
     }
 
+    // Never rejects
     export const approve =
-        ({headline, message, approveText, cancelText, reverse, origin}: ApproveCreation): Promise<void> => {
+        ({headline, message, approveText, cancelText, reverse, origin}: ApproveCreation): Promise<boolean> => {
             reverse ??= false
-            const {resolve, reject, promise} = Promise.withResolvers<void>()
+            const {resolve, promise} = Promise.withResolvers<boolean>()
             const buttons: Array<Button> = [{
                 text: approveText ?? "Yes",
                 primary: reverse,
                 onClick: handler => {
                     handler.close()
-                    resolve()
+                    resolve(true)
                 }
             }, {
                 text: cancelText ?? "Cancel",
                 primary: !reverse,
                 onClick: handler => {
                     handler.close()
-                    reject(Errors.AbortError)
+                    resolve(false)
                 }
             }]
             if (reverse) {buttons.reverse()}
@@ -300,7 +301,8 @@ export namespace Dialogs {
                     cancelable={false}
                     error>
                 <div style={{padding: "1em 0", maxWidth: "50vw"}}>
-                    <p>Caching Issue detected. A new version is in place. Please reload or clear your browsers cache.</p>
+                    <p>Caching Issue detected. A new version is in place. Please reload or clear your browsers
+                        cache.</p>
                     {document.scripts.length > 1 &&
                         <p style={{color: Colors.red, fontWeight: "bolder"}}>Browser extensions detected! Please disable
                             before reload!</p>}

@@ -38,12 +38,15 @@ export const initAppMenu = (service: StudioService) => {
                                 if (Browser.isLocalHost()) {
                                     return service.importDawproject()
                                 } else {
-                                    return Dialogs.approve({
+                                    const approved = await Dialogs.approve({
                                         headline: "DAWproject Early Preview",
                                         message: "Please be aware that the import may not work as expected.",
                                         approveText: "Import",
                                         cancelText: "Cancel"
-                                    }).then(() => service.importDawproject())
+                                    })
+                                    if (approved) {
+                                        return service.importDawproject()
+                                    }
                                 }
                             })
                         )),

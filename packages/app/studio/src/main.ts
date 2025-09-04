@@ -20,7 +20,14 @@ import {AnimationFrame, Browser, Events, Keyboard} from "@opendaw/lib-dom"
 import {AudioOutputDevice} from "@/audio/AudioOutputDevice"
 import {FontLoader} from "@/ui/FontLoader"
 import {ErrorHandler} from "@/errors/ErrorHandler.ts"
-import {MainThreadSampleManager, SampleProvider, SampleStorage, WorkerAgents, AudioWorklets} from "@opendaw/studio-core"
+import {
+    AudioWorklets,
+    MainThreadSampleManager,
+    RuntimeNotification,
+    SampleProvider,
+    SampleStorage,
+    WorkerAgents
+} from "@opendaw/studio-core"
 
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
 import WorkletsUrl from "@opendaw/studio-core/processors.js?worker&url"
@@ -87,6 +94,10 @@ requestAnimationFrame(async () => {
         replaceChildren(surface.ground, App(service))
         AnimationFrame.start()
         installCursors()
+        RuntimeNotification.install({
+            info: (request) => Dialogs.info(request),
+            approve: (request) => Dialogs.approve(request)
+        })
         if (buildInfo.env === "production" && !Browser.isLocalHost()) {
             const uuid = buildInfo.uuid
             const sourceCss = document.querySelector<HTMLLinkElement>("link[rel='stylesheet']")?.href ?? ""

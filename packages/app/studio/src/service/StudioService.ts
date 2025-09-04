@@ -106,12 +106,6 @@ export class StudioService implements ProjectEnv {
     readonly recovery = new Recovery(this)
     readonly midiLearning = new MIDILearning(this)
     readonly engine = new EngineFacade()
-    readonly dialogs: ProjectEnv.Dialogs = {
-        info: (headline: string, message: string, okText: string): Promise<void> =>
-            Dialogs.info({headline, message, okText}),
-        approve: (headline: string, message: string, approveText: string, cancelText: string): Promise<boolean> =>
-            Dialogs.approve({headline, message, approveText, cancelText}).then(() => true, () => false)
-    }
 
     readonly #signals = new Notifier<StudioSignal>()
 
@@ -255,13 +249,11 @@ export class StudioService implements ProjectEnv {
         if (this.project.editing.isEmpty()) {
             this.profileService.setValue(Option.None)
         } else {
-            try {
-                await Dialogs.approve({headline: "Closing Project?", message: "You will lose all progress!"})
-            } catch (error) {
-                if (!Errors.isAbort(error)) {panic(String(error))}
-                return
-            }
-            this.profileService.setValue(Option.None)
+            const approved = await Dialogs.approve({
+                headline: "Closing Project?",
+                message: "You will lose all progress!"
+            })
+            if (approved) {this.profileService.setValue(Option.None)}
         }
     }
 

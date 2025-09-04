@@ -1,6 +1,5 @@
 import {asDefined, DefaultObservableValue, UUID} from "@opendaw/lib-std"
 import {PPQN} from "@opendaw/lib-dsp"
-import {Promises} from "@opendaw/lib-runtime"
 import {AudioFileBox, AudioRegionBox} from "@opendaw/studio-boxes"
 import {Sample} from "@opendaw/studio-adapters"
 import {ColorCodes, InstrumentFactories, SampleStorage} from "@opendaw/studio-core"
@@ -56,12 +55,12 @@ export class SampleService {
         const used = await Projects.listUsedSamples()
         const online = new Set<string>((await SampleApi.all()).map(({uuid}) => uuid))
         processDialog.close()
-        const {status} = await Promises.tryCatch(Dialogs.approve({
+        const approved = await Dialogs.approve({
             headline: "Remove Sample(s)?",
             message: "This cannot be undone!",
             approveText: "Remove"
-        }))
-        if (status === "rejected") {return}
+        })
+        if (!approved) {return}
         for (const {uuid, name} of samples) {
             const isUsed = used.has(uuid)
             const isOnline = online.has(uuid)
