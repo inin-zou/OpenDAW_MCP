@@ -1,6 +1,6 @@
 import "./main.sass"
 import {App} from "@/ui/App.tsx"
-import {panic, Procedure, RuntimeNotifier, unitValue, UUID} from "@opendaw/lib-std"
+import {panic, Procedure, RuntimeNotifier, Terminable, unitValue, UUID} from "@opendaw/lib-std"
 import {StudioService} from "@/service/StudioService"
 import {AudioData, SampleMetaData} from "@opendaw/studio-adapters"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
@@ -10,7 +10,6 @@ import {Surface} from "@/ui/surface/Surface.tsx"
 import {replaceChildren} from "@opendaw/lib-jsx"
 import {ContextMenu} from "@/ui/ContextMenu.ts"
 import {Spotlight} from "@/ui/spotlight/Spotlight.tsx"
-import {SampleApi} from "@/service/SampleApi.ts"
 import {testFeatures} from "@/features.ts"
 import {MissingFeature} from "@/ui/MissingFeature.tsx"
 import {UpdateMessage} from "@/ui/UpdateMessage.tsx"
@@ -24,12 +23,13 @@ import {AudioWorklets, MainThreadSampleManager, SampleProvider, SampleStorage, W
 
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
 import WorkletsUrl from "@opendaw/studio-core/processors.js?worker&url"
+import {OpenSampleAPI} from "@/service/OpenSampleAPI"
 
 window.name = "main"
 
 const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`).then(x => x.json().then(x => x as BuildInfo))
 
-requestAnimationFrame(async () => {
+;(async () => {
         if (!window.crossOriginIsolated) {return panic("window must be crossOriginIsolated")}
         console.debug("booting...")
         WorkerAgents.install(WorkersUrl)
@@ -58,12 +58,13 @@ requestAnimationFrame(async () => {
                     console.debug(`AudioContext resumed (${context.state})`)), {capture: true, once: true})
         }
         const audioDevices = await AudioOutputDevice.create(context)
+        const sampleAPI = new OpenSampleAPI()
         const sampleManager = new MainThreadSampleManager({
             fetch: async (uuid: UUID.Format, progress: Procedure<unitValue>): Promise<[AudioData, SampleMetaData]> =>
-                SampleApi.load(context, uuid, progress)
+                sampleAPI.load(context, uuid, progress)
         } satisfies SampleProvider, context)
         const service: StudioService =
-            new StudioService(context, audioWorklets.value, audioDevices, sampleManager, buildInfo)
+            new StudioService(context, audioWorklets.value, audioDevices, sampleAPI, sampleManager, buildInfo)
         const errorHandler = new ErrorHandler(service)
         const surface = Surface.main({
             config: (surface: Surface) => {
@@ -89,7 +90,8 @@ requestAnimationFrame(async () => {
         installCursors()
         RuntimeNotifier.install({
             info: (request) => Dialogs.info(request),
-            approve: (request) => Dialogs.approve(request)
+            approve: (request) => Dialogs.approve(request),
+            progress: (request): Terminable => Dialogs.progress(request)
         })
         if (buildInfo.env === "production" && !Browser.isLocalHost()) {
             const uuid = buildInfo.uuid
@@ -137,4 +139,4 @@ requestAnimationFrame(async () => {
         // delete obsolete samples
         SampleStorage.clean().then()
     }
-)
+)()

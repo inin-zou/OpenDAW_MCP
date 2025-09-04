@@ -1,7 +1,17 @@
-import {Arrays, asDefined, DefaultObservableValue, panic, Procedure, tryCatch, unitValue, UUID} from "@opendaw/lib-std"
-import {AudioData, Sample, SampleMetaData} from "@opendaw/studio-adapters"
-import {Dialogs} from "@/ui/components/dialogs.tsx"
+import {
+    Arrays,
+    asDefined,
+    DefaultObservableValue,
+    panic,
+    Procedure,
+    RuntimeNotifier,
+    tryCatch,
+    unitValue,
+    UUID
+} from "@opendaw/lib-std"
 import {network, Promises} from "@opendaw/lib-runtime"
+import {AudioData, Sample, SampleMetaData} from "@opendaw/studio-adapters"
+import {SampleAPI} from "@opendaw/studio-core"
 
 const username = "openDAW"
 const password = "prototype"
@@ -12,36 +22,37 @@ const headers: RequestInit = {
     credentials: "include"
 }
 
-// TODO This should be the interface the studio works with. It will be implemented for different services.
-export interface FutureSampleApi {
-    all(): Promise<ReadonlyArray<Sample>>
-    get(uuid: UUID.Format): Promise<Sample>
-    load(context: AudioContext, uuid: UUID.Format, progress: Procedure<unitValue>): Promise<[AudioData, Sample]>
-    upload(arrayBuffer: ArrayBuffer, metaData: SampleMetaData): Promise<void>
-}
+export class OpenSampleAPI implements SampleAPI {
+    static readonly ApiRoot = "https://api.opendaw.studio/samples"
+    static readonly FileRoot = "https://assets.opendaw.studio/samples"
 
-export namespace SampleApi {
-    export const ApiRoot = "https://api.opendaw.studio/samples"
-    export const FileRoot = "https://assets.opendaw.studio/samples"
-
-    export const all = async (): Promise<ReadonlyArray<Sample>> => {
-        return await Promises.retry(() => fetch(`${ApiRoot}/list.php`, headers).then(x => x.json(), () => []))
+    static fromAudioBuffer(buffer: AudioBuffer): AudioData {
+        return {
+            frames: Arrays.create(channel => buffer.getChannelData(channel), buffer.numberOfChannels),
+            sampleRate: buffer.sampleRate,
+            numberOfFrames: buffer.length,
+            numberOfChannels: buffer.numberOfChannels
+        }
     }
 
-    export const get = async (uuid: UUID.Format): Promise<Sample> => {
-        const url = `${ApiRoot}/get.php?uuid=${UUID.toString(uuid)}`
+    async all(): Promise<ReadonlyArray<Sample>> {
+        return Promises.retry(() => fetch(`${OpenSampleAPI.ApiRoot}/list.php`, headers)
+            .then(x => x.json(), () => []))
+    }
+
+    async get(uuid: UUID.Format): Promise<Sample> {
+        const url = `${OpenSampleAPI.ApiRoot}/get.php?uuid=${UUID.toString(uuid)}`
         const sample: Sample = await Promises.retry(() => network.limitFetch(url, headers)
             .then(x => x.json()))
             .then(x => {if ("error" in x) {return panic(x.error)} else {return x}})
-        return Object.freeze({...sample, cloud: FileRoot})
+        return Object.freeze({...sample, cloud: "cloud:openDAW"})
     }
 
-    export const load = async (context: AudioContext,
-                               uuid: UUID.Format,
-                               progress: Procedure<unitValue>): Promise<[AudioData, Sample]> => {
+    async load(context: AudioContext, uuid: UUID.Format, progress: Procedure<unitValue>): Promise<[AudioData, Sample]> {
         console.debug(`load ${UUID.toString(uuid)}`)
-        return get(uuid)
-            .then(({uuid, name, bpm}) => Promises.retry(() => network.limitFetch(`${FileRoot}/${uuid}`, headers))
+        return this.get(uuid)
+            .then(({uuid, name, bpm}) => Promises.retry(() => network
+                .limitFetch(`${OpenSampleAPI.FileRoot}/${uuid}`, headers))
                 .then(response => {
                     const total = parseInt(response.headers.get("Content-Length") ?? "0")
                     let loaded = 0
@@ -62,7 +73,7 @@ export namespace SampleApi {
                     })
                 })
                 .then(arrayBuffer => context.decodeAudioData(arrayBuffer))
-                .then(audioBuffer => ([fromAudioBuffer(audioBuffer), {
+                .then(audioBuffer => ([OpenSampleAPI.fromAudioBuffer(audioBuffer), {
                     uuid,
                     bpm,
                     name,
@@ -71,16 +82,9 @@ export namespace SampleApi {
                 }])))
     }
 
-    const fromAudioBuffer = (buffer: AudioBuffer): AudioData => ({
-        frames: Arrays.create(channel => buffer.getChannelData(channel), buffer.numberOfChannels),
-        sampleRate: buffer.sampleRate,
-        numberOfFrames: buffer.length,
-        numberOfChannels: buffer.numberOfChannels
-    })
-
-    export const upload = async (arrayBuffer: ArrayBuffer, metaData: SampleMetaData) => {
+    async upload(arrayBuffer: ArrayBuffer, metaData: SampleMetaData): Promise<void> {
         const progress = new DefaultObservableValue(0.0)
-        const dialogHandler = Dialogs.progress("Uploading", progress)
+        const dialog = RuntimeNotifier.progress({headline: "Uploading", progress})
         const formData = new FormData()
         Object.entries(metaData).forEach(([key, value]) => formData.set(key, String(value)))
         const params = new URLSearchParams(location.search)
@@ -96,23 +100,25 @@ export namespace SampleApi {
         })
         xhr.onreadystatechange = () => {
             if (xhr.readyState === 4) {
-                dialogHandler.close()
+                dialog.terminate()
                 if (xhr.status === 200) {
-                    Dialogs.info({message: xhr.responseText})
+                    RuntimeNotifier.info({message: xhr.responseText})
                 } else {
                     const {
                         status,
                         value
                     } = tryCatch(() => JSON.parse(xhr.responseText).message ?? "Unknown error message")
-                    Dialogs.info({
+                    RuntimeNotifier.info({
                         headline: "Upload Failure",
                         message: status === "success" ? value : "Unknown error"
                     })
                 }
             }
         }
-        xhr.open("POST", `${ApiRoot}/upload.php`, true)
+        xhr.open("POST", `${OpenSampleAPI.ApiRoot}/upload.php`, true)
         xhr.setRequestHeader("Authorization", `Basic ${base64Credentials}`)
         xhr.send(formData)
     }
+
+    allowsUpload(): boolean {return false}
 }

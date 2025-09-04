@@ -8,7 +8,6 @@ import {SampleStorage} from "@opendaw/studio-core"
 import {StudioService} from "@/service/StudioService.ts"
 import {ThreeDots} from "@/ui/spinner/ThreeDots.tsx"
 import {Button} from "@/ui/components/Button.tsx"
-import {SampleApi} from "@/service/SampleApi.ts"
 import {SearchInput} from "@/ui/components/SearchInput"
 import {SampleView} from "@/ui/browse/SampleView"
 import {RadioGroup} from "../components/RadioGroup"
@@ -65,7 +64,7 @@ export const SampleBrowser = ({lifecycle, service}: Construct) => {
                                 case SampleLocation.Local:
                                     return SampleStorage.list()
                                 case SampleLocation.Cloud:
-                                    return SampleApi.all()
+                                    return service.sampleAPI.all()
                             }
                         }} loading={() => {
                             return (

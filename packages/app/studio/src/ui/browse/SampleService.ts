@@ -1,4 +1,4 @@
-import {asDefined, DefaultObservableValue, UUID} from "@opendaw/lib-std"
+import {asDefined, RuntimeNotifier, UUID} from "@opendaw/lib-std"
 import {PPQN} from "@opendaw/lib-dsp"
 import {AudioFileBox, AudioRegionBox} from "@opendaw/studio-boxes"
 import {Sample} from "@opendaw/studio-adapters"
@@ -7,7 +7,6 @@ import {HTMLSelection} from "@/ui/HTMLSelection"
 import {StudioService} from "@/service/StudioService"
 import {Dialogs} from "../components/dialogs"
 import {Projects} from "@/project/Projects"
-import {SampleApi} from "@/service/SampleApi"
 
 export class SampleService {
     readonly #service: StudioService
@@ -51,10 +50,10 @@ export class SampleService {
     async deleteSelected() {return this.deleteSamples(...this.#samples())}
 
     async deleteSamples(...samples: ReadonlyArray<Sample>) {
-        const processDialog = Dialogs.progress("Checking Sample Usages", new DefaultObservableValue(0.5))
+        const dialog = RuntimeNotifier.progress({headline: "Checking Sample Usages"})
         const used = await Projects.listUsedSamples()
-        const online = new Set<string>((await SampleApi.all()).map(({uuid}) => uuid))
-        processDialog.close()
+        const online = new Set<string>((await this.#service.sampleAPI.all()).map(({uuid}) => uuid))
+        dialog.terminate()
         const approved = await Dialogs.approve({
             headline: "Remove Sample(s)?",
             message: "This cannot be undone!",

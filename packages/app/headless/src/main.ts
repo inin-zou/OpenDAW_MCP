@@ -10,7 +10,7 @@ import {testFeatures} from "./features"
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
 import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
 import {createExampleProject} from "./ExampleProject"
-import {SampleApi} from "./SampleApi"
+import {OpenSampleAPI} from "@opendaw/app-studio/src/service/OpenSampleAPI"
 
 (async () => {
     console.debug("openDAW -> headless")
@@ -36,9 +36,10 @@ import {SampleApi} from "./SampleApi"
         return
     }
     {
+        const sampleAPI = new OpenSampleAPI()
         const sampleManager = new MainThreadSampleManager({
             fetch: (uuid: UUID.Format, progress: Progress.Handler): Promise<[AudioData, SampleMetaData]> =>
-                SampleApi.load(context, uuid, progress)
+                sampleAPI.load(context, uuid, progress)
         }, context)
 
         const loadProject = false

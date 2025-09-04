@@ -3,7 +3,6 @@ import {createElement, PageContext, PageFactory} from "@opendaw/lib-jsx"
 import {StudioService} from "@/service/StudioService.ts"
 import {Files, Html} from "@opendaw/lib-dom"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
-import {SampleApi} from "@/service/SampleApi.ts"
 import {estimateBpm} from "@opendaw/lib-dsp"
 import {FilePickerAcceptTypes} from "@/ui/FilePickerAcceptTypes.ts"
 import {encodeWavFloat} from "@opendaw/studio-core"
@@ -31,7 +30,7 @@ export const SampleUploadPage: PageFactory<StudioService> = ({service}: PageCont
                         console.debug("sampleRate", sample_rate)
                         console.debug("duration", duration)
                         console.debug("bpm", bpm)
-                        await SampleApi.upload(wav, {name, bpm, sample_rate, duration})
+                        await service.sampleAPI.upload(wav, {name, bpm, sample_rate, duration})
                     } catch (error) {
                         if (error instanceof DOMException && error.name === "AbortError") {
                             console.debug("Caught an AbortError")

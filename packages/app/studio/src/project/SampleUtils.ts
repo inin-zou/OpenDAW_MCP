@@ -4,19 +4,21 @@ import {BoxGraph} from "@opendaw/lib-box"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioFileBox} from "@opendaw/studio-boxes"
 import {Sample, SampleManager} from "@opendaw/studio-adapters"
-import {SampleStorage} from "@opendaw/studio-core"
+import {SampleAPI, SampleStorage} from "@opendaw/studio-core"
 import {SampleDialogs} from "@/ui/browse/SampleDialogs"
 import {Dialogs} from "@/ui/components/dialogs"
 import {SampleImporter} from "@/project/SampleImporter"
-import {SampleApi} from "@/service/SampleApi"
 
 export namespace SampleUtils {
-    export const verify = async (boxGraph: BoxGraph, importer: SampleImporter, audioManager: SampleManager) => {
+    export const verify = async (boxGraph: BoxGraph,
+                                 importer: SampleImporter,
+                                 sampleAPI: SampleAPI,
+                                 sampleManager: SampleManager) => {
         const boxes = boxGraph.boxes().filter((box) => box instanceof AudioFileBox)
         if (boxes.length > 0) {
             // check for missing samples
             const online = UUID.newSet<{ uuid: UUID.Format, sample: Sample }>(x => x.uuid)
-            online.addMany((await SampleApi.all()).map(sample => ({uuid: UUID.parse(sample.uuid), sample})))
+            online.addMany((await sampleAPI.all()).map(sample => ({uuid: UUID.parse(sample.uuid), sample})))
             const offline = UUID.newSet<{ uuid: UUID.Format, sample: Sample }>(x => x.uuid)
             offline.addMany((await SampleStorage.list()).map(sample => ({uuid: UUID.parse(sample.uuid), sample})))
             for (const box of boxes) {
@@ -36,7 +38,7 @@ export namespace SampleUtils {
                         headline: "Replaced Sample",
                         message: `${sample.name} has been replaced`
                     })
-                    audioManager.invalidate(UUID.parse(sample.uuid))
+                    sampleManager.invalidate(UUID.parse(sample.uuid))
                 }
             }
         }

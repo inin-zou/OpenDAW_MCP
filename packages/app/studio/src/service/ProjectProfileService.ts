@@ -4,6 +4,7 @@ import {
     ObservableValue,
     Observer,
     Option,
+    RuntimeNotifier,
     Terminable,
     UUID
 } from "@opendaw/lib-std"
@@ -88,9 +89,9 @@ export class ProjectProfileService implements MutableObservableValue<Option<Proj
     async exportBundle() {
         return this.#profile.getValue().ifSome(async profile => {
             const progress = new DefaultObservableValue(0.0)
-            const processDialog = Dialogs.progress("Bundling Project...", progress)
+            const processDialog = RuntimeNotifier.progress({headline: "Bundling Project...", progress})
             const arrayBuffer = await ProjectBundle.encode(profile, progress)
-            processDialog.close()
+            processDialog.terminate()
             const {status} = await Promises.tryCatch(Dialogs.approve({
                 headline: "Save Project Bundle",
                 message: "",

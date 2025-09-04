@@ -1,6 +1,6 @@
 import {AudioWorklets, encodeWavFloat, Project, ProjectMeta} from "@opendaw/studio-core"
 import {PPQN} from "@opendaw/lib-dsp"
-import {DefaultObservableValue, int, Option, panic, TimeSpan} from "@opendaw/lib-std"
+import {DefaultObservableValue, int, Option, panic, RuntimeNotifier, TimeSpan} from "@opendaw/lib-std"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {Promises, Wait} from "@opendaw/lib-runtime"
 import {AnimationFrame, Errors, Files} from "@opendaw/lib-dom"
@@ -15,7 +15,7 @@ export namespace AudioOfflineRenderer {
         const project = source.copy()
         const numStems = ExportStemsConfiguration.countStems(optExportConfiguration)
         const progress = new DefaultObservableValue(0.0)
-        const dialogHandler = Dialogs.progress("Rendering...", progress)
+        const dialog = RuntimeNotifier.progress({headline: "Rendering...", progress})
         project.boxGraph.beginTransaction()
         project.timelineBox.loopArea.enabled.setValue(false)
         project.boxGraph.endTransaction()
@@ -32,7 +32,7 @@ export namespace AudioOfflineRenderer {
         const terminable = AnimationFrame.add(() => progress.setValue(context.currentTime / durationInSeconds))
         const buffer = await context.startRendering()
         terminable.terminate()
-        dialogHandler.close()
+        dialog.terminate()
         project.terminate()
         if (optExportConfiguration.isEmpty()) {
             await saveWavFile(buffer, meta)

@@ -6,6 +6,7 @@ import {
     isDefined,
     Nullish,
     quantizeCeil,
+    RuntimeNotifier,
     tryCatch,
     unitValue,
     UUID
@@ -34,9 +35,9 @@ export namespace MidiImport {
         const {value: format} = formatResult
         const {boxGraph, editing} = project
         const progress = new DefaultObservableValue(0.0)
-        const dialogHandler = Dialogs.progress("Import Midi", progress)
+        const dialog = RuntimeNotifier.progress({headline: "Import Midi", progress})
         let reuseTrackBox: Nullish<TrackBox> = Arrays.peekLast(audioUnitBoxAdapter.tracks.collection.adapters())?.box
-        let trackIndex: int
+        let trackIndex: int = 0
         if (isDefined(reuseTrackBox)) {
             if (reuseTrackBox.type.getValue() === TrackType.Notes && reuseTrackBox.regions.pointerHub.isEmpty()) {
                 trackIndex = reuseTrackBox.index.getValue()
@@ -44,8 +45,6 @@ export namespace MidiImport {
                 trackIndex = reuseTrackBox.index.getValue() + 1
                 reuseTrackBox = null
             }
-        } else {
-            trackIndex = 0
         }
         let lastTime = Date.now()
         function* generate() {
@@ -118,7 +117,7 @@ export namespace MidiImport {
             modificationProcess.revert()
             await Dialogs.info({headline: "Error Importing Midi-File", message: String(error)})
         }
-        dialogHandler.close()
         console.debug("finished import.")
+        dialog.terminate()
     }
 }

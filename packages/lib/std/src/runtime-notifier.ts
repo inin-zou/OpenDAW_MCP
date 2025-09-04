@@ -1,11 +1,14 @@
-import {assert} from "./lang"
+import {assert, Exec, unitValue} from "./lang"
 import {Option} from "./option"
+import {ObservableValue} from "./observables"
+import {Terminable} from "./terminable"
 
 export namespace RuntimeNotification {
     export type InfoRequest = {
         headline?: string
         message: string
         okText?: string
+        origin?: Element
         abortSignal?: AbortSignal
     }
 
@@ -14,7 +17,16 @@ export namespace RuntimeNotification {
         message: string
         approveText?: string
         cancelText?: string
+        origin?: Element
         abortSignal?: AbortSignal
+    }
+
+    export type ProgressRequest = {
+        headline: string
+        message?: string
+        progress?: ObservableValue<unitValue>
+        cancel?: Exec
+        origin?: Element
     }
 
     export interface Installer {
@@ -24,6 +36,7 @@ export namespace RuntimeNotification {
     export interface Notifier {
         info(request: InfoRequest): Promise<void>
         approve(request: ApproveRequest): Promise<boolean>
+        progress(request: ProgressRequest): Terminable
     }
 }
 
@@ -37,6 +50,10 @@ export const RuntimeNotifier: RuntimeNotification.Notifier & RuntimeNotification
         approve: (request: RuntimeNotification.ApproveRequest): Promise<boolean> => notifierOption.match({
             none: () => Promise.resolve(true),
             some: notifier => notifier.approve(request)
+        }),
+        progress: (request: RuntimeNotification.ProgressRequest): Terminable => notifierOption.match({
+            none: () => Terminable.Empty,
+            some: notifier => notifier.progress(request)
         }),
         install: (notifier: RuntimeNotification.Notifier) => {
             assert(notifierOption.isEmpty(), "RuntimeNotification already installed")

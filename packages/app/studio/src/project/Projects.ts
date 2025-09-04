@@ -16,7 +16,7 @@ export namespace Projects {
             .then(async array => {
                 const arrayBuffer = array.buffer as ArrayBuffer
                 const project = Project.load(service, arrayBuffer)
-                await SampleUtils.verify(project.boxGraph, service, service.sampleManager)
+                await SampleUtils.verify(project.boxGraph, service, service.sampleAPI, service.sampleManager)
                 return project
             })
     }

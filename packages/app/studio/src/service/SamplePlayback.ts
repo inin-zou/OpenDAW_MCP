@@ -8,8 +8,8 @@ import {
     unitValue,
     UUID
 } from "@opendaw/lib-std"
-import {SampleApi} from "./SampleApi"
 import {encodeWavFloat, SampleStorage} from "@opendaw/studio-core"
+import {OpenSampleAPI} from "@/service/OpenSampleAPI"
 
 export type PlaybackEvent = {
     type: "idle"
@@ -62,7 +62,7 @@ export class SamplePlayback {
                         numFrames: audio.numberOfFrames
                     })], {type: "audio/wav"}))
                 }, () => {
-                    this.#audio.src = `${SampleApi.FileRoot}/${uuidAsString}`
+                    this.#audio.src = `${OpenSampleAPI.FileRoot}/${uuidAsString}`
                 })
                 .finally(() => this.#audio.play().catch(EmptyExec))
 

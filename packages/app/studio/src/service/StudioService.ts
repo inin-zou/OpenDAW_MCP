@@ -13,6 +13,7 @@ import {
     Procedure,
     Progress,
     Provider,
+    RuntimeNotifier,
     safeRead,
     Subscription,
     Terminator,
@@ -58,7 +59,8 @@ import {
     ProjectEnv,
     ProjectMeta,
     ProjectProfile,
-    RestartWorklet
+    RestartWorklet,
+    SampleAPI
 } from "@opendaw/studio-core"
 import {AudioOfflineRenderer} from "@/audio/AudioOfflineRenderer"
 import {ProjectDialogs} from "@/project/ProjectDialogs"
@@ -116,6 +118,7 @@ export class StudioService implements ProjectEnv {
     constructor(readonly audioContext: AudioContext,
                 readonly audioWorklets: AudioWorklets,
                 readonly audioDevices: AudioOutputDevice,
+                readonly sampleAPI: SampleAPI,
                 readonly sampleManager: MainThreadSampleManager,
                 readonly buildInfo: BuildInfo) {
         this.samplePlayback = new SamplePlayback(audioContext)
@@ -313,7 +316,9 @@ export class StudioService implements ProjectEnv {
             if (Errors.isAbort(error)) {return} else {return panic(String(error)) }
         }
         const progress = new DefaultObservableValue(0.0)
-        const progressDialog = Dialogs.progress(`Importing ${files.length === 1 ? "Sample" : "Samples"}...`, progress)
+        const dialog = RuntimeNotifier.progress({
+            headline: `Importing ${files.length === 1 ? "Sample" : "Samples"}...`, progress
+        })
         const progressHandler = Progress.split(value => progress.setValue(value), files.length)
         const rejected: Array<string> = []
         for (const [index, file] of files.entries()) {
@@ -328,7 +333,7 @@ export class StudioService implements ProjectEnv {
             }))
             if (status === "rejected") {rejected.push(String(error))}
         }
-        progressDialog.close()
+        dialog.terminate()
         if (rejected.length > 0) {
             await Dialogs.info({
                 headline: "Sample Import Issues",

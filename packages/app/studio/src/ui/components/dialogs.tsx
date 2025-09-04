@@ -8,6 +8,7 @@ import {
     Option,
     Procedure,
     Provider,
+    Terminable,
     Terminator,
     unitValue
 } from "@opendaw/lib-std"
@@ -107,10 +108,12 @@ export namespace Dialogs {
             return promise
         }
 
-    export const progress = (headline: string,
-                             progress: ObservableValue<unitValue>,
-                             cancel?: Exec,
-                             origin?: Element): DialogHandler => {
+    export const progress = ({headline, progress, cancel, origin}: {
+        headline: string,
+        progress?: ObservableValue<unitValue>,
+        cancel?: Exec,
+        origin?: Element
+    }): Terminator => {
         const lifecycle = new Terminator()
         const buttons: ReadonlyArray<Button> = isDefined(cancel)
             ? [{
@@ -124,17 +127,20 @@ export namespace Dialogs {
         const dialog: HTMLDialogElement = (
             <Dialog headline={headline}
                     icon={IconSymbol.System}
-                    cancelable={true}
+                    cancelable={isDefined(cancel)}
                     buttons={buttons}>
-                <div style={{padding: "1em 0"}}>
-                    <ProgressBar lifecycle={lifecycle} progress={progress}/>
-                </div>
+                {progress && (
+                    <div style={{padding: "1em 0"}}>
+                        <ProgressBar lifecycle={lifecycle} progress={progress}/>
+                    </div>
+                )}
             </Dialog>
         )
         Surface.get(origin).flyout.appendChild(dialog)
         dialog.addEventListener("close", () => lifecycle.terminate(), {once: true})
         dialog.showModal()
-        return {close: () => {dialog.close()}}
+        lifecycle.own(Terminable.create(() => dialog.close()))
+        return lifecycle
     }
 
     export const processMonolog = (headline: string,

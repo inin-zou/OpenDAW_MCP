@@ -5,6 +5,7 @@ export * from "./sync-log/SyncLogWriter"
 export * from "./samples/SampleStorage"
 export * from "./samples/MainThreadSampleLoader"
 export * from "./samples/MainThreadSampleManager"
+export * from "./samples/SampleAPI"
 export * from "./samples/SampleProvider"
 
 export * from "./capture/Capture"
