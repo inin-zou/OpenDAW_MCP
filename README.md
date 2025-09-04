@@ -11,7 +11,8 @@
 
 **openDAW** is a next-generation web-based Digital Audio Workstation (DAW) designed to **democratize** music production
 and to **resurface the process of making music** by making **high-quality** creation tools accessible to everyone, with
-a strong focus on **education** and data-privacy. Please consider supporting this project on [Patreon](https://www.patreon.com/join/openDAW) or [ko-fi](https://ko-fi.com/opendaw).
+a strong focus on **education** and data-privacy. Please consider supporting this project
+on [Patreon](https://www.patreon.com/join/openDAW) or [ko-fi](https://ko-fi.com/opendaw).
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/andremichelle/openDAW/refs/heads/main/assets/studio-teaser.png"/>
@@ -21,7 +22,7 @@ a strong focus on **education** and data-privacy. Please consider supporting thi
 
 ## Open-Source
 
-We are committed to transparency and community-driven development. 
+We are committed to transparency and community-driven development.
 
 The source code for openDAW is available under GPL3 (links below).
 
@@ -58,35 +59,37 @@ Huge thanks to our [ambassadors](https://opendaw.org/ambassadors), whose dedicat
 
 ## And big hugs to all our supporters!
 
-### openDAW Visionary — $25.00  
+### openDAW Visionary — $25.00
+
 - Polarity
-- kanaris  
-- Stephen Tai  
-- Thad Guidry  
-- Pathfinder  
+- kanaris
+- Stephen Tai
+- Thad Guidry
+- Pathfinder
 - One Sound Every Day (santino)
 
-### openDAW Supporter — $5.00  
-- Cal Lycus  
-- Jetdarc  
-- Truls Enstad  
-- p07a  
-- Ynot Etluhcs  
-- Mats Gisselson  
-- Dado  
-- centomila  
-- Ola  
-- SKYENCE  
-- BeatMax_Prediction  
-- Kim T  
-- Nyenoidz  
-- Bruce Hunter  
-- Steve Meiers  
-- 4ohm  
-- Yito  
-- Shawn Lukas  
-- Tommes  
-- David Thompson  
+### openDAW Supporter — $5.00
+
+- Cal Lycus
+- Jetdarc
+- Truls Enstad
+- p07a
+- Ynot Etluhcs
+- Mats Gisselson
+- Dado
+- centomila
+- Ola
+- SKYENCE
+- BeatMax_Prediction
+- Kim T
+- Nyenoidz
+- Bruce Hunter
+- Steve Meiers
+- 4ohm
+- Yito
+- Shawn Lukas
+- Tommes
+- David Thompson
 - Harry Gillich
 - OxVolt
 - Wojciech Miłkowski
@@ -94,6 +97,7 @@ Huge thanks to our [ambassadors](https://opendaw.org/ambassadors), whose dedicat
 - skyboundzoo
 
 ### openDAW Custom Pledge
+
 - lokomotywa ($2.47)
 
 ---
@@ -101,13 +105,47 @@ Huge thanks to our [ambassadors](https://opendaw.org/ambassadors), whose dedicat
 ### Repositories
 
 * [openDAW](https://github.com/andremichelle/opendaw)
+* [openDAW-headless (SDK)](https://github.com/andremichelle/opendaw-headless)
+
+### Roadmap
+
+This roadmap represents an estimation of the upcoming development steps. Timelines and priorities may shift as openDAW
+evolves.
+
+#### 2025/Q4
+
+- [ ] Fine-tune recording including loops (takes)
+- [ ] Implement audio playback algorithms (pitch, stretch, absolute) including interpolation
+- [ ] Sample editor
+- [ ] Pushing event flow and painting routines into SDK
+
+#### 2026/Q1
+
+- [ ] Preset API
+- [ ] Full implementation of connecting several cloud services to store samples, projects, and presets
+- [ ] Fine-tune timeline clips (recording, switch times)
+- [ ] Fine-tune MIDI effects
+- [ ] Implement missing region actions like flatten
+
+#### 2026/Q2
+
+- [ ] Add at least one more synthesizer
+- [ ] Add several effect devices
+- [ ] Polish UI
+
+#### 2026/Q3
+
+- [ ] Testing & QA
+- [ ] Launch 1.0
 
 ### Prepare, Clone, Installation, and Run
 
-openDAW tries to avoid external libraries and frameworks. Following is a list of the external libraries we currently use in the web studio:
+openDAW tries to avoid external libraries and frameworks. Following is a list of the external libraries we currently use
+in the web studio:
 
 * [jszip](https://www.npmjs.com/package/jszip) (for openDAW project bundle file)
-* [markdown-it](https://www.npmjs.com/package/markdown-it) + [markdown-it-table](https://www.npmjs.com/package/markdown-it-table) (for help pages)
+* [markdown-it](https://www.npmjs.com/package/markdown-it) + [markdown-it-table](https://www.npmjs.com/package/markdown-it-table) (
+  for help pages)
 * [d3-force](https://d3js.org/d3-force) (for graph debugging)
 
 Before starting, ensure you have the following installed on your system:
@@ -121,7 +159,8 @@ Before starting, ensure you have the following installed on your system:
   ensure you have the
   binaries available in your environment if used outside the build system.
 - [TypeScript](https://www.typescriptlang.org/)
-- [OpenSSL](https://openssl-library.org/) For generating local development certificates (), OpenSSL needs to be installed on
+- [OpenSSL](https://openssl-library.org/) For generating local development certificates (), OpenSSL needs to be
+  installed on
   your system. Most Linux/macOS systems have OpenSSL pre-installed.
 
 ### Clone
