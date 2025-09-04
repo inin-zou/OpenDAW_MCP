@@ -29,12 +29,14 @@ import {
 } from "@opendaw/studio-core"
 
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
+import WorkletsUrl from "@opendaw/studio-core/processors.js?url" // This must be here to fight a vite bug
 
 window.name = "main"
 
 const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`).then(x => x.json().then(x => x as BuildInfo))
 
 ;(async () => {
+        console.debug("WorkletsUrl", WorkletsUrl)
         if (!window.crossOriginIsolated) {return panic("window must be crossOriginIsolated")}
         console.debug("booting...")
         WorkerAgents.install(WorkersUrl)

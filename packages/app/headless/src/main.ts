@@ -8,10 +8,11 @@ import {AudioWorklets, MainThreadSampleManager, OpenSampleAPI, Project, WorkerAg
 import {testFeatures} from "./features"
 
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
-import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
+import WorkletsUrl from "@opendaw/studio-core/processors.js?url" // This must be here to fight a vite bug
 import {createExampleProject} from "./ExampleProject"
 
 (async () => {
+    console.debug("WorkletsUrl", WorkletsUrl)
     console.debug("openDAW -> headless")
     console.debug("Agent", Browser.userAgent)
     console.debug("isLocalHost", Browser.isLocalHost())
@@ -29,7 +30,7 @@ import {createExampleProject} from "./ExampleProject"
     }
     const context = new AudioContext({latencyHint: 0})
     console.debug(`AudioContext state: ${context.state}, sampleRate: ${context.sampleRate}`)
-    const audioWorkletResult = await Promises.tryCatch(AudioWorklets.install(context, WorkletsUrl))
+    const audioWorkletResult = await Promises.tryCatch(AudioWorklets.install(context))
     if (audioWorkletResult.status === "rejected") {
         alert(`Could not install Worklets (${(audioWorkletResult.error)})`)
         return

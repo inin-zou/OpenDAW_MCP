@@ -8,6 +8,8 @@ import {RenderQuantum} from "./RenderQuantum"
 
 const WorkletsUrl = new URL("./processors.js", import.meta.url)
 
+console.debug("WorkletsUrl", WorkletsUrl)
+
 export class AudioWorklets {
     static async install(context: BaseAudioContext): Promise<AudioWorklets> {
         return context.audioWorklet.addModule(WorkletsUrl).then(() => {
