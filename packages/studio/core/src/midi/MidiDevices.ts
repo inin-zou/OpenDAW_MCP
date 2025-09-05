@@ -19,10 +19,12 @@ import {MIDIMessageSubscriber} from "./MIDIMessageSubscriber"
 export class MidiDevices {
     static canRequestMidiAccess(): boolean {return "requestMIDIAccess" in navigator}
 
+    static #memoizedRequest = Promises.memoizeAsync(() => navigator.requestMIDIAccess({sysex: false}))
+
     static async requestPermission() {
         if (this.canRequestMidiAccess()) {
             const {status, value: midiAccess, error} =
-                await Promises.tryCatch(navigator.requestMIDIAccess({sysex: false}))
+                await Promises.tryCatch(this.#memoizedRequest())
             if (status === "rejected") {
                 console.warn(error)
                 return Errors.warn("Could not request MIDI")

@@ -3,6 +3,8 @@ import {
     Exec,
     InaccessibleProperty,
     int,
+    isNull,
+    Nullable,
     Option,
     Provider,
     safeExecute,
@@ -90,6 +92,20 @@ export namespace Promises {
     export const sequential = <T, R>(fn: (arg: T) => Promise<R>): (arg: T) => Promise<R> => {
         let lastPromise: Promise<any> = Promise.resolve(null)
         return (arg: T) => lastPromise = lastPromise.then(() => fn(arg))
+    }
+
+    export const memoizeAsync = <T>(factory: Provider<Promise<T>>): Provider<Promise<T>> => {
+        let resolving: Nullable<Promise<T>> = null
+        return () => {
+            if (isNull(resolving)) {
+                resolving = factory()
+                resolving.catch(error => {
+                    resolving = null
+                    throw error
+                })
+            }
+            return resolving
+        }
     }
 
     export class Limit<T> {

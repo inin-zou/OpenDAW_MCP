@@ -68,6 +68,7 @@ export type AssertType<T> = (value: unknown) => value is T
 export const identity = <T>(value: T): T => value
 export const isDefined = <T>(value: Nullish<T>): value is T => value !== undefined && value !== null
 export const isUndefined = <T>(value: Nullish<T>): value is undefined | null => value === undefined || value === null
+export const isNull = <T>(value: Nullable<T>): value is null => value === null
 export const ifDefined = <T, R = void>(value: Nullish<T>, procedure: Func<T, R>): R | undefined =>
     value !== undefined && value !== null ? procedure(value) : undefined
 export const asDefined = <T>(value: Nullish<T>, fail: string = "asDefined failed"): T => value === null || value === undefined ? panic(fail) : value
