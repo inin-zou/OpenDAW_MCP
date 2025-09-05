@@ -45,6 +45,7 @@ import {EngineWorklet} from "../EngineWorklet"
 import {AudioWorklets} from "../AudioWorklets"
 import {Recording} from "../capture/Recording"
 import {MIDILearning} from "../midi/MIDILearning"
+import {ppqn} from "@opendaw/lib-dsp"
 
 export type RestartWorklet = { unload: Procedure<unknown>, load: Procedure<EngineWorklet> }
 
@@ -205,6 +206,16 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
                 userInterfaceBox: this.userInterfaceBox
             }
         }
+    }
+
+    merge(options: { insert: ppqn }, ...projects: ReadonlyArray<Project>): Promise<Project> {
+        // TODO
+        return Promise.reject("Not implemented")
+    }
+
+    extractIntoNew(/*Something ;)*/): Promise<Project> {
+        // TODO
+        return Promise.reject("Not implemented")
     }
 
     toArrayBuffer(): ArrayBufferLike {
