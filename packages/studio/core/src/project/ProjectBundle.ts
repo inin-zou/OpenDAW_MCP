@@ -8,7 +8,7 @@ import {ProjectProfile} from "./ProjectProfile"
 import {WorkerAgents} from "../WorkerAgents"
 import {SampleStorage} from "../samples/SampleStorage"
 import {MainThreadSampleLoader} from "../samples/MainThreadSampleLoader"
-import JSZip from "jszip"
+import type JSZip from "jszip"
 
 export namespace ProjectBundle {
     export const encode = async ({uuid, project, meta, cover}: ProjectProfile,
@@ -39,35 +39,31 @@ export namespace ProjectBundle {
 
     export const decode = async (env: ProjectEnv,
                                  arrayBuffer: ArrayBuffer,
-                                 exclude?: UUID.Format): Promise<ProjectProfile> => {
+                                 openProfileUUID?: UUID.Format): Promise<ProjectProfile> => {
         const {default: JSZip} = await import("jszip")
         const zip = await JSZip.loadAsync(arrayBuffer)
         if (await asDefined(zip.file("version")).async("text") !== "1") {
             return panic("Unknown bundle version")
         }
         const bundleUUID = UUID.validate(await asDefined(zip.file("uuid")).async("uint8array"))
-        console.debug(UUID.toString(bundleUUID), exclude ? UUID.toString(exclude) : "none")
-        if (isDefined(exclude) && UUID.equals(exclude, bundleUUID)) {
+        console.debug(UUID.toString(bundleUUID), openProfileUUID ? UUID.toString(openProfileUUID) : "none")
+        if (isDefined(openProfileUUID) && UUID.equals(openProfileUUID, bundleUUID)) {
             return panic("Project is already open")
         }
         console.debug("loading samples...")
         const samples = asDefined(zip.folder("samples"), "Could not find samples")
         const promises: Array<Promise<void>> = []
         samples.forEach((path, file) => {
-            if (!file.dir) {
-                promises.push(file
-                    .async("arraybuffer")
-                    .then(arrayBuffer => WorkerAgents.Opfs
-                        .write(`${SampleStorage.Folder}/${path}`, new Uint8Array(arrayBuffer))))
-            }
+            if (file.dir) {return}
+            promises.push(file.async("arraybuffer")
+                .then(arrayBuffer => WorkerAgents.Opfs
+                    .write(`${SampleStorage.Folder}/${path}`, new Uint8Array(arrayBuffer))))
         })
         await Promise.all(promises)
         const project = Project.load(env, await asDefined(zip.file(ProjectPaths.ProjectFile)).async("arraybuffer"))
         const meta = JSON.parse(await asDefined(zip.file(ProjectPaths.ProjectMetaFile)).async("text"))
         const coverFile = zip.file(ProjectPaths.ProjectCoverFile)
-        const cover: Option<ArrayBuffer> = isDefined(coverFile)
-            ? Option.wrap(await coverFile.async("arraybuffer"))
-            : Option.None
+        const cover: Option<ArrayBuffer> = Option.wrap(await coverFile?.async("arraybuffer"))
         return new ProjectProfile(bundleUUID, project, meta, cover)
     }
 

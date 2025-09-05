@@ -4,10 +4,10 @@ import {AudioData} from "../audio/AudioData"
 import {SampleLoaderState} from "./SampleLoaderState"
 
 export interface SampleLoader {
-    readonly data: Option<AudioData>
-    readonly peaks: Option<Peaks>
-    readonly uuid: UUID.Format
-    readonly state: SampleLoaderState
+    get data(): Option<AudioData>
+    get peaks(): Option<Peaks>
+    get uuid(): UUID.Format
+    get state(): SampleLoaderState
     invalidate(): void
     subscribe(observer: Observer<SampleLoaderState>): Subscription
 }
