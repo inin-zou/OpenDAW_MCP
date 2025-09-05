@@ -12,7 +12,7 @@ import {attachParameterContextMenu} from "@/ui/menu/automation.ts"
 import {ControlIndicator} from "@/ui/components/ControlIndicator"
 import {Html} from "@opendaw/lib-dom"
 import {CaptureAudio, Colors} from "@opendaw/studio-core"
-import {TrackPeakMeter} from "@/ui/components/TrackPeakMeter"
+import {HorizontalPeakMeter} from "@/ui/components/HorizontalPeakMeter"
 import {gainToDb} from "@opendaw/lib-dsp"
 import {StudioService} from "@/service/StudioService"
 import {TextTooltip} from "@/ui/surface/TextTooltip"
@@ -133,7 +133,7 @@ export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construc
                     })}
                 </div>
             </header>
-            <TrackPeakMeter lifecycle={lifecycle} peaksInDb={peaksInDb}/>
+            <HorizontalPeakMeter lifecycle={lifecycle} peaksInDb={peaksInDb}/>
         </div>
     )
 }

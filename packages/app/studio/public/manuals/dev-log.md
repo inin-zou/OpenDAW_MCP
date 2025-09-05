@@ -11,17 +11,17 @@
         * ~~List all devices~~
         * ~~If MIDI, select all channels or specific channel~~
         * ~~Arm buttons default behavior should be radio group (shift to add)~~
-        * Capture audio
+        * ~~Capture audio~~
           * layout channels
           * adjust pre-gain?
-        * MIDI Controller (values)
+        * ~~MIDI Controller (values)~~
         * ~~Put Recording.start into class Project~~
         * ~~Stop (~~start~~) recording at quantized positions~~
         * Find a way to overlay, replace, mix on existing regions
         * Find a way to handle loops/jumps while recording
     * Level #2
         * Sample editor
-        * Record samples into Playfield and clips
+        * Record samples into Playfield and clips (basically anywhere)
         * Better audio playback algorithms
             * time-stretch
             * event-based warping
@@ -45,10 +45,9 @@
 * ~~Attach a CurveBox to ValueEventBox (enables having different curve shapes in future)~~
 * Make effect-bypass parameter automatable
 * Add SoundFont device
-* Polish audio playback -> will have unwanted sounds when start/stop audio segments
 * AcceptingType for audio-unit should be a set?
 * Admin sample management (rename, edit, delete)
-* Do not use an unknown track for busses. This must be handled by the timeline view.
+* Do not use an unknown track for buses. This must be handled by the timeline view.
 * https://bungee.parabolaresearch.com/
 * Playfield
     * ~~Panics when replacing synth with Playfield and undo~~
@@ -56,16 +55,16 @@
         * ~~sample in edit mode~~
         * ~~octave index~~
         * ~~cache editor~~
-    * Fix envelope (not in prototype)
-    * Fix loop discontinuations with fades (not in prototype)
-    * Update start & end while playing (not in prototype)
+    * Better envelope
+    * Fix loop discontinuations with fades
+    * Update start & end while playing
     * ~~Reset Playfield and delete samples~~
     * ~~Automation~~
     * ~~Exclusion group~~
     * ~~Gate-mode selector (Off, On, Loop)~~
     * ~~Monophone / Polyphone switcher~~
 * Stereo Tool
-    * Stereo expander is not really working (not in prototype < no easy fix)
+    * Stereo expander param is not really working
     * ~~Interpolate matrix~~
     * ~~swap channels~~
 * PointerLock Api

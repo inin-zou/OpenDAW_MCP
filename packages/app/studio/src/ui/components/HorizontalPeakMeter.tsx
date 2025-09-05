@@ -1,4 +1,4 @@
-import css from "./TrackPeakMeter.sass?inline"
+import css from "./HorizontalMeter.sass?inline"
 import {AnimationFrame, Html} from "@opendaw/lib-dom"
 import {Arrays, Lifecycle, ValueMapping} from "@opendaw/lib-std"
 import {createElement} from "@opendaw/lib-jsx"
@@ -10,6 +10,7 @@ const className = Html.adoptStyleSheet(css, "PeakVolumeSlider")
 type Construct = {
     lifecycle: Lifecycle
     peaksInDb: Float32Array
+    width?: string
 }
 
 type Peak = {
@@ -17,7 +18,7 @@ type Peak = {
     value: number
 }
 
-export const TrackPeakMeter = ({lifecycle, peaksInDb}: Construct) => {
+export const HorizontalPeakMeter = ({lifecycle, peaksInDb, width}: Construct) => {
     const canvas: HTMLCanvasElement = <canvas/>
     const mapping = ValueMapping.linear(-48, 9)
     const s0 = mapping.x(-12)
@@ -62,5 +63,5 @@ export const TrackPeakMeter = ({lifecycle, peaksInDb}: Construct) => {
         peakPainter,
         AnimationFrame.add(peakPainter.requestUpdate)
     )
-    return (<div className={className}>{canvas}</div>)
+    return (<div className={className} style={{width}}>{canvas}</div>)
 }

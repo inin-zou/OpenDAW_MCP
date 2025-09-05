@@ -1,7 +1,7 @@
 import css from "./Header.sass?inline"
 import {Checkbox} from "@/ui/components/Checkbox.tsx"
 import {Icon} from "@/ui/components/Icon.tsx"
-import {Lifecycle, Nullable, ObservableValue, Observer, Subscription} from "@opendaw/lib-std"
+import {Lifecycle, Nullable, ObservableValue, Observer, Subscription, Terminator, UUID} from "@opendaw/lib-std"
 import {TransportGroup} from "@/ui/header/TransportGroup.tsx"
 import {TimeStateDisplay} from "@/ui/header/TimeStateDisplay.tsx"
 import {RadioGroup} from "@/ui/components/RadioGroup.tsx"
@@ -14,6 +14,9 @@ import {Html} from "@opendaw/lib-dom"
 import {MenuItem} from "@/ui/model/menu-item"
 import {Colors, MidiDevices} from "@opendaw/studio-core"
 import {Manuals} from "@/ui/pages/Manuals"
+import {HorizontalPeakMeter} from "@/ui/components/HorizontalPeakMeter"
+import {Address} from "@opendaw/lib-box"
+import {gainToDb} from "@opendaw/lib-dsp"
 
 const className = Html.adoptStyleSheet(css, "Header")
 
@@ -23,6 +26,20 @@ type Construct = {
 }
 
 export const Header = ({lifecycle, service}: Construct) => {
+    const peaksInDb = new Float32Array(2)
+    const runtime = lifecycle.own(new Terminator())
+    lifecycle.own(service.profileService.catchupAndSubscribe((owner) => {
+        runtime.terminate()
+        owner.getValue().match<unknown>({
+            none: () => peaksInDb.fill(Number.NEGATIVE_INFINITY),
+            some: ({project: {liveStreamReceiver}}) =>
+                runtime.own(liveStreamReceiver
+                    .subscribeFloats(Address.compose(UUID.Lowest), ([l, r]) => {
+                        peaksInDb[0] = gainToDb(l)
+                        peaksInDb[1] = gainToDb(r)
+                    }))
+        })
+    }))
     return (
         <header className={className}>
             <MenuButton root={service.menu}
@@ -97,6 +114,10 @@ export const Header = ({lifecycle, service}: Construct) => {
                 <img src="/become_a_patron_button.png" alt="Patreon"/>
             </a>
             <div style={{flex: "2 0 0"}}/>
+            <hr/>
+            <div className="header">
+                <HorizontalPeakMeter lifecycle={lifecycle} peaksInDb={peaksInDb} width="4em"/>
+            </div>
             <hr/>
             <RadioGroup lifecycle={lifecycle}
                         model={new class implements ObservableValue<Nullable<Workspace.ScreenKeys>> {
