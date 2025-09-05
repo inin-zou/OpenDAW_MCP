@@ -28,7 +28,9 @@ import {
     WorkerAgents
 } from "@opendaw/studio-core"
 
-// This must be here to fight a vite bug
+// DO NOT DELETE THOSE IMPORTS
+// Importing here (even if unused) ensures Vite registers the asset
+// and serves it under a safe URL instead of a blocked /@fs/... path.
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
 import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
 

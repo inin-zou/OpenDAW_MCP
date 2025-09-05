@@ -6,11 +6,13 @@ import {Promises} from "@opendaw/lib-runtime"
 import {AudioData, SampleMetaData} from "@opendaw/studio-adapters"
 import {AudioWorklets, MainThreadSampleManager, OpenSampleAPI, Project, WorkerAgents} from "@opendaw/studio-core"
 import {testFeatures} from "./features"
+import {createExampleProject} from "./ExampleProject"
 
-// This must be here to fight a vite bug
+// DO NOT DELETE THOSE IMPORTS
+// Importing here (even if unused) ensures Vite registers the asset
+// and serves it under a safe URL instead of a blocked /@fs/... path.
 import WorkersUrl from "@opendaw/studio-core/workers.js?worker&url"
 import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
-import {createExampleProject} from "./ExampleProject"
 
 (async () => {
     assert(crossOriginIsolated, "window must be crossOriginIsolated")
