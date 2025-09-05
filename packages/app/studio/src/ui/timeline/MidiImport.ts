@@ -2,6 +2,7 @@ import {
     Arrays,
     byte,
     DefaultObservableValue,
+    Errors,
     int,
     isDefined,
     Nullish,
@@ -16,7 +17,7 @@ import {AudioUnitBoxAdapter, TrackType} from "@opendaw/studio-adapters"
 import {PPQN, ppqn} from "@opendaw/lib-dsp"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {Promises, Wait} from "@opendaw/lib-runtime"
-import {Errors, Files} from "@opendaw/lib-dom"
+import {Files} from "@opendaw/lib-dom"
 import {ColorCodes, Project} from "@opendaw/studio-core"
 import {ControlType, MidiFile} from "@opendaw/lib-midi"
 

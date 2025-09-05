@@ -3,9 +3,9 @@ import {IconSymbol, Sample} from "@opendaw/studio-adapters"
 import {Surface} from "@/ui/surface/Surface"
 import {createElement} from "@opendaw/lib-jsx"
 import {Dialogs} from "@/ui/components/dialogs"
-import {isDefined, UUID} from "@opendaw/lib-std"
+import {Errors, isDefined, UUID} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
-import {Errors, Files} from "@opendaw/lib-dom"
+import {Files} from "@opendaw/lib-dom"
 import {FilePickerAcceptTypes, SampleImporter} from "@opendaw/studio-core"
 
 export namespace SampleDialogs {

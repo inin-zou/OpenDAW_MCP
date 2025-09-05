@@ -2,6 +2,7 @@ import {createElement, JsxValue} from "@opendaw/lib-jsx"
 import {Button, Dialog, DialogHandler} from "@/ui/components/Dialog.tsx"
 import {
     Arrays,
+    Errors,
     Exec,
     isDefined,
     ObservableValue,
@@ -19,7 +20,6 @@ import {BoxDebugView} from "./BoxDebugView"
 import {BoxesDebugView} from "@/ui/components/BoxesDebugView.tsx"
 import {ProgressBar} from "@/ui/components/ProgressBar.tsx"
 import EmailBody from "@/ErrorMail.txt?raw"
-import {Errors} from "@opendaw/lib-dom"
 import {Colors} from "@opendaw/studio-core"
 
 export namespace Dialogs {

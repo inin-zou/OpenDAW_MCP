@@ -9,7 +9,7 @@ export namespace Errors {
     export const AbortError = typeof DOMException === "undefined"
         ? NaN : Object.freeze(new DOMException("AbortError"))
 
-    export const isAbort = (error: unknown) =>
+    export const isAbort = (error: unknown): error is { name: string, message: string } =>
         error === AbortError || (isDOMException(error) && error.name === "AbortError")
 
     export const CatchAbort = (error: unknown) =>

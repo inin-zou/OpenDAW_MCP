@@ -1,5 +1,4 @@
-import {panic, RuntimeNotifier, UUID} from "@opendaw/lib-std"
-import {Errors} from "@opendaw/lib-dom"
+import {Errors, panic, RuntimeNotifier, UUID} from "@opendaw/lib-std"
 import {BoxGraph} from "@opendaw/lib-box"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioFileBox} from "@opendaw/studio-boxes"

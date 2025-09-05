@@ -1,5 +1,6 @@
 import {
     DefaultObservableValue,
+    Errors,
     MutableObservableValue,
     ObservableValue,
     Observer,
@@ -13,7 +14,7 @@ import {Projects} from "@/project/Projects"
 import {Dialogs} from "@/ui/components/dialogs"
 import {StudioService} from "./StudioService"
 import {Promises} from "@opendaw/lib-runtime"
-import {Errors, Files} from "@opendaw/lib-dom"
+import {Files} from "@opendaw/lib-dom"
 import {
     FilePickerAcceptTypes,
     Project,

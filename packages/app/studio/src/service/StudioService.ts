@@ -2,6 +2,7 @@ import {
     assert,
     DefaultObservableValue,
     EmptyExec,
+    Errors,
     Func,
     int,
     isDefined,
@@ -39,7 +40,7 @@ import {AudioOutputDevice} from "@/audio/AudioOutputDevice"
 import {FooterLabel} from "@/service/FooterLabel"
 import {RouteLocation} from "@opendaw/lib-jsx"
 import {PPQN} from "@opendaw/lib-dsp"
-import {Browser, ConsoleCommands, Errors, Files} from "@opendaw/lib-dom"
+import {Browser, ConsoleCommands, Files} from "@opendaw/lib-dom"
 import {Promises} from "@opendaw/lib-runtime"
 import {ExportStemsConfiguration, Sample} from "@opendaw/studio-adapters"
 import {Xml} from "@opendaw/lib-xml"
