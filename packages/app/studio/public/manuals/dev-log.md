@@ -74,7 +74,6 @@
 * Find a modifier key to always select
 * Offline Tauri version
 * Offline PWA version
-* studio header > peak-meter
 * peak-meter > hold-value | rms < PeakBroadcaster
 * Implement presets for devices and complete device-chain
 * Preview midi notes (https://discord.com/channels/1241019312328675399/1337837099302391849)
@@ -106,6 +105,7 @@
 
 ## Done
 
+* ~~studio header > peak-meter~~
 * ~~Manuals should be listing all entries in the dropdown~~
 * ~~Inform the user if there is no outputLatency~~
 * ~~Implement monitor~~
