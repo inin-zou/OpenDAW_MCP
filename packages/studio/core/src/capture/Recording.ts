@@ -1,4 +1,4 @@
-import {asInstanceOf, assert, Option, Terminable, Terminator, warn} from "@opendaw/lib-std"
+import {asInstanceOf, assert, Errors, Option, Terminable, Terminator} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioUnitBox} from "@opendaw/studio-boxes"
 import {AudioUnitType} from "@opendaw/studio-enums"
@@ -20,13 +20,13 @@ export class Recording {
         const captures = captureDevices.filterArmed()
         if (captures.length === 0) {
             this.#isRecording = false
-            return warn("No track is armed for Recording")
+            return Errors.warn("No track is armed for Recording")
         }
         const {status, error} =
             await Promises.tryCatch(Promise.all(captures.map(capture => capture.prepareRecording())))
         if (status === "rejected") {
             this.#isRecording = false
-            return warn(String(error))
+            return Errors.warn(String(error))
         }
         terminator.ownAll(...captures.map(capture => capture.startRecording()))
         engine.startRecording(countIn)

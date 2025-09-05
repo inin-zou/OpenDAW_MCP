@@ -1,6 +1,6 @@
-import {DefaultObservableValue, int, Option, panic, RuntimeNotifier, TimeSpan} from "@opendaw/lib-std"
+import {DefaultObservableValue, Errors, int, Option, panic, RuntimeNotifier, TimeSpan} from "@opendaw/lib-std"
 import {PPQN} from "@opendaw/lib-dsp"
-import {AnimationFrame, Errors, Files} from "@opendaw/lib-dom"
+import {AnimationFrame, Files} from "@opendaw/lib-dom"
 import {Promises, Wait} from "@opendaw/lib-runtime"
 import {ExportStemsConfiguration} from "@opendaw/studio-adapters"
 import {Project} from "./project/Project"

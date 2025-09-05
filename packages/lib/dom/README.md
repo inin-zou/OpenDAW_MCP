@@ -30,7 +30,6 @@ DOM utilities and web browser interaction helpers for TypeScript projects.
 
 * Browser detection and compatibility utilities **browser.ts**
 * Font loading and management **fonts.ts**
-* Error handling for DOM operations **errors.ts**
 * Console utility commands **console-commands.ts**
 
 ## Performance & Lifecycle

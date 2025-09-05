@@ -1,13 +1,12 @@
 import {
-    abort,
+    Errors,
     Func,
     isDefined,
     isUndefined,
     MutableObservableOption,
     Option,
     RuntimeNotifier,
-    Terminable,
-    warn
+    Terminable
 } from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioUnitBox, CaptureAudioBox} from "@opendaw/studio-boxes"
@@ -79,7 +78,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
                 cancelText: "Cancel"
             })
             if (!approved) {
-                return abort("Recording cancelled")
+                return Promise.reject("Recording cancelled")
             }
         }
         return this.#streamGenerator()
@@ -140,7 +139,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
                 this.#stream.wrap(stream)
             } else {
                 stream.getAudioTracks().forEach(track => track.stop())
-                return warn(`Could not find audio device with id: '${deviceId} in ${gotDeviceId}'`)
+                return Errors.warn(`Could not find audio device with id: '${deviceId} in ${gotDeviceId}'`)
             }
         })
     }

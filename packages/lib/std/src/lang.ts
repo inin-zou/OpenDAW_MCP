@@ -18,8 +18,18 @@ export type NumberArray =
     | Int16Array
     | Uint32Array
     | Int32Array
-export type FloatArray = Float32Array | Float64Array | number[]
+export type FloatArray = Float32Array | Float64Array | Array<number>
 export type Primitive = boolean | byte | short | int | long | float | double | string | Readonly<Int8Array>
+export type JsType =
+    "string"
+    | "number"
+    | "boolean"
+    | "object"
+    | "undefined"
+    | "function"
+    | "symbol"
+    | "bigint"
+    | "null"
 export type StructuredCloneable =
     | string
     | number
@@ -69,6 +79,11 @@ export const getOrProvide = <T>(value: ValueOrProvider<T>): T => value instanceo
 export const safeWrite = (object: any, property: string, value: any): void => property in object ? object[property] = value : undefined
 export const safeExecute = <F extends AnyFunc>(func: Nullish<F>, ...args: Parameters<F>): Nullish<ReturnType<F>> => func?.apply(null, args)
 export const isRecord = (value: unknown): value is Record<string, unknown> => isDefined(value) && typeof value === "object"
+export const hasField = (record: Record<string, unknown>, key: string, type: JsType): boolean => {
+    if (!(key in record)) return false
+    const value = record[key]
+    return type === "null" ? value === null : typeof value === type
+}
 export const safeRead = (object: unknown, key: string): Nullish<unknown> => isRecord(object) && key in object ? object[key] : undefined
 export const Unhandled = <R>(empty: never): R => {throw new Error(`Unhandled ${empty}`)}
 export const panic = (issue?: string | Error | unknown): never => {throw typeof issue === "string" ? new Error(issue) : issue}

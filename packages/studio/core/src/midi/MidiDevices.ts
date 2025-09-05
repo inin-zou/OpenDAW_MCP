@@ -1,5 +1,6 @@
 import {
     byte,
+    Errors,
     Lazy,
     MutableObservableOption,
     MutableObservableValue,
@@ -9,8 +10,7 @@ import {
     Observer,
     Option,
     Subscription,
-    Terminator,
-    warn
+    Terminator
 } from "@opendaw/lib-std"
 import {MidiData} from "@opendaw/lib-midi"
 import {Promises} from "@opendaw/lib-runtime"
@@ -25,14 +25,14 @@ export class MidiDevices {
                 await Promises.tryCatch(navigator.requestMIDIAccess({sysex: false}))
             if (status === "rejected") {
                 console.warn(error)
-                return warn("Could not request MIDI")
+                return Errors.warn("Could not request MIDI")
             }
             const numberOfInputs = midiAccess.inputs.size
             const numberOfOutputs = midiAccess.outputs.size
             console.debug(`MIDI access granted: ${numberOfInputs} inputs, ${numberOfOutputs} outputs`)
             this.#midiAccess.wrap(midiAccess)
         } else {
-            return warn("This browser does not support MIDI")
+            return Errors.warn("This browser does not support MIDI")
         }
     }
 

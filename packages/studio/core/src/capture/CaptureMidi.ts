@@ -1,6 +1,7 @@
 import {
     assert,
     byte,
+    Errors,
     Func,
     isDefined,
     isUndefined,
@@ -8,8 +9,7 @@ import {
     Observer,
     Option,
     Subscription,
-    Terminable,
-    warn
+    Terminable
 } from "@opendaw/lib-std"
 import {Events} from "@opendaw/lib-dom"
 import {MidiData} from "@opendaw/lib-midi"
@@ -20,6 +20,7 @@ import {MidiDevices} from "../midi/MidiDevices"
 import {Capture} from "./Capture"
 import {CaptureDevices} from "./CaptureDevices"
 import {RecordMidi} from "./RecordMidi"
+import warn = Errors.warn
 
 export class CaptureMidi extends Capture<CaptureMidiBox> {
     readonly #streamGenerator: Func<void, Promise<void>>
@@ -91,12 +92,12 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
             if (MidiDevices.canRequestMidiAccess()) {
                 await MidiDevices.requestPermission()
             } else {
-                return warn("MIDI not available")
+                return Errors.warn("MIDI not available")
             }
         }
         const optInputs = MidiDevices.inputs()
         if (optInputs.isEmpty()) {
-            return warn("MIDI not available")
+            return Errors.warn("MIDI not available")
         }
         const inputs = optInputs.unwrap()
         if (inputs.length === 0) {return}
