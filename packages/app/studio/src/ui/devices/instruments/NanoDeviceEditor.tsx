@@ -24,8 +24,8 @@ type Construct = {
 
 export const NanoDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
     const {volume, release} = adapter.namedParameter
-    const {project, midiLearning} = service
-    const {editing} = project
+    const {project} = service
+    const {editing, midiLearning} = project
     const sampleDropZone: HTMLElement = (
         <div className="sample-drop">
             <Icon symbol={IconSymbol.Waveform}/>

@@ -38,8 +38,8 @@ type Construct = {
 
 export const ChannelStrip = ({lifecycle, service, adapter, compact}: Construct) => {
     const {mute, panning, solo, volume} = adapter.namedParameter
-    const {project, midiLearning} = service
-    const {editing, mixer, rootBoxAdapter, liveStreamReceiver} = project
+    const {project} = service
+    const {editing, mixer, rootBoxAdapter, liveStreamReceiver, midiLearning} = project
     const isBus = adapter.type === AudioUnitType.Bus
     const isAux = adapter.type === AudioUnitType.Aux
     const isOutput = adapter.type === AudioUnitType.Output

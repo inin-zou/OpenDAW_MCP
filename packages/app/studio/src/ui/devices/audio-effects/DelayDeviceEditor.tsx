@@ -21,8 +21,8 @@ type Construct = {
 }
 
 export const DelayDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
-    const {project, midiLearning} = service
-    const {editing} = project
+    const {project} = service
+    const {editing, midiLearning} = project
     const {delay, feedback, cross, filter, dry, wet} = adapter.namedParameter
     return (
         <DeviceEditor lifecycle={lifecycle}

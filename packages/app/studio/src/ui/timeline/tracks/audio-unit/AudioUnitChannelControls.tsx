@@ -27,8 +27,8 @@ type Construct = {
 }
 
 export const AudioUnitChannelControls = ({lifecycle, service, adapter}: Construct) => {
-    const {project, midiLearning, audioContext} = service
-    const {captureDevices, editing} = project
+    const {project, audioContext} = service
+    const {captureDevices, editing, midiLearning} = project
     const {volume, panning, mute, solo} = adapter.namedParameter
     const volumeControl = (
         <RelativeUnitValueDragging lifecycle={lifecycle}

@@ -14,7 +14,7 @@ import {
 } from "@opendaw/lib-std"
 import {MidiData} from "@opendaw/lib-midi"
 import {Promises} from "@opendaw/lib-runtime"
-import {MIDIMessageSubscriber} from "@opendaw/app-studio/src/midi/devices/MIDIMessageSubscriber"
+import {MIDIMessageSubscriber} from "./MIDIMessageSubscriber"
 
 export class MidiDevices {
     static canRequestMidiAccess(): boolean {return "requestMIDIAccess" in navigator}

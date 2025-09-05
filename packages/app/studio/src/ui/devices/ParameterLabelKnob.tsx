@@ -3,12 +3,11 @@ import {Lifecycle, unitValue, ValueGuide} from "@opendaw/lib-std"
 import {createElement} from "@opendaw/lib-jsx"
 import {RelativeUnitValueDragging} from "@/ui/wrapper/RelativeUnitValueDragging.tsx"
 import {LabelKnob} from "@/ui/composite/LabelKnob.tsx"
-import {AutomatableParameterFieldAdapter} from "@opendaw/studio-adapters"
-import {DeviceBoxAdapter} from "@opendaw/studio-adapters"
+import {AutomatableParameterFieldAdapter, DeviceBoxAdapter} from "@opendaw/studio-adapters"
 import {Editing} from "@opendaw/lib-box"
 import {attachParameterContextMenu} from "@/ui/menu/automation.ts"
 import {Html} from "@opendaw/lib-dom"
-import {MIDILearning} from "@/midi/devices/MIDILearning"
+import {MIDILearning} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "ParameterLabelKnob")
 

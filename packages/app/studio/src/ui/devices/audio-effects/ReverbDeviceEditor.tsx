@@ -21,8 +21,8 @@ type Construct = {
 }
 
 export const ReverbDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
-    const {project, midiLearning} = service
-    const {editing} = project
+    const {project} = service
+    const {editing, liveStreamReceiver, midiLearning} = project
     const {decay, preDelay, damp, dry, wet} = adapter.namedParameter
     return (
         <DeviceEditor lifecycle={lifecycle}
@@ -32,19 +32,19 @@ export const ReverbDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Co
                       populateControls={() => (
                           <div className={className}>
                               {ControlBuilder.createKnob({
-                                  lifecycle, editing, midiLearning: midiLearning, adapter, parameter: decay
+                                  lifecycle, editing, midiLearning, adapter, parameter: decay
                               })}
                               <div/>
                               {ControlBuilder.createKnob({
-                                  lifecycle, editing, midiLearning: midiLearning, adapter, parameter: preDelay
+                                  lifecycle, editing, midiLearning, adapter, parameter: preDelay
                               })}
                               {ControlBuilder.createKnob({
-                                  lifecycle, editing, midiLearning: midiLearning, adapter, parameter: damp
+                                  lifecycle, editing, midiLearning, adapter, parameter: damp
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: dry,
                                   options: SnapCommonDecibel
@@ -52,7 +52,7 @@ export const ReverbDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Co
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: wet,
                                   options: SnapCommonDecibel
@@ -61,7 +61,7 @@ export const ReverbDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Co
                       )}
                       populateMeter={() => (
                           <DevicePeakMeter lifecycle={lifecycle}
-                                           receiver={project.liveStreamReceiver}
+                                           receiver={liveStreamReceiver}
                                            address={adapter.address}/>
                       )}
                       icon={EffectFactories.AudioNamed.Reverb.defaultIcon}/>

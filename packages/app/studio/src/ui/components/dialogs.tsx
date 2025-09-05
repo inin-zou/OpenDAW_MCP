@@ -23,13 +23,25 @@ import {Errors} from "@opendaw/lib-dom"
 import {Colors} from "@opendaw/studio-core"
 
 export namespace Dialogs {
-    export const show = async ({headline, content, okText, buttons, origin}: {
+    type Default = {
         headline?: string,
         content: JsxValue,
         okText?: string,
         buttons?: ReadonlyArray<Button>
         origin?: Element
-    }): Promise<void> => {
+        abortSignal?: AbortSignal
+    }
+
+    type Info = {
+        headline?: string,
+        message: string,
+        okText?: string,
+        buttons?: ReadonlyArray<Button>
+        origin?: Element
+        abortSignal?: AbortSignal
+    }
+
+    export const show = async ({headline, content, okText, buttons, origin, abortSignal}: Default): Promise<void> => {
         buttons ??= []
         let resolved = false
         const {resolve, reject, promise} = Promise.withResolvers<void>()
@@ -49,19 +61,21 @@ export namespace Dialogs {
                 <div style={{padding: "1em 0"}}>{content}</div>
             </Dialog>
         )
+        console.debug("abortSignal", abortSignal)
         Surface.get(origin).body.appendChild(dialog)
         dialog.showModal()
         dialog.addEventListener("close", () => {if (!resolved) {reject(Errors.AbortError)}}, {once: true})
+        abortSignal?.addEventListener("abort", () => {
+            if (!resolved) {
+                resolved = true
+                dialog.close()
+                reject(abortSignal?.reason ?? Errors.AbortError)
+            }
+        }, {once: true})
         return promise
     }
-
-    export const info = async ({headline, message, okText, buttons, origin}: {
-        headline?: string,
-        message: string,
-        okText?: string,
-        buttons?: ReadonlyArray<Button>
-        origin?: Element
-    }): Promise<void> => show({headline, content: (<p>{message}</p>), okText, buttons, origin})
+    export const info = async ({headline, message, okText, buttons, origin, abortSignal}: Info): Promise<void> =>
+        show({headline, content: (<p>{message}</p>), okText, buttons, origin, abortSignal})
 
     export type ApproveCreation = {
         headline?: string

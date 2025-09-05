@@ -31,8 +31,8 @@ type Construct = {
 }
 
 export const GenericModuleView = ({lifecycle, environment, adapter}: Construct) => {
-    const {selection, project, service: {midiLearning}} = environment
-    const {editing} = project
+    const {selection, project} = environment
+    const {editing, midiLearning} = project
     const {x, y, label, collapsed} = adapter.attributes
     const nameValue = Inject.value(label.getValue())
     lifecycle.own(label.subscribe(owner => nameValue.value = owner.getValue()))

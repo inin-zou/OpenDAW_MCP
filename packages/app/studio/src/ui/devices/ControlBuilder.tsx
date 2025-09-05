@@ -5,8 +5,7 @@ import {LKR} from "@/ui/devices/constants.ts"
 import {ParameterLabelKnob} from "@/ui/devices/ParameterLabelKnob.tsx"
 import {TerminableOwner, ValueGuide} from "@opendaw/lib-std"
 import {Editing, PrimitiveValues} from "@opendaw/lib-box"
-import {MIDILearning} from "@/midi/devices/MIDILearning"
-import {Colors} from "@opendaw/studio-core"
+import {Colors, MIDILearning} from "@opendaw/studio-core"
 
 type Creation<T extends PrimitiveValues> = {
     lifecycle: TerminableOwner

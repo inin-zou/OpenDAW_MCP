@@ -50,8 +50,7 @@ export const RevampDeviceEditor = ({adapter, service, lifecycle, deviceHost}: Co
             values => plotSpectrum(spectrumContext, xAxis, spectrumScale, values, project.engine.sampleRate())))
     const grid: SVGSVGElement = <svg/>
     lifecycle.own(createDisplay(xAxis, yAxis, grid))
-    const {midiLearning} = service
-    const {editing} = project
+    const {editing, midiLearning} = project
     const {highPass, lowShelf, lowBell, midBell, highBell, highShelf, lowPass} = adapter.namedParameter
     return (
         <DeviceEditor lifecycle={lifecycle}

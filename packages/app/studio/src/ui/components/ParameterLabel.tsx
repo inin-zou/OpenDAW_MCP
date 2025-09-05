@@ -5,7 +5,7 @@ import {attachParameterContextMenu} from "@/ui/menu/automation.ts"
 import {AutomatableParameterFieldAdapter, DeviceBoxAdapter} from "@opendaw/studio-adapters"
 import {Editing} from "@opendaw/lib-box"
 import {Html} from "@opendaw/lib-dom"
-import {MIDILearning} from "@/midi/devices/MIDILearning"
+import {MIDILearning} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "ParameterLabel")
 

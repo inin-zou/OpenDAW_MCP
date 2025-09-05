@@ -31,8 +31,8 @@ type Construct = {
 
 export const StereoToolDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
     const {volume, panning, stereo, invertL, invertR, swap} = adapter.namedParameter
-    const {project, midiLearning} = service
-    const {editing} = project
+    const {project} = service
+    const {editing, midiLearning} = project
     const panningMixing = adapter.box.panningMixing
     return (
         <DeviceEditor lifecycle={lifecycle}
@@ -52,7 +52,7 @@ export const StereoToolDeviceEditor = ({lifecycle, service, adapter, deviceHost}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: volume,
                                   options: SnapCommonDecibel
@@ -61,7 +61,7 @@ export const StereoToolDeviceEditor = ({lifecycle, service, adapter, deviceHost}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: panning,
                                   options: SnapCenter,
@@ -70,7 +70,7 @@ export const StereoToolDeviceEditor = ({lifecycle, service, adapter, deviceHost}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: stereo,
                                   options: SnapCenter,

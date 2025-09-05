@@ -21,8 +21,8 @@ type Construct = {
 
 export const VaporisateurDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
     const {volume, octave, tune, waveform, cutoff, resonance, attack, release, filterEnvelope} = adapter.namedParameter
-    const {project, midiLearning} = service
-    const {editing} = project
+    const {project} = service
+    const {editing, midiLearning, liveStreamReceiver} = project
     return (
         <DeviceEditor lifecycle={lifecycle}
                       project={project}
@@ -40,56 +40,56 @@ export const VaporisateurDeviceEditor = ({lifecycle, service, adapter, deviceHos
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: octave
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: tune
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: waveform
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: cutoff
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: resonance
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: attack
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: release
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: filterEnvelope
                               })}
@@ -97,7 +97,7 @@ export const VaporisateurDeviceEditor = ({lifecycle, service, adapter, deviceHos
                       )}
                       populateMeter={() => (
                           <DevicePeakMeter lifecycle={lifecycle}
-                                           receiver={project.liveStreamReceiver}
+                                           receiver={liveStreamReceiver}
                                            address={adapter.address}/>
                       )}
                       icon={InstrumentFactories.Vaporisateur.defaultIcon}/>

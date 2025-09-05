@@ -21,8 +21,8 @@ type Construct = {
 
 export const PitchDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
     const {octaves, semiTones, cent} = adapter.namedParameter
-    const {project, midiLearning} = service
-    const {editing} = project
+    const {project} = service
+    const {editing, liveStreamReceiver, midiLearning} = project
     return (
         <DeviceEditor lifecycle={lifecycle}
                       project={project}
@@ -33,21 +33,21 @@ export const PitchDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Con
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: octaves
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: semiTones
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: cent
                               })}
@@ -55,7 +55,7 @@ export const PitchDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Con
                       )}
                       populateMeter={() => (
                           <DeviceMidiMeter lifecycle={lifecycle}
-                                           receiver={project.liveStreamReceiver}
+                                           receiver={liveStreamReceiver}
                                            address={adapter.address}/>
                       )}
                       icon={EffectFactories.MidiNamed.Pitch.defaultIcon}/>

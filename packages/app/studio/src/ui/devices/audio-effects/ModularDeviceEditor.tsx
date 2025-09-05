@@ -41,7 +41,7 @@ export const ModularDeviceEditor = ({lifecycle, service, adapter, deviceHost}: C
                 const element: HTMLElement = ControlBuilder.createKnob({
                     lifecycle: lifecycle,
                     editing: project.editing,
-                    midiLearning: service.midiLearning,
+                    midiLearning: project.midiLearning,
                     adapter: adapter,
                     parameter: parameterAdapter,
                     anchor: box.anchor.getValue()

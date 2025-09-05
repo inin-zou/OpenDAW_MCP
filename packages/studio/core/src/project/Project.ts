@@ -44,6 +44,7 @@ import {EngineFacade} from "../EngineFacade"
 import {EngineWorklet} from "../EngineWorklet"
 import {AudioWorklets} from "../AudioWorklets"
 import {Recording} from "../capture/Recording"
+import {MIDILearning} from "../midi/MIDILearning"
 
 export type RestartWorklet = { unload: Procedure<unknown>, load: Procedure<EngineWorklet> }
 
@@ -118,6 +119,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
     readonly userEditingManager: UserEditingManager
     readonly parameterFieldAdapters: ParameterFieldAdapters
     readonly liveStreamReceiver: LiveStreamReceiver
+    readonly midiLearning: MIDILearning
     readonly mixer: Mixer
     readonly engine = new EngineFacade()
 
@@ -145,6 +147,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
         this.userEditingManager.follow(this.userInterfaceBox)
         this.selection.switch(this.userInterfaceBox.selection)
         this.liveStreamReceiver = this.#terminator.own(new LiveStreamReceiver())
+        this.midiLearning = this.#terminator.own(new MIDILearning(this))
         this.captureDevices = this.#terminator.own(new CaptureDevices(this))
         this.mixer = new Mixer(this.rootBoxAdapter.audioUnits)
 

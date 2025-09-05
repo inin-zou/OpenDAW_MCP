@@ -22,8 +22,8 @@ type Construct = {
 export const ZeitgeistDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
     const grooveAdapter = adapter.groove() as GrooveShuffleBoxAdapter
     const {amount, duration} = grooveAdapter.namedParameter
-    const {project, midiLearning} = service
-    const {editing} = project
+    const {project} = service
+    const {editing, liveStreamReceiver, midiLearning} = project
     return (
         <DeviceEditor lifecycle={lifecycle}
                       project={project}
@@ -34,14 +34,14 @@ export const ZeitgeistDeviceEditor = ({lifecycle, service, adapter, deviceHost}:
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: amount
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: duration
                               })}
@@ -49,7 +49,7 @@ export const ZeitgeistDeviceEditor = ({lifecycle, service, adapter, deviceHost}:
                       )}
                       populateMeter={() => (
                           <DeviceMidiMeter lifecycle={lifecycle}
-                                           receiver={project.liveStreamReceiver}
+                                           receiver={liveStreamReceiver}
                                            address={adapter.address}/>
                       )}
                       icon={EffectFactories.MidiNamed.Zeitgeist.defaultIcon}/>

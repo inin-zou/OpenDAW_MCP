@@ -21,8 +21,8 @@ type Construct = {
 
 export const ArpeggioDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
     const {modeIndex, numOctaves, rate, gate, repeat, velocity} = adapter.namedParameter
-    const {project, midiLearning} = service
-    const {editing} = project
+    const {project} = service
+    const {editing, midiLearning} = project
     return (
         <DeviceEditor lifecycle={lifecycle}
                       project={project}
@@ -33,42 +33,42 @@ export const ArpeggioDeviceEditor = ({lifecycle, service, adapter, deviceHost}: 
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: modeIndex
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: rate
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: numOctaves
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: repeat
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: gate
                               })}
                               {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
-                                  midiLearning: midiLearning,
+                                  midiLearning,
                                   adapter,
                                   parameter: velocity
                               })}

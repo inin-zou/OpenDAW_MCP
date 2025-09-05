@@ -26,8 +26,8 @@ type Construct = {
 }
 
 export const SlotEditor = ({lifecycle, service, adapter}: Construct) => {
-    const {project, midiLearning} = service
-    const {editing, userEditingManager} = project
+    const {project} = service
+    const {editing, midiLearning, userEditingManager} = project
     const deviceAdapter = adapter.device()
     const {
         sampleStart, sampleEnd, attack, release,

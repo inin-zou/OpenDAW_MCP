@@ -46,7 +46,6 @@ import {Xml} from "@opendaw/lib-xml"
 import {Address} from "@opendaw/lib-box"
 import {MetaDataSchema} from "@opendaw/lib-dawproject"
 import {Recovery} from "@/Recovery.ts"
-import {MIDILearning} from "@/midi/devices/MIDILearning"
 import {
     AudioOfflineRenderer,
     AudioWorklets,
@@ -105,7 +104,6 @@ export class StudioService implements ProjectEnv {
     // noinspection JSUnusedGlobalSymbols
     readonly _shortcuts = new Shortcuts(this) // TODO reference will be used later in a key-mapping configurator
     readonly recovery = new Recovery(this)
-    readonly midiLearning = new MIDILearning(this)
     readonly engine = new EngineFacade()
 
     readonly #signals = new Notifier<StudioSignal>()

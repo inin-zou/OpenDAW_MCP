@@ -1,11 +1,21 @@
-import {byte, isDefined, JSONValue, Observer, Provider, SortedSet, Terminable, Terminator} from "@opendaw/lib-std"
-import {AutomatableParameterFieldAdapter} from "@opendaw/studio-adapters"
-import {MidiDialogs} from "@/midi/devices/MidiDialogs"
+import {
+    byte,
+    isDefined,
+    JSONValue,
+    Observer,
+    Provider,
+    RuntimeNotifier,
+    SortedSet,
+    Terminable,
+    Terminator
+} from "@opendaw/lib-std"
+import {Errors} from "@opendaw/lib-dom"
 import {Address, AddressJSON, PrimitiveField, PrimitiveValues} from "@opendaw/lib-box"
-import {Pointers} from "@opendaw/studio-enums"
-import {StudioService} from "@/service/StudioService"
-import {MidiDevices, Project} from "@opendaw/studio-core"
 import {MidiData} from "@opendaw/lib-midi"
+import {Pointers} from "@opendaw/studio-enums"
+import {AutomatableParameterFieldAdapter} from "@opendaw/studio-adapters"
+import {Project} from "../project/Project"
+import {MidiDevices} from "./MidiDevices"
 
 export type MIDIConnectionJSON = ({ type: "control", controlId: byte })
     & { address: AddressJSON, channel: byte }
@@ -22,11 +32,11 @@ interface MIDIObserver extends Terminable {observer: Observer<MIDIMessageEvent>}
 export class MIDILearning implements Terminable {
     readonly #terminator = new Terminator()
 
-    readonly #service: StudioService
+    readonly #project: Project
     readonly #connections: SortedSet<Address, MIDIConnection>
 
-    constructor(service: StudioService) {
-        this.#service = service
+    constructor(project: Project) {
+        this.#project = project
         this.#connections = Address.newSet<MIDIConnection>(connection => connection.address)
     }
 
@@ -37,16 +47,22 @@ export class MIDILearning implements Terminable {
         if (!MidiDevices.canRequestMidiAccess()) {return}
         await MidiDevices.requestPermission()
         const learnLifecycle = this.#terminator.spawn()
-        const dialog = MidiDialogs.showInfoDialog(() => learnLifecycle.terminate())
+        const abortController = new AbortController()
         learnLifecycle.own(MidiDevices.subscribeMessageEvents((event: MIDIMessageEvent) => {
             const data = event.data
             if (data === null) {return}
             if (MidiData.isController(data)) {
                 learnLifecycle.terminate()
-                dialog.close()
+                abortController.abort(Errors.AbortError)
                 return this.#startListeningControl(field, MidiData.readChannel(data), MidiData.readParam1(data), event)
             }
         }))
+        return RuntimeNotifier.info({
+            headline: "Learn Midi Keys...",
+            message: "Hit a key on your midi-device to learn a connection.",
+            okText: "Cancel",
+            abortSignal: abortController.signal
+        }).then(() => learnLifecycle.terminate(), Errors.CatchAbort)
     }
 
     toJSON(): ReadonlyArray<MIDIConnectionJSON> {
@@ -63,9 +79,8 @@ export class MIDILearning implements Terminable {
                            controlId: byte,
                            event?: MIDIMessageEvent): void {
         console.debug(`startListeningControl channel: ${channel}, controlId: ${controlId}`)
-        const {project} = this.#service
         const {observer, terminate} =
-            this.#createMidiControlObserver(project, project.parameterFieldAdapters.get(field.address), controlId)
+            this.#createMidiControlObserver(this.#project, this.#project.parameterFieldAdapters.get(field.address), controlId)
         if (isDefined(event)) {observer(event)}
         const subscription = MidiDevices.subscribeMessageEvents(observer, channel)
         this.#connections.add({
@@ -76,7 +91,7 @@ export class MIDILearning implements Terminable {
                 channel,
                 controlId
             }),
-            label: () => project.parameterFieldAdapters.get(field.address).name,
+            label: () => this.#project.parameterFieldAdapters.get(field.address).name,
             terminate: () => {
                 terminate()
                 subscription.terminate()

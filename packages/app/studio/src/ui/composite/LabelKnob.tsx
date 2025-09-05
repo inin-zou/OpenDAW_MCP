@@ -2,10 +2,9 @@ import {Lifecycle, unitValue} from "@opendaw/lib-std"
 import {Knob} from "@/ui/components/Knob.tsx"
 import {ParameterLabel} from "@/ui/components/ParameterLabel.tsx"
 import {createElement} from "@opendaw/lib-jsx"
-import {AutomatableParameterFieldAdapter} from "@opendaw/studio-adapters"
-import {DeviceBoxAdapter} from "@opendaw/studio-adapters"
+import {AutomatableParameterFieldAdapter, DeviceBoxAdapter} from "@opendaw/studio-adapters"
 import {Editing} from "@opendaw/lib-box"
-import {MIDILearning} from "@/midi/devices/MIDILearning"
+import {MIDILearning} from "@opendaw/studio-core"
 
 type Construct = {
     lifecycle: Lifecycle
