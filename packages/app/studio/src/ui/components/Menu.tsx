@@ -50,7 +50,7 @@ export class Menu implements Terminable, Lifecycle {
         return menu
     }
 
-    static Padding = 4 // this is the invisible increase of the hitarea to have seamless connection to the source
+    static Padding = 4 // this is the invisible increase of the hitarea to have seamless connection to the source element
     static MIN_TIME_MS = 250 // if the menu is placed under the pointer, we avoid an accidental click
 
     readonly #terminator: Terminator
@@ -168,7 +168,7 @@ export class Menu implements Terminable, Lifecycle {
 
     #onPointerUp(item: MenuItem, _itemElement: HTMLElement, event: PointerEvent): void {
         event.preventDefault()
-        if (this.#childMenu.isEmpty() && this.#openTime + 100 < Date.now()) {
+        if (this.#childMenu.isEmpty()) {
             this.root.terminate()
             item.trigger()
         }
@@ -230,11 +230,10 @@ export class Menu implements Terminable, Lifecycle {
                         if (hasChildren) {
                             itemElement.classList.add("has-children")
                         }
-                        const now = Date.now()
                         itemElement.onpointerenter = () => this.#onPointerEnter(item, itemElement)
                         itemElement.onpointerleave = (event: PointerEvent) => this.#onPointerLeave(item, itemElement, event)
                         itemElement.onpointerup = (event: PointerEvent) => {
-                            if (Date.now() - now < Menu.MIN_TIME_MS) {return}
+                            if (Date.now() - this.#openTime < Menu.MIN_TIME_MS) {return}
                             this.#onPointerUp(item, itemElement, event)
                         }
                         return (
