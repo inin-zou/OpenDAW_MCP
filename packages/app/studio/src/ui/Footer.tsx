@@ -26,23 +26,23 @@ export const Footer = ({lifecycle, service}: Construct) => {
              ondblclick={(event) => {
                  const optProfile = service.profileService.getValue()
                  if (optProfile.isEmpty()) {return}
-                 const session = optProfile.unwrap()
-                 const name = session.meta.name
+                 const profile = optProfile.unwrap()
+                 const name = profile.meta.name
                  if (isDefined(name)) {
                      Surface.get(labelName).requestFloatingTextInput(event, name)
-                         .then(name => session.updateMetaData("name", name))
+                         .then(name => profile.updateMetaData("name", name))
                  }
              }}/>
     )
     const profileLifecycle = lifecycle.own(new Terminator())
     lifecycle.own(service.profileService.catchupAndSubscribe(owner => {
         profileLifecycle.terminate()
-        const optSession = owner.getValue()
-        if (optSession.nonEmpty()) {
-            const session = optSession.unwrap()
+        const optProfile = owner.getValue()
+        if (optProfile.nonEmpty()) {
+            const profile = optProfile.unwrap()
             const observer = (meta: ProjectMeta) => labelName.textContent = meta.name
-            profileLifecycle.own(session.subscribeMetaData(observer))
-            observer(session.meta)
+            profileLifecycle.own(profile.subscribeMetaData(observer))
+            observer(profile.meta)
         } else {
             labelName.textContent = "⏏︎"
         }

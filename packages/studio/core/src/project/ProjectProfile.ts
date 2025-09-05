@@ -50,9 +50,9 @@ export class ProjectProfile {
             const uuid = UUID.generate()
             const project = this.project.copy()
             const meta = ProjectMeta.copy(this.meta)
-            const session = new ProjectProfile(uuid, project, meta, Option.None, true)
-            await ProjectProfile.#writeFiles(session)
-            return Option.wrap(session)
+            const profile = new ProjectProfile(uuid, project, meta, Option.None, true)
+            await ProjectProfile.#writeFiles(profile)
+            return Option.wrap(profile)
         } else {
             return ProjectProfile.#writeFiles(this).then(() => {
                 this.#saved = true

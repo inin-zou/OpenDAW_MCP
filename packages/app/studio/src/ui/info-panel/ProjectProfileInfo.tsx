@@ -13,7 +13,7 @@ type Construct = {
 }
 
 export const ProjectProfileInfo = ({lifecycle, service}: Construct) => {
-    if (!service.hasProfile) {return "No session."}
+    if (!service.hasProfile) {return "No project profile."}
     const {profile} = service
     const {meta, cover} = profile
     const inputName: HTMLInputElement = (

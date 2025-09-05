@@ -88,9 +88,9 @@ export const DevicePanel = ({lifecycle, service}: Construct) => {
         Html.empty(audioEffectsContainer)
         Html.empty(channelStripContainer)
         chainLifecycle.terminate()
-        const session = service.profileService.getValue()
-        if (session.isEmpty()) {return}
-        const {project} = session.unwrap()
+        const profile = service.profileService.getValue()
+        if (profile.isEmpty()) {return}
+        const {project} = profile.unwrap()
         const optEditing = project.userInterfaceBox.editingDeviceChain.targetVertex
         noAudioUnitSelectedPlaceholder.classList.toggle("hidden", optEditing.nonEmpty())
         noEffectPlaceholder.classList.toggle("hidden", optEditing.isEmpty())

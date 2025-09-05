@@ -10,7 +10,7 @@ export class Recovery {
 
     constructor(service: StudioService) {this.#service = service}
 
-    async restoreSession(): Promise<Option<ProjectProfile>> {
+    async restoreProfile(): Promise<Option<ProjectProfile>> {
         const backupResult = await Promises.tryCatch(WorkerAgents.Opfs.list(Recovery.#RESTORE_FILE_PATH))
         if (backupResult.status === "rejected" || backupResult.value.length === 0) {return Option.None}
         const readResult = await Promises.tryCatch(Promise.all([
@@ -27,20 +27,20 @@ export class Recovery {
         console.debug(`delete backup: "${deleteResult.status}"`)
         if (readResult.status === "rejected") {return Option.None}
         const [uuid, project, meta, saved] = readResult.value
-        const session = new ProjectProfile(uuid, project, meta, Option.None, saved)
-        console.debug(`restore ${session}, saved: ${saved}`)
-        return Option.wrap(session)
+        const profile = new ProjectProfile(uuid, project, meta, Option.None, saved)
+        console.debug(`restore ${profile}, saved: ${saved}`)
+        return Option.wrap(profile)
     }
 
     createBackupCommand(): Option<Provider<Promise<void>>> {
-        return this.#service.profileService.getValue().map((session: ProjectProfile) => async () => {
+        return this.#service.profileService.getValue().map((profile: ProjectProfile) => async () => {
             console.debug("temp storing project")
-            const {project, meta, uuid} = session
+            const {project, meta, uuid} = profile
             return Promises.tryCatch(Promise.all([
                 WorkerAgents.Opfs.write(`${Recovery.#RESTORE_FILE_PATH}/uuid`, uuid),
                 WorkerAgents.Opfs.write(`${Recovery.#RESTORE_FILE_PATH}/project.od`, new Uint8Array(project.toArrayBuffer())),
                 WorkerAgents.Opfs.write(`${Recovery.#RESTORE_FILE_PATH}/meta.json`, new TextEncoder().encode(JSON.stringify(meta))),
-                WorkerAgents.Opfs.write(`${Recovery.#RESTORE_FILE_PATH}/saved`, new Uint8Array([session.saved() ? 1 : 0]))
+                WorkerAgents.Opfs.write(`${Recovery.#RESTORE_FILE_PATH}/saved`, new Uint8Array([profile.saved() ? 1 : 0]))
             ])).then(result => console.debug(`backup result: ${result.status}`))
         })
     }

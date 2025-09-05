@@ -225,9 +225,9 @@ export class StudioService implements ProjectEnv {
         configLocalStorageBoolean(this.layout.helpVisible, "help-visible",
             visible => document.body.classList.toggle("help-hidden", !visible), true)
 
-        this.recovery.restoreSession().then(optSession => {
-            if (optSession.nonEmpty()) {
-                this.profileService.setValue(optSession)
+        this.recovery.restoreProfile().then(optProfile => {
+            if (optProfile.nonEmpty()) {
+                this.profileService.setValue(optProfile)
             }
         }, EmptyExec)
     }

@@ -44,13 +44,13 @@ export const TimeStateDisplay = ({lifecycle, service}: Construct) => {
     // Bar, Bar+Beats, Bar+Beats+SemiQuaver, Bar+Beats+SemiQuaver+Ticks
     const timeUnits = ["Bar", "Beats", "SemiQuaver", "Ticks"] // Bar+Beats
     const timeUnitIndex = new DefaultObservableValue(1)
-    const sessionService = service.profileService
+    const profileService = service.profileService
     const projectActiveLifeTime = lifecycle.own(new Terminator())
     const projectProfileObserver = (owner: ObservableValue<Option<ProjectProfile>>) => {
         projectActiveLifeTime.terminate()
-        const optSession = owner.getValue()
-        if (optSession.isEmpty()) {return}
-        const {project} = optSession.unwrap()
+        const optProfile = owner.getValue()
+        if (optProfile.isEmpty()) {return}
+        const {project} = optProfile.unwrap()
         const {timelineBoxAdapter, rootBoxAdapter, boxGraph} = project
         projectActiveLifeTime.own(service.engine.position.catchupAndSubscribe((owner: ObservableValue<number>) => {
             const position = owner.getValue()
@@ -92,14 +92,14 @@ export const TimeStateDisplay = ({lifecycle, service}: Construct) => {
             </div>
         </Frag>
     )
-    lifecycle.own(sessionService.catchupAndSubscribe(projectProfileObserver))
+    lifecycle.own(profileService.catchupAndSubscribe(projectProfileObserver))
     const bpmDisplay: HTMLElement = (
         <div className="number-display">
             <div>{bpmDigit}</div>
             <div>BPM</div>
         </div>
     )
-    lifecycle.own(Dragging.attach(bpmDisplay, (event: PointerEvent) => sessionService.getValue().match({
+    lifecycle.own(Dragging.attach(bpmDisplay, (event: PointerEvent) => profileService.getValue().match({
         none: () => Option.None,
         some: ({project}) => {
             const {editing} = project
@@ -124,7 +124,7 @@ export const TimeStateDisplay = ({lifecycle, service}: Construct) => {
                 resolvers.promise.then((value: string) => {
                     const bpm = parseFloat(value)
                     if (isNaN(bpm)) {return}
-                    sessionService.getValue().ifSome(({project}) =>
+                    profileService.getValue().ifSome(({project}) =>
                         project.editing.modify(() => project.timelineBox.bpm.setValue(clamp(bpm, minBpm, maxBpm))))
                 }, EmptyExec)
                 return resolvers
@@ -138,7 +138,7 @@ export const TimeStateDisplay = ({lifecycle, service}: Construct) => {
                     const attempt: Attempt<[int, int]> = Attempts.tryGet(() => parseTimeSignature(value))
                     if (attempt.isSuccess()) {
                         const [nominator, denominator] = attempt.result()
-                        sessionService.getValue()
+                        profileService.getValue()
                             .ifSome(({project: {editing, rootBoxAdapter: {timeline: {box: {signature}}}}}) =>
                                 editing.modify(() => {
                                     signature.nominator.setValue(clamp(nominator, 1, 32))
@@ -158,7 +158,7 @@ export const TimeStateDisplay = ({lifecycle, service}: Construct) => {
                 resolvers.promise.then((value: string) => {
                     const amount = parseFloat(value)
                     if (isNaN(amount)) {return}
-                    sessionService.getValue().ifSome(({project}) =>
+                    profileService.getValue().ifSome(({project}) =>
                         project.editing.modify(() => project.rootBoxAdapter.groove.box.amount
                             .setValue(clamp(amount / 100.0, 0.0, 1.0))))
                 }, EmptyExec)
@@ -172,7 +172,7 @@ export const TimeStateDisplay = ({lifecycle, service}: Construct) => {
         </div>
     )
     lifecycle.ownAll(
-        sessionService.catchupAndSubscribe(owner => element.classList.toggle("disabled", owner.getValue().isEmpty())),
+        profileService.catchupAndSubscribe(owner => element.classList.toggle("disabled", owner.getValue().isEmpty())),
         ContextMenu.subscribe(element, collector => collector.addItems(MenuItem.default({label: "Units"})
             .setRuntimeChildrenProcedure(parent => parent.addMenuItem(
                 ...timeUnits.map((_, index) => MenuItem.default({
