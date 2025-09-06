@@ -5,13 +5,12 @@ import {
     Errors,
     Exec,
     isDefined,
-    ObservableValue,
     Option,
     Procedure,
     Provider,
+    RuntimeNotification,
     Terminable,
-    Terminator,
-    unitValue
+    Terminator
 } from "@opendaw/lib-std"
 import {Surface} from "@/ui/surface/Surface.tsx"
 import {IconSymbol} from "@opendaw/studio-adapters"
@@ -124,12 +123,9 @@ export namespace Dialogs {
             return promise
         }
 
-    export const progress = ({headline, progress, cancel, origin}: {
-        headline: string,
-        progress?: ObservableValue<unitValue>,
-        cancel?: Exec,
-        origin?: Element
-    }): Terminator => {
+    export const progress = ({
+                                 headline, message, progress, cancel, origin
+                             }: RuntimeNotification.ProgressRequest): RuntimeNotification.ProgressHandler => {
         const lifecycle = new Terminator()
         const buttons: ReadonlyArray<Button> = isDefined(cancel)
             ? [{
@@ -140,11 +136,13 @@ export namespace Dialogs {
                     handler.close()
                 }
             }] : Arrays.empty()
+        const messageElement: HTMLParagraphElement = (<p className="message">{message}</p>)
         const dialog: HTMLDialogElement = (
             <Dialog headline={headline}
                     icon={IconSymbol.System}
                     cancelable={isDefined(cancel)}
                     buttons={buttons}>
+                {messageElement}
                 {progress && (
                     <div style={{padding: "1em 0"}}>
                         <ProgressBar lifecycle={lifecycle} progress={progress}/>
@@ -156,7 +154,10 @@ export namespace Dialogs {
         dialog.addEventListener("close", () => lifecycle.terminate(), {once: true})
         dialog.showModal()
         lifecycle.own(Terminable.create(() => dialog.close()))
-        return lifecycle
+        return new class implements RuntimeNotification.ProgressHandler {
+            set message(value: string) {messageElement.textContent = value}
+            terminate(): void {lifecycle.terminate()}
+        }
     }
 
     export const processMonolog = (headline: string,

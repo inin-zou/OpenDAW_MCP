@@ -1,7 +1,8 @@
-import {assert, Exec, unitValue} from "./lang"
+import {assert, EmptyExec, Exec, unitValue} from "./lang"
 import {Option} from "./option"
 import {ObservableValue} from "./observables"
 import {Terminable} from "./terminable"
+import ProgressHandler = RuntimeNotification.ProgressHandler
 
 export namespace RuntimeNotification {
     export type InfoRequest = {
@@ -29,6 +30,10 @@ export namespace RuntimeNotification {
         origin?: Element
     }
 
+    export interface ProgressHandler extends Terminable {
+        set message(value: string)
+    }
+
     export interface Installer {
         install(notifier: Notifier): void
     }
@@ -36,7 +41,7 @@ export namespace RuntimeNotification {
     export interface Notifier {
         info(request: InfoRequest): Promise<void>
         approve(request: ApproveRequest): Promise<boolean>
-        progress(request: ProgressRequest): Terminable
+        progress(request: ProgressRequest): ProgressHandler
     }
 }
 
@@ -51,8 +56,8 @@ export const RuntimeNotifier: RuntimeNotification.Notifier & RuntimeNotification
             none: () => Promise.resolve(true),
             some: notifier => notifier.approve(request)
         }),
-        progress: (request: RuntimeNotification.ProgressRequest): Terminable => notifierOption.match({
-            none: () => Terminable.Empty,
+        progress: (request: RuntimeNotification.ProgressRequest): ProgressHandler => notifierOption.match({
+            none: () => ({message: "", terminate: EmptyExec}),
             some: notifier => notifier.progress(request)
         }),
         install: (notifier: RuntimeNotification.Notifier) => {

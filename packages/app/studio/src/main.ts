@@ -1,6 +1,6 @@
 import "./main.sass"
 import {App} from "@/ui/App.tsx"
-import {panic, Procedure, RuntimeNotifier, Terminable, unitValue, UUID} from "@opendaw/lib-std"
+import {panic, Procedure, RuntimeNotification, RuntimeNotifier, unitValue, UUID} from "@opendaw/lib-std"
 import {StudioService} from "@/service/StudioService"
 import {AudioData, SampleMetaData} from "@opendaw/studio-adapters"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
@@ -102,7 +102,7 @@ const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`).then
         RuntimeNotifier.install({
             info: (request) => Dialogs.info(request),
             approve: (request) => Dialogs.approve(request),
-            progress: (request): Terminable => Dialogs.progress(request)
+            progress: (request): RuntimeNotification.ProgressHandler => Dialogs.progress(request)
         })
         if (buildInfo.env === "production" && !Browser.isLocalHost()) {
             const uuid = buildInfo.uuid

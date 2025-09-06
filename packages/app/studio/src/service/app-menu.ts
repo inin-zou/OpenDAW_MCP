@@ -2,7 +2,7 @@ import {MenuItem} from "@/ui/model/menu-item"
 import {StudioService} from "@/service/StudioService"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {RouteLocation} from "@opendaw/lib-jsx"
-import {Errors, isDefined, panic} from "@opendaw/lib-std"
+import {Errors, isDefined, panic, RuntimeNotifier} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
@@ -64,17 +64,16 @@ export const initAppMenu = (service: StudioService) => {
                             MenuItem.default({label: "DAWproject...", selectable: service.hasProfile})
                                 .setTriggerProcedure(async () => service.exportDawproject())
                         )),
-                    MenuItem.default({label: "Cloud Services"})
+                    MenuItem.default({label: "Cloud Services", hidden: !Browser.isLocalHost()})
                         .setRuntimeChildrenProcedure(parent => {
                             parent.addMenuItem(
                                 MenuItem.default({label: "Dropbox Sync", icon: IconSymbol.Dropbox})
                                     .setTriggerProcedure(async () => {
                                         const approveResult = await Promises.tryCatch(Dialogs.approve({
                                             headline: "openDAW and your data",
-                                            message: "openDAW will never store or share your personal account details. " +
-                                                "Dropbox requires permission to read “basic account info” such as your " +
-                                                "name and email, but openDAW does not use or retain this information. " +
-                                                "We only access the files you choose to synchronize.",
+                                            message: `openDAW will never store or share your personal account details. Dropbox requires permission to read “basic account info” such as your name and email, but openDAW does not use or retain this information. We only access the files you choose to synchronize. 
+                                            
+                                            This will open a new tab to let you login to your dropbox account.`,
                                             approveText: "Connect",
                                             cancelText: "Cancel",
                                             reverse: true,
@@ -88,53 +87,19 @@ export const initAppMenu = (service: StudioService) => {
                                             return
                                         }
                                         const cloudHandler = dropboxResult.value
-                                        const p = document.createElement("code")
-                                        Object.assign(p.style, {
-                                            padding: "1em 0",
-                                            overflow: "hidden",
-                                            whiteSpace: "nowrap",
-                                            textOverflow: "ellipsis",
-                                            minWidth: "30em",
-                                            maxWidth: "30em"
-                                        })
-                                        const monolog = Dialogs.processMonolog("Cloud Sync", p)
-                                        const syncResult =
-                                            await Promises.tryCatch(CloudSync
-                                                .run(cloudHandler, service.audioContext, text => p.textContent = text))
-                                        if (syncResult.status === "rejected") {return Errors.warn(String(syncResult.error))}
-                                        monolog.close()
-                                    }),
-                                MenuItem.default({label: "Dropbox IO Test", icon: IconSymbol.Dropbox, hidden: true})
-                                    .setTriggerProcedure(async () => {
-                                        console.debug("create CloudAuthManager and authenticate...")
-                                        const manager = await CloudAuthManager.create()
-                                        const {status, error, value: handler} = await Promises.tryCatch(manager.dropbox())
-                                        if (status === "rejected") {
-                                            console.debug(`Promise rejected with '${error}'`)
-                                            return
+                                        const notification = RuntimeNotifier.progress({headline: "Dropbox Sync"})
+                                        const log = (text: string) => notification.message = text
+                                        const syncSamplesResult = await Promises.tryCatch(CloudSync
+                                            .syncSamples(cloudHandler, service.audioContext, log))
+                                        if (syncSamplesResult.status === "rejected") {
+                                            return Errors.warn(String(syncSamplesResult.error))
                                         }
-                                        const path = "some-folder/test.txt"
-                                        console.debug("upload tiny file to Dropbox", path)
-                                        const buffer = new TextEncoder().encode("Hello World").buffer
-                                        const uploadResult = await Promises.tryCatch(handler.upload(path, buffer))
-                                        if (uploadResult.status === "rejected") {
-                                            console.error(uploadResult.error)
-                                            return
+                                        const syncProjectsResult = await Promises.tryCatch(CloudSync
+                                            .syncProjects(cloudHandler, log))
+                                        if (syncProjectsResult.status === "rejected") {
+                                            return Errors.warn(String(syncProjectsResult.error))
                                         }
-                                        console.debug("upload result", uploadResult.value)
-                                        const listResult = await Promises.tryCatch(handler.list(""))
-                                        if (listResult.status === "rejected") {
-                                            console.error(listResult.error)
-                                            return
-                                        }
-                                        console.debug("list result", listResult.value)
-                                        const downloadResult = await Promises.tryCatch(handler.download(path))
-                                        if (downloadResult.status === "rejected") {
-                                            console.error(downloadResult.error)
-                                            return
-                                        }
-                                        const text = new TextDecoder().decode(downloadResult.value)
-                                        console.debug("download result", downloadResult.value, text)
+                                        notification.terminate()
                                     })
                             )
                         }),

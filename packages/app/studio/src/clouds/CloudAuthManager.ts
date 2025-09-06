@@ -1,5 +1,4 @@
-import {asDefined, Errors, isDefined, isUndefined, panic} from "@opendaw/lib-std"
-import {Dialogs} from "@/ui/components/dialogs"
+import {asDefined, Errors, isDefined, isUndefined, panic, RuntimeNotifier} from "@opendaw/lib-std"
 import {CloudStorageHandler} from "@/clouds/CloudStorageHandler"
 
 export class CloudAuthManager {
@@ -54,7 +53,11 @@ export class CloudAuthManager {
         }
         const {resolve, reject, promise} = Promise.withResolvers<CloudStorageHandler>()
         const channel = new BroadcastChannel("auth-callback")
-        const dialog = Dialogs.processMonolog("Cloud Authentification", undefined, () => reject(null))
+        const dialog = RuntimeNotifier.progress({
+            headline: "Cloud Authentification",
+            message: "Waiting for authentification...",
+            cancel: () => reject(null)
+        })
         channel.onmessage = async (event: MessageEvent<any>) => {
             const data = asDefined(event.data, "No data")
             console.debug("[CloudAuth] Received via BroadcastChannel:", this.id, data)
@@ -80,7 +83,7 @@ export class CloudAuthManager {
         return promise.finally(() => {
             console.debug("[CloudAuth] Closing auth window")
             authWindow.close()
-            dialog.close()
+            dialog.terminate()
             channel.close()
         })
     }
@@ -106,7 +109,6 @@ export class CloudAuthManager {
         if (service !== "dropbox") {
             throw new Error(`Token exchange not implemented for service: ${service}`)
         }
-
         const tokenUrl = "https://api.dropboxapi.com/oauth2/token"
         const params = new URLSearchParams({
             code: code,
