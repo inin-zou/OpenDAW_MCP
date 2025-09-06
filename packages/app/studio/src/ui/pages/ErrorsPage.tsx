@@ -47,7 +47,8 @@ export const ErrorsPage: PageFactory<StudioService> = ({lifecycle}: PageContext<
                         list.append(...entries.map((entry: Entry) => (<ErrorEntry entry={entry}/>)))
                     createRows(entries)
                     ;(async () => {
-                        while (list.scrollHeight <= wrapper.clientHeight) {
+                        await Wait.frame()
+                        while (list.scrollHeight < wrapper.clientHeight) {
                             const entries: ReadonlyArray<Entry> = await loadMore()
                             if (entries.length === 0) return
                             createRows(entries)
@@ -57,11 +58,11 @@ export const ErrorsPage: PageFactory<StudioService> = ({lifecycle}: PageContext<
                             const threshold = 64
                             if (wrapper.scrollTop + wrapper.clientHeight >= list.scrollHeight - threshold) {
                                 const entries: ReadonlyArray<Entry> = await loadMore()
-                                if (entries.length === 0) {
+                                if (entries.length > 0) {
+                                    createRows(entries)
+                                } else {
                                     subscription.terminate()
-                                    return
                                 }
-                                createRows(entries)
                             }
                         }))
                         lifecycle.own(subscription)
