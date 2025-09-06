@@ -1,4 +1,4 @@
-import {asDefined, isDefined, isUndefined, panic, warn} from "@opendaw/lib-std"
+import {asDefined, Errors, isDefined, isUndefined, panic} from "@opendaw/lib-std"
 import {Dialogs} from "@/ui/components/dialogs"
 import {CloudStorageHandler} from "@/clouds/CloudStorageHandler"
 
@@ -48,9 +48,9 @@ export class CloudAuthManager {
         const service = "dropbox"
         const authUrl = this.#getAuthUrl(service)
         console.debug("[CloudAuth] Opening auth window:", authUrl)
-        const authWindow = window.open(authUrl, "cloudAuth", "width=600,height=700,left=200,top=100")
+        const authWindow = window.open(authUrl, "cloudAuth")
         if (isUndefined(authWindow)) {
-            return warn("Failed to open authentication window. Please check popup blockers.")
+            return Errors.warn("Failed to open authentication window. Please check popup blockers.")
         }
         const {resolve, reject, promise} = Promise.withResolvers<CloudStorageHandler>()
         const channel = new BroadcastChannel("auth-callback")

@@ -1,9 +1,8 @@
-import {SampleApi} from "@/service/SampleApi"
-import {encodeWavFloat, SampleStorage} from "@opendaw/studio-core"
-import {CloudStorageHandler} from "@/clouds/CloudStorageHandler"
-import {Sample} from "@opendaw/studio-adapters"
 import {Arrays, Procedure, TimeSpan, UUID} from "@opendaw/lib-std"
 import {Promises, Wait} from "@opendaw/lib-runtime"
+import {Sample} from "@opendaw/studio-adapters"
+import {encodeWavFloat, OpenSampleAPI, SampleStorage} from "@opendaw/studio-core"
+import {CloudStorageHandler} from "@/clouds/CloudStorageHandler"
 
 export namespace CloudSync {
     const SamplePath = "samples"
@@ -13,7 +12,7 @@ export namespace CloudSync {
     export const run = async (cloudHandler: CloudStorageHandler, audioContext: AudioContext, log: Procedure<string>) => {
         log("Syncing with cloud...")
         await Wait.timeSpan(TimeSpan.seconds(1))
-        const excludeSamples: ReadonlyArray<Sample> = await SampleApi.all()
+        const excludeSamples: ReadonlyArray<Sample> = await new OpenSampleAPI().all()
         log(`Found ${excludeSamples.length} openDAW samples.`)
         await Wait.timeSpan(TimeSpan.seconds(1))
         const localSamples: ReadonlyArray<Sample> = await SampleStorage.list()

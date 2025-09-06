@@ -2,7 +2,7 @@ import {MenuItem} from "@/ui/model/menu-item"
 import {StudioService} from "@/service/StudioService"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {RouteLocation} from "@opendaw/lib-jsx"
-import {isDefined, panic, warn} from "@opendaw/lib-std"
+import {Errors, isDefined, panic} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
@@ -101,7 +101,7 @@ export const initAppMenu = (service: StudioService) => {
                                         const syncResult =
                                             await Promises.tryCatch(CloudSync
                                                 .run(cloudHandler, service.audioContext, text => p.textContent = text))
-                                        if (syncResult.status === "rejected") {return warn(String(syncResult.error))}
+                                        if (syncResult.status === "rejected") {return Errors.warn(String(syncResult.error))}
                                         monolog.close()
                                     }),
                                 MenuItem.default({label: "Dropbox IO Test", icon: IconSymbol.Dropbox, hidden: true})

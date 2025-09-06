@@ -2,12 +2,14 @@ import {createElement, JsxValue} from "@opendaw/lib-jsx"
 import {Button, Dialog, DialogHandler} from "@/ui/components/Dialog.tsx"
 import {
     Arrays,
+    Errors,
     Exec,
     isDefined,
     ObservableValue,
     Option,
     Procedure,
     Provider,
+    Terminable,
     Terminator,
     unitValue
 } from "@opendaw/lib-std"
@@ -17,8 +19,8 @@ import {Box, BoxGraph} from "@opendaw/lib-box"
 import {BoxDebugView} from "./BoxDebugView"
 import {BoxesDebugView} from "@/ui/components/BoxesDebugView.tsx"
 import {ProgressBar} from "@/ui/components/ProgressBar.tsx"
-import EmailBody from "@/ErrorMail.txt?raw"
 import {Colors} from "@opendaw/studio-core"
+import EmailBody from "@/ErrorMail.txt?raw"
 
 export namespace Dialogs {
     type Default = {
@@ -86,7 +88,9 @@ export namespace Dialogs {
 
     // Never rejects
     export const approve =
-        ({headline, message, approveText, cancelText, reverse, origin, maxWidth}: ApproveCreation): Promise<void> => {
+        ({
+             headline, message, approveText, cancelText, reverse, origin, maxWidth
+         }: ApproveCreation): Promise<boolean> => {
             reverse ??= false
             const {resolve, promise} = Promise.withResolvers<boolean>()
             const buttons: Array<Button> = [{
