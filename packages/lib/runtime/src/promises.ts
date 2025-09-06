@@ -114,6 +114,27 @@ export namespace Promises {
         }
     }
 
+    export const allSettledWithLimit = async <T, U>(
+        tasks: ReadonlyArray<Provider<Promise<T | U>>>,
+        limit = 1
+    ): Promise<PromiseSettledResult<T | U>[]> => {
+        const results: PromiseSettledResult<T | U>[] = new Array(tasks.length)
+        let index = 0
+        const run = async () => {
+            while (index < tasks.length) {
+                const i = index++
+                try {
+                    const value = await tasks[i]()
+                    results[i] = {status: "fulfilled", value}
+                } catch (reason) {
+                    results[i] = {status: "rejected", reason}
+                }
+            }
+        }
+        await Promise.all(Array.from({length: Math.min(limit, tasks.length)}, run))
+        return results
+    }
+
     export class Limit<T> {
         readonly #waiting: Array<[Provider<Promise<T>>, PromiseWithResolvers<T>]>
 

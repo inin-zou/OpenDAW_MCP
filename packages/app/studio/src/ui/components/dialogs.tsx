@@ -2,14 +2,12 @@ import {createElement, JsxValue} from "@opendaw/lib-jsx"
 import {Button, Dialog, DialogHandler} from "@/ui/components/Dialog.tsx"
 import {
     Arrays,
-    Errors,
     Exec,
     isDefined,
     ObservableValue,
     Option,
     Procedure,
     Provider,
-    Terminable,
     Terminator,
     unitValue
 } from "@opendaw/lib-std"
@@ -61,7 +59,6 @@ export namespace Dialogs {
                 <div style={{padding: "1em 0"}}>{content}</div>
             </Dialog>
         )
-        console.debug("abortSignal", abortSignal)
         Surface.get(origin).body.appendChild(dialog)
         dialog.showModal()
         dialog.addEventListener("close", () => {if (!resolved) {reject(Errors.AbortError)}}, {once: true})
@@ -84,11 +81,12 @@ export namespace Dialogs {
         reverse?: boolean
         message: string
         origin?: Element
+        maxWidth?: string
     }
 
     // Never rejects
     export const approve =
-        ({headline, message, approveText, cancelText, reverse, origin}: ApproveCreation): Promise<boolean> => {
+        ({headline, message, approveText, cancelText, reverse, origin, maxWidth}: ApproveCreation): Promise<void> => {
             reverse ??= false
             const {resolve, promise} = Promise.withResolvers<boolean>()
             const buttons: Array<Button> = [{
@@ -112,7 +110,7 @@ export namespace Dialogs {
                         icon={IconSymbol.System}
                         cancelable={true}
                         buttons={buttons}>
-                    <div style={{padding: "1em 0"}}>
+                    <div style={{padding: "1em 0", maxWidth}}>
                         <p>{message}</p>
                     </div>
                 </Dialog>

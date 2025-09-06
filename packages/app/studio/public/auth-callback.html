@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication - openDAW</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .success {
+            color: #10b981;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .error {
+            color: #ef4444;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 1.5rem;
+            margin: 0 0 0.5rem 0;
+        }
+
+        p {
+            color: #6b7280;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="container">
+    <div class="success">⏳</div>
+    <h1>Authenticating...</h1>
+    <p>Please wait...</p>
+</div>
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const error = params.get('error');
+    const container = document.getElementById('container');
+    const channel = new BroadcastChannel('auth-callback');
+    window.onbeforeunload = () => channel.postMessage({type: 'closed'})
+    if (code !== null) {
+        try {
+            const channel = new BroadcastChannel('auth-callback');
+            channel.postMessage({type: 'auth-callback', code: code});
+            channel.close();
+            window.onbeforeunload = null
+            window.close();
+        } catch (error) {
+            container.innerHTML = `
+                    <div class="error">⚠️</div>
+                    <h1>Communication Error</h1>
+                    <p style="font-family: monospace; word-break: break-all; margin-top: 1rem; padding: 0.5rem; background: #f3f4f6; border-radius: 4px;">${error}</p>
+                `;
+        }
+    } else if (error !== null) {
+        const errorDesc = params.get('error_description') || 'Authentication failed';
+        container.innerHTML = `
+                <div class="error">⚠️</div>
+                <h1>Authentication Failed</h1>
+                <p>${errorDesc}</p>
+            `;
+    } else {
+        container.innerHTML = `
+                <div class="error">❓</div>
+                <h1>Unexpected Response</h1>
+                <p>No authentication data received.</p>
+            `;
+    }
+</script>
+</body>
+</html>
