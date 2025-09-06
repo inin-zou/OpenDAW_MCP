@@ -1,6 +1,7 @@
 import {
     assert,
     Exec,
+    Func,
     InaccessibleProperty,
     int,
     isNull,
@@ -89,9 +90,14 @@ export namespace Promises {
         })
     }
 
-    export const sequential = <T, R>(fn: (arg: T) => Promise<R>): (arg: T) => Promise<R> => {
-        let lastPromise: Promise<any> = Promise.resolve(null)
-        return (arg: T) => lastPromise = lastPromise.then(() => fn(arg))
+    export const sequential = <A, T>(handler: Func<A, Promise<T>>): Func<A, Promise<T>> => {
+        let lastPromise: Promise<unknown> = Promise.resolve()
+        return (arg: A): Promise<T> => {
+            const execute = () => handler(arg)
+            const currentPromise = lastPromise.then(execute, execute)
+            lastPromise = currentPromise.catch(() => {})
+            return currentPromise
+        }
     }
 
     export const memoizeAsync = <T>(factory: Provider<Promise<T>>): Provider<Promise<T>> => {
