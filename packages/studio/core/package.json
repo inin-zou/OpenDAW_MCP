@@ -1,6 +1,6 @@
 {
   "name": "@opendaw/studio-core",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "license": "LGPL-3.0-or-later",
   "publishConfig": {
     "access": "public"
@@ -26,22 +26,22 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@opendaw/lib-box": "^0.0.24",
-    "@opendaw/lib-dawproject": "^0.0.10",
-    "@opendaw/lib-dom": "^0.0.24",
-    "@opendaw/lib-dsp": "^0.0.24",
-    "@opendaw/lib-fusion": "^0.0.24",
-    "@opendaw/lib-runtime": "^0.0.24",
-    "@opendaw/lib-std": "^0.0.24",
-    "@opendaw/studio-adapters": "^0.0.24",
-    "@opendaw/studio-boxes": "^0.0.24",
+    "@opendaw/lib-box": "^0.0.25",
+    "@opendaw/lib-dawproject": "^0.0.11",
+    "@opendaw/lib-dom": "^0.0.25",
+    "@opendaw/lib-dsp": "^0.0.25",
+    "@opendaw/lib-fusion": "^0.0.25",
+    "@opendaw/lib-runtime": "^0.0.25",
+    "@opendaw/lib-std": "^0.0.25",
+    "@opendaw/studio-adapters": "^0.0.25",
+    "@opendaw/studio-boxes": "^0.0.25",
     "@opendaw/studio-enums": "^0.0.20"
   },
   "devDependencies": {
     "@opendaw/eslint-config": "^0.0.18",
-    "@opendaw/studio-core-processors": "^0.0.24",
-    "@opendaw/studio-core-workers": "^0.0.18",
-    "@opendaw/studio-forge-boxes": "^0.0.24",
+    "@opendaw/studio-core-processors": "^0.0.25",
+    "@opendaw/studio-core-workers": "^0.0.19",
+    "@opendaw/studio-forge-boxes": "^0.0.25",
     "@opendaw/typescript-config": "^0.0.19"
   },
   "gitHead": "498716ab88a9a6bba7f8e1c034703cdc749ef8b0"
