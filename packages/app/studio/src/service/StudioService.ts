@@ -34,7 +34,7 @@ import {SamplePlayback} from "@/service/SamplePlayback"
 import {Shortcuts} from "@/service/Shortcuts"
 import {ProjectProfileService} from "./ProjectProfileService"
 import {StudioSignal} from "./StudioSignal"
-import {Projects} from "@/project/Projects"
+import {ProjectStorage} from "@/project/ProjectStorage"
 import {SampleDialogs} from "@/ui/browse/SampleDialogs"
 import {AudioOutputDevice} from "@/audio/AudioOutputDevice"
 import {FooterLabel} from "@/service/FooterLabel"
@@ -98,7 +98,7 @@ export class StudioService implements ProjectEnv {
         primaryVisible: new DefaultObservableValue(true)
     } as const
     readonly menu = initAppMenu(this)
-    readonly profileService = new ProjectProfileService(this)
+    readonly profileService: ProjectProfileService
     readonly panelLayout = new PanelContents(createPanelFactory(this))
     readonly spotlightDataSupplier = new SpotlightDataSupplier()
     readonly samplePlayback: SamplePlayback
@@ -118,6 +118,9 @@ export class StudioService implements ProjectEnv {
                 readonly sampleManager: MainThreadSampleManager,
                 readonly buildInfo: BuildInfo) {
         this.samplePlayback = new SamplePlayback(audioContext)
+        this.profileService = new ProjectProfileService({
+            env: this, importer: this, sampleAPI: this.sampleAPI, sampleManager: this.sampleManager
+        })
         const lifeTime = new Terminator()
         const observer = (optProfile: Option<ProjectProfile>) => {
             const root = RouteLocation.get().path === "/"
@@ -259,9 +262,22 @@ export class StudioService implements ProjectEnv {
             new ProjectProfile(UUID.generate(), Project.new(this), ProjectMeta.init("Untitled"), Option.None)))
     }
 
-    async save(): Promise<void> {return this.profileService.save()}
-    async saveAs(): Promise<void> {return this.profileService.saveAs()}
-    async browse(): Promise<void> {return this.profileService.browse()}
+    async save(): Promise<void> {
+        return this.profileService.save()
+    }
+
+    async saveAs(): Promise<void> {
+        return this.profileService.saveAs()
+    }
+
+    async browse(): Promise<void> {
+        const {status, value} = await Promises.tryCatch(ProjectDialogs.showBrowseDialog(this))
+        if (status === "resolved") {
+            const [uuid, meta] = value
+            await this.profileService.loadExisting(uuid, meta)
+        }
+    }
+
     async loadTemplate(name: string): Promise<unknown> {return this.profileService.loadTemplate(name)}
     async exportZip() {return this.profileService.exportBundle()}
     async importZip() {return this.profileService.importBundle()}
@@ -269,7 +285,7 @@ export class StudioService implements ProjectEnv {
         if (this.profileService.getValue().ifSome(profile => UUID.equals(profile.uuid, uuid)) === true) {
             await this.closeProject()
         }
-        const {status} = await Promises.tryCatch(Projects.deleteProject(uuid))
+        const {status} = await Promises.tryCatch(ProjectStorage.deleteProject(uuid))
         if (status === "resolved") {
             this.#signals.notify({type: "delete-project", meta})
         }

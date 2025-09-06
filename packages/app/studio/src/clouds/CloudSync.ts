@@ -1,38 +1,57 @@
-import {Arrays, Procedure, TimeSpan, UUID} from "@opendaw/lib-std"
+import {Arrays, identity, isDefined, Procedure, TimeSpan, tryCatch, UUID} from "@opendaw/lib-std"
 import {Promises, Wait} from "@opendaw/lib-runtime"
 import {Sample} from "@opendaw/studio-adapters"
 import {encodeWavFloat, OpenSampleAPI, ProjectMeta, SampleStorage} from "@opendaw/studio-core"
 import {CloudStorageHandler} from "@/clouds/CloudStorageHandler"
-import {Projects} from "@/project/Projects"
+import {ProjectStorage} from "@/project/ProjectStorage"
 
 export namespace CloudSync {
-    // const ProjectsPath = "project"
-    // const ProjectsCatalogPath = Projects + "/index.json"
+    const ProjectsPath = "projects"
     const SamplesPath = "samples"
     const SamplesCatalogPath = SamplesPath + "/index.json"
 
     // TODO Move Projects to SDK
     // TODO Move Cloud stuff to SDK
 
-    export const syncProjects = async (_cloudHandler: CloudStorageHandler,
+    export const syncProjects = async (cloudHandler: CloudStorageHandler,
                                        log: Procedure<string>) => {
         log("Start syncing projects...")
         await Wait.timeSpan(TimeSpan.seconds(1))
-        const listResult = await Promises.tryCatch(Projects.listProjects())
+        const dropboxResult = await Promises.tryCatch(cloudHandler.list(ProjectsPath))
+        const excludeProjects = UUID.newSet<UUID.Format>(identity)
+        if (dropboxResult.status === "resolved") {
+            excludeProjects.addMany(dropboxResult.value
+                .map(fileName => tryCatch(() => UUID.parse(fileName)))
+                .filter(result => result.status === "success")
+                .map(result => result.value))
+        }
+        const listResult = await Promises.tryCatch(ProjectStorage.listProjects({includeCover: true}))
         if (listResult.status === "rejected") {
             return log("Failed to list projects.")
         }
-        log(`Found ${listResult.value.length} projects.`)
-        const localProjects: ReadonlyArray<PromiseSettledResult<void>> = await Promises.allSettledWithLimit(listResult.value.map((project: {
-            uuid: UUID.Format;
-            meta: ProjectMeta
-        }) => async () => {
-            log(`Synchronize '${project.meta.name}'...`)
-            await Wait.timeSpan(TimeSpan.seconds(1))
-            return Promise.resolve()
-        }))
-        localProjects
+        const unsyncedProjects = listResult.value.filter(({uuid}) => !excludeProjects.hasKey(uuid))
+        log(`Synchronize ${listResult.value.length} projects...`)
+        await Wait.timeSpan(TimeSpan.seconds(1))
+        const results = await Promises.allSettledWithLimit(unsyncedProjects
+            .map(({uuid, meta, cover}: {
+                uuid: UUID.Format
+                meta: ProjectMeta
+                cover?: ArrayBuffer
+            }) => async () => {
+                const folder = `${ProjectsPath}/${UUID.toString(uuid)}`
+                const projectData = await ProjectStorage.loadProject(uuid)
+                const metaJson = new TextEncoder().encode(JSON.stringify(meta)).buffer
+                const tasks: Array<Promise<unknown>> = []
+                tasks.push(cloudHandler.upload(`${folder}/project.od`, projectData))
+                tasks.push(cloudHandler.upload(`${folder}/meta.json`, metaJson))
+                if (isDefined(cover)) {
+                    tasks.push(cloudHandler.upload(`${ProjectsPath}/${folder}/image.bin`, cover))
+                }
+                log(`Uploading project '${meta.name}'`)
+                await Promise.all(tasks)
+            }))
         await Wait.timeSpan(TimeSpan.seconds(2))
+        console.log(`${results.filter(result => result.status === "fulfilled").length} successfully uploaded.`)
     }
 
     export const syncSamples = async (cloudHandler: CloudStorageHandler,

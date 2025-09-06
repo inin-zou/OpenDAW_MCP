@@ -1,7 +1,7 @@
 import css from "./ProjectBrowser.sass?inline"
 import {StudioService} from "@/service/StudioService"
 import {Procedure, StringComparator, TimeSpan, UUID} from "@opendaw/lib-std"
-import {Projects} from "@/project/Projects"
+import {ProjectStorage} from "@/project/ProjectStorage"
 import {Icon} from "@/ui/components/Icon"
 import {IconSymbol} from "@opendaw/studio-adapters"
 import {Dialogs} from "@/ui/components/dialogs"
@@ -20,7 +20,7 @@ export const ProjectBrowser = ({service, select}: Construct) => {
     const now = new Date().getTime()
     return (
         <div className={className}>
-            <Await factory={() => Projects.listProjects()}
+            <Await factory={() => ProjectStorage.listProjects()}
                    loading={() => <span>loading...</span>}
                    failure={({reason}) => (
                        <span>{reason instanceof DOMException ? reason.name : String(reason)}</span>

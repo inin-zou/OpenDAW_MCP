@@ -89,14 +89,18 @@ export const initAppMenu = (service: StudioService) => {
                                         const cloudHandler = dropboxResult.value
                                         const notification = RuntimeNotifier.progress({headline: "Dropbox Sync"})
                                         const log = (text: string) => notification.message = text
-                                        const syncSamplesResult = await Promises.tryCatch(CloudSync
-                                            .syncSamples(cloudHandler, service.audioContext, log))
-                                        if (syncSamplesResult.status === "rejected") {
-                                            return Errors.warn(String(syncSamplesResult.error))
+                                        if(false) {
+                                            const syncSamplesResult = await Promises.tryCatch(CloudSync
+                                                .syncSamples(cloudHandler, service.audioContext, log))
+                                            if (syncSamplesResult.status === "rejected") {
+                                                notification.terminate()
+                                                return Errors.warn(String(syncSamplesResult.error))
+                                            }
                                         }
                                         const syncProjectsResult = await Promises.tryCatch(CloudSync
                                             .syncProjects(cloudHandler, log))
                                         if (syncProjectsResult.status === "rejected") {
+                                            notification.terminate()
                                             return Errors.warn(String(syncProjectsResult.error))
                                         }
                                         notification.terminate()

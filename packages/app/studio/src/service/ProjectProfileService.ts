@@ -10,9 +10,8 @@ import {
     UUID
 } from "@opendaw/lib-std"
 import {ProjectDialogs} from "@/project/ProjectDialogs"
-import {Projects} from "@/project/Projects"
+import {ProjectStorage} from "@/project/ProjectStorage"
 import {Dialogs} from "@/ui/components/dialogs"
-import {StudioService} from "./StudioService"
 import {Promises} from "@opendaw/lib-runtime"
 import {Files} from "@opendaw/lib-dom"
 import {
@@ -21,15 +20,31 @@ import {
     ProjectBundle,
     ProjectEnv,
     ProjectMeta,
-    ProjectProfile
+    ProjectProfile,
+    SampleAPI,
+    SampleImporter
 } from "@opendaw/studio-core"
+import {SampleManager} from "@opendaw/studio-adapters"
+import {SampleUtils} from "@/project/SampleUtils"
 
 export class ProjectProfileService implements MutableObservableValue<Option<ProjectProfile>> {
-    readonly #service: StudioService
     readonly #profile: DefaultObservableValue<Option<ProjectProfile>>
 
-    constructor(service: StudioService) {
-        this.#service = service
+    readonly #env: ProjectEnv
+    readonly #importer: SampleImporter
+    readonly #sampleAPI: SampleAPI
+    readonly #sampleManager: SampleManager
+
+    constructor({env, importer, sampleAPI, sampleManager}: {
+        env: ProjectEnv,
+        importer: SampleImporter,
+        sampleAPI: SampleAPI,
+        sampleManager: SampleManager
+    }) {
+        this.#env = env
+        this.#importer = importer
+        this.#sampleAPI = sampleAPI
+        this.#sampleManager = sampleManager
         this.#profile = new DefaultObservableValue<Option<ProjectProfile>>(Option.None)
     }
 
@@ -60,18 +75,10 @@ export class ProjectProfileService implements MutableObservableValue<Option<Proj
         })
     }
 
-    async browse(): Promise<void> {
-        const {status, value} = await Promises.tryCatch(ProjectDialogs.showBrowseDialog(this.#service))
-        if (status === "resolved") {
-            const [uuid, meta] = value
-            await this.loadExisting(uuid, meta)
-        }
-    }
-
     async loadExisting(uuid: UUID.Format, meta: ProjectMeta) {
-        console.debug(UUID.toString(uuid))
-        const project = await Projects.loadProject(this.#service, uuid)
-        const cover = await Projects.loadCover(uuid)
+        const project: Project = await ProjectStorage.loadProject(uuid).then(buffer => Project.load(this.#env, buffer))
+        await SampleUtils.verify(project.boxGraph, this.#importer, this.#sampleAPI, this.#sampleManager)
+        const cover = await ProjectStorage.loadCover(uuid)
         this.#setProfile(uuid, project, meta, cover, true)
     }
 
@@ -82,7 +89,7 @@ export class ProjectProfileService implements MutableObservableValue<Option<Proj
             .then(res => res.arrayBuffer())
             .then(arrayBuffer => {
                 const uuid = UUID.generate()
-                const project = Project.load(this.#service, arrayBuffer)
+                const project = Project.load(this.#env, arrayBuffer)
                 const meta = ProjectMeta.init(name)
                 this.#setProfile(uuid, project, meta, Option.None)
             })
@@ -122,10 +129,9 @@ export class ProjectProfileService implements MutableObservableValue<Option<Proj
     async importBundle() {
         try {
             const [file] = await Files.open({types: [FilePickerAcceptTypes.ProjectBundleFileType]})
-            const env: ProjectEnv = this.#service
             const arrayBuffer = await file.arrayBuffer()
             const exclude = this.#profile.getValue().map(({uuid}) => uuid).unwrapOrUndefined()
-            const profile = await ProjectBundle.decode(env, arrayBuffer, exclude)
+            const profile = await ProjectBundle.decode(this.#env, arrayBuffer, exclude)
             this.#profile.setValue(Option.wrap(profile))
         } catch (error) {
             if (!Errors.isAbort(error)) {
@@ -154,7 +160,7 @@ export class ProjectProfileService implements MutableObservableValue<Option<Proj
     async loadFile() {
         try {
             const [file] = await Files.open({types: [FilePickerAcceptTypes.ProjectFileType]})
-            const project = Project.load(this.#service, await file.arrayBuffer())
+            const project = Project.load(this.#env, await file.arrayBuffer())
             this.#setProfile(UUID.generate(), project, ProjectMeta.init(file.name), Option.None)
         } catch (error) {
             if (!Errors.isAbort(error)) {

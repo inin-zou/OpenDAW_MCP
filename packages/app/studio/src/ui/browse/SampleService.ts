@@ -6,7 +6,7 @@ import {ColorCodes, InstrumentFactories, SampleStorage} from "@opendaw/studio-co
 import {HTMLSelection} from "@/ui/HTMLSelection"
 import {StudioService} from "@/service/StudioService"
 import {Dialogs} from "../components/dialogs"
-import {Projects} from "@/project/Projects"
+import {ProjectStorage} from "@/project/ProjectStorage"
 
 export class SampleService {
     readonly #service: StudioService
@@ -51,7 +51,7 @@ export class SampleService {
 
     async deleteSamples(...samples: ReadonlyArray<Sample>) {
         const dialog = RuntimeNotifier.progress({headline: "Checking Sample Usages"})
-        const used = await Projects.listUsedSamples()
+        const used = await ProjectStorage.listUsedSamples()
         const online = new Set<string>((await this.#service.sampleAPI.all()).map(({uuid}) => uuid))
         dialog.terminate()
         const approved = await Dialogs.approve({
