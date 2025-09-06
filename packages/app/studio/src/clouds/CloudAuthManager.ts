@@ -135,7 +135,7 @@ export class CloudAuthManager {
         switch (service) {
             case "dropbox":
                 const {DropboxHandler} = await import("./DropboxHandler")
-                return new DropboxHandler(token, "/openDAW")
+                return new DropboxHandler(token)
             default:
                 return panic(`Handler not implemented for service: ${service}`)
         }

@@ -4,15 +4,11 @@ import {Promises} from "@opendaw/lib-runtime"
 import {CloudStorageHandler} from "@/clouds/CloudStorageHandler"
 
 export class DropboxHandler implements CloudStorageHandler {
-    readonly #accessToken: string
-    readonly #basePath: string
+    readonly #token: string
 
     #dropboxClient: Option<Dropbox> = Option.None
 
-    constructor(token: string, basePath: string) {
-        this.#accessToken = token
-        this.#basePath = basePath
-    }
+    constructor(token: string) {this.#token = token}
 
     async upload(path: string, buffer: ArrayBuffer): Promise<void> {
         const client = await this.#ensureClient()
@@ -38,7 +34,10 @@ export class DropboxHandler implements CloudStorageHandler {
     async exists(path: string): Promise<boolean> {
         const client = await this.#ensureClient()
         const fullPath = this.#getFullPath(path)
-        const {status, error} = await Promises.tryCatch(client.filesGetMetadata({path: fullPath})).catch(error => (error as any))
+        const {
+            status,
+            error
+        } = await Promises.tryCatch(client.filesGetMetadata({path: fullPath})).catch(error => (error as any))
         if (status === "resolved") return true
         const summary: string | undefined = error?.error?.error_summary
         if (summary && summary.includes("not_found")) return false
@@ -47,7 +46,7 @@ export class DropboxHandler implements CloudStorageHandler {
 
     async list(path?: string): Promise<string[]> {
         const client = await this.#ensureClient()
-        const fullPath = path ? this.#getFullPath(path) : this.#basePath
+        const fullPath = path ? this.#getFullPath(path) : ""
         const response = await client.filesListFolder({path: fullPath})
         return response.result.entries.map(entry => entry.name).filter(isDefined)
     }
@@ -61,17 +60,7 @@ export class DropboxHandler implements CloudStorageHandler {
     async #ensureClient(): Promise<Dropbox> {
         if (this.#dropboxClient.isEmpty()) {
             const DropboxModule = await import("dropbox")
-            this.#dropboxClient = Option.wrap(new DropboxModule.Dropbox({accessToken: this.#accessToken}))
-            const {status, error} = await Promises.tryCatch(
-                this.#dropboxClient.unwrap().filesCreateFolderV2({path: this.#basePath}))
-                .catch(error => (error as any))
-            if (status === "rejected") {
-                if (error?.error?.error_summary?.includes("path/conflict/folder")) {
-                    console.debug("[Dropbox] path exists (error above is expected)")
-                } else {
-                    return panic(error)
-                }
-            }
+            this.#dropboxClient = Option.wrap(new DropboxModule.Dropbox({accessToken: this.#token}))
         }
         return this.#dropboxClient.unwrap()
     }
@@ -79,9 +68,8 @@ export class DropboxHandler implements CloudStorageHandler {
     #getFullPath(path: string): string {
         if (path.includes(":") || path.includes("T")) {
             const filename = path.replace(/:/g, "-")
-            return `${this.#basePath}/${filename}`
+            return filename.startsWith("/") ? filename : `/${filename}`
         }
-        const cleanPath = path.startsWith("/") ? path : `/${path}`
-        return `${this.#basePath}${cleanPath}`
+        return path.startsWith("/") ? path : `/${path}`
     }
 }

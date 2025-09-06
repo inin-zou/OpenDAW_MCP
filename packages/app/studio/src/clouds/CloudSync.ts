@@ -12,6 +12,7 @@ export namespace CloudSync {
 
     // TODO Move Projects to SDK
     // TODO Move Cloud stuff to SDK
+    // TODO We need to compare the last modification time of the project files on the cloud with the local project files
 
     export const syncProjects = async (cloudHandler: CloudStorageHandler,
                                        log: Procedure<string>) => {
@@ -30,7 +31,12 @@ export namespace CloudSync {
             return log("Failed to list projects.")
         }
         const unsyncedProjects = listResult.value.filter(({uuid}) => !excludeProjects.hasKey(uuid))
-        log(`Synchronize ${listResult.value.length} projects...`)
+        if (unsyncedProjects.length === 0) {
+            log("No unsynced projects found.")
+            await Wait.timeSpan(TimeSpan.seconds(2))
+            return
+        }
+        log(`Synchronize ${unsyncedProjects.length} projects...`)
         await Wait.timeSpan(TimeSpan.seconds(1))
         const results = await Promises.allSettledWithLimit(unsyncedProjects
             .map(({uuid, meta, cover}: {
@@ -45,13 +51,13 @@ export namespace CloudSync {
                 tasks.push(cloudHandler.upload(`${folder}/project.od`, projectData))
                 tasks.push(cloudHandler.upload(`${folder}/meta.json`, metaJson))
                 if (isDefined(cover)) {
-                    tasks.push(cloudHandler.upload(`${ProjectsPath}/${folder}/image.bin`, cover))
+                    tasks.push(cloudHandler.upload(`${ProjectsPath}/image.bin`, cover))
                 }
                 log(`Uploading project '${meta.name}'`)
                 await Promise.all(tasks)
             }))
-        await Wait.timeSpan(TimeSpan.seconds(2))
         console.log(`${results.filter(result => result.status === "fulfilled").length} successfully uploaded.`)
+        await Wait.timeSpan(TimeSpan.seconds(2))
     }
 
     export const syncSamples = async (cloudHandler: CloudStorageHandler,
@@ -95,8 +101,6 @@ export namespace CloudSync {
         const jsonString = JSON.stringify(catalog, null, 2)
         console.debug(jsonString)
         const buffer = new TextEncoder().encode(jsonString).buffer
-        await cloudHandler.upload(`${SamplesPath}/index.json`, buffer)
-        log("Everything is up to date.")
-        await Wait.timeSpan(TimeSpan.seconds(2))
+        return cloudHandler.upload(`${SamplesPath}/index.json`, buffer)
     }
 }

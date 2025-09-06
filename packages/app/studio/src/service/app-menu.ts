@@ -2,12 +2,12 @@ import {MenuItem} from "@/ui/model/menu-item"
 import {StudioService} from "@/service/StudioService"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {RouteLocation} from "@opendaw/lib-jsx"
-import {Errors, isDefined, panic, RuntimeNotifier} from "@opendaw/lib-std"
+import {Errors, isDefined, panic, RuntimeNotifier, TimeSpan} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
 import {CloudAuthManager} from "@/clouds/CloudAuthManager"
-import {Promises} from "@opendaw/lib-runtime"
+import {Promises, Wait} from "@opendaw/lib-runtime"
 import {CloudSync} from "@/clouds/CloudSync"
 
 export const initAppMenu = (service: StudioService) => {
@@ -67,14 +67,14 @@ export const initAppMenu = (service: StudioService) => {
                     MenuItem.default({label: "Cloud Services", hidden: !Browser.isLocalHost()})
                         .setRuntimeChildrenProcedure(parent => {
                             parent.addMenuItem(
-                                MenuItem.default({label: "Dropbox Sync", icon: IconSymbol.Dropbox})
+                                MenuItem.default({label: "Dropbox Backup", icon: IconSymbol.Dropbox})
                                     .setTriggerProcedure(async () => {
                                         const approveResult = await Promises.tryCatch(Dialogs.approve({
                                             headline: "openDAW and your data",
                                             message: `openDAW will never store or share your personal account details. Dropbox requires permission to read “basic account info” such as your name and email, but openDAW does not use or retain this information. We only access the files you choose to synchronize. 
                                             
                                             This will open a new tab to let you login to your dropbox account.`,
-                                            approveText: "Connect",
+                                            approveText: "Login",
                                             cancelText: "Cancel",
                                             reverse: true,
                                             maxWidth: "30em"
@@ -87,15 +87,13 @@ export const initAppMenu = (service: StudioService) => {
                                             return
                                         }
                                         const cloudHandler = dropboxResult.value
-                                        const notification = RuntimeNotifier.progress({headline: "Dropbox Sync"})
+                                        const notification = RuntimeNotifier.progress({headline: "Dropbox Backup"})
                                         const log = (text: string) => notification.message = text
-                                        if(false) {
-                                            const syncSamplesResult = await Promises.tryCatch(CloudSync
-                                                .syncSamples(cloudHandler, service.audioContext, log))
-                                            if (syncSamplesResult.status === "rejected") {
-                                                notification.terminate()
-                                                return Errors.warn(String(syncSamplesResult.error))
-                                            }
+                                        const syncSamplesResult = await Promises.tryCatch(CloudSync
+                                            .syncSamples(cloudHandler, service.audioContext, log))
+                                        if (syncSamplesResult.status === "rejected") {
+                                            notification.terminate()
+                                            return Errors.warn(String(syncSamplesResult.error))
                                         }
                                         const syncProjectsResult = await Promises.tryCatch(CloudSync
                                             .syncProjects(cloudHandler, log))
@@ -103,6 +101,8 @@ export const initAppMenu = (service: StudioService) => {
                                             notification.terminate()
                                             return Errors.warn(String(syncProjectsResult.error))
                                         }
+                                        log("Everything is up to date.")
+                                        await Wait.timeSpan(TimeSpan.seconds(2))
                                         notification.terminate()
                                     })
                             )
