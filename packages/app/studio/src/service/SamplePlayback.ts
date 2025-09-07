@@ -8,7 +8,7 @@ import {
     unitValue,
     UUID
 } from "@opendaw/lib-std"
-import {encodeWavFloat, OpenSampleAPI, SampleStorage} from "@opendaw/studio-core"
+import {OpenSampleAPI, SampleStorage, WavFile} from "@opendaw/studio-core"
 
 export type PlaybackEvent = {
     type: "idle"
@@ -55,7 +55,7 @@ export class SamplePlayback {
 
             SampleStorage.load(UUID.parse(uuidAsString), this.#context)
                 .then(([audio]) => {
-                    this.#audio.src = URL.createObjectURL(new Blob([encodeWavFloat({
+                    this.#audio.src = URL.createObjectURL(new Blob([WavFile.encodeFloats({
                         channels: audio.frames.slice(),
                         sampleRate: audio.sampleRate,
                         numFrames: audio.numberOfFrames

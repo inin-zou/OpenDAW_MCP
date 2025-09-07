@@ -2,7 +2,6 @@ import {
     Arrays,
     DefaultObservableValue,
     Errors,
-    isDefined,
     isUndefined,
     Procedure,
     Progress,
@@ -17,9 +16,17 @@ import {ProjectStorage} from "../project/ProjectStorage"
 import {ProjectMeta} from "../project/ProjectMeta"
 import {OpenSampleAPI} from "../samples/OpenSampleAPI"
 import {SampleStorage} from "../samples/SampleStorage"
-import {encodeWavFloat} from "../Wav"
 import {CloudStorageHandler} from "./CloudStorageHandler"
+import {WavFile} from "../WavFile"
 
+/**
+ * Next steps:
+ *  Introduce a local trash.json to store all files that have been deleted locally,
+ *  so they get not recovered when connecting to the cloud. After an approval dialog,
+ *  they can be deleted from the cloud as well.
+ *
+ *  flac
+ */
 export namespace CloudBackup {
     const ProjectsPath = "projects"
     const ProjectsCatalogPath = `${ProjectsPath}/index.json`
@@ -35,17 +42,17 @@ export namespace CloudBackup {
         const notification = RuntimeNotifier.progress({headline: "Dropbox Backup", progress: progressValue})
         const [progressSamples, progressProjects] = Progress.split(progress => progressValue.setValue(progress), 2)
         const log = (text: string) => notification.message = text
-        const syncSamplesResult = await Promises.tryCatch(
-            backupSamples(cloudHandler, audioContext, log, progressSamples))
-        if (syncSamplesResult.status === "rejected") {
+        const {status: sampleStatus, error: sampleError} = await Promises.tryCatch(
+            uploadSamples(cloudHandler, audioContext, log, progressSamples))
+        if (sampleStatus === "rejected") {
             notification.terminate()
-            return Errors.warn(String(syncSamplesResult.error))
+            return Errors.warn(String(sampleError))
         }
-        const syncProjectsResult = await Promises.tryCatch(
-            backupProjects(cloudHandler, log, progressProjects))
-        if (syncProjectsResult.status === "rejected") {
+        const {status: projectStatus, error: projectError} = await Promises.tryCatch(
+            uploadProjects(cloudHandler, log, progressProjects))
+        if (projectStatus === "rejected") {
             notification.terminate()
-            return Errors.warn(String(syncProjectsResult.error))
+            return Errors.warn(String(projectError))
         }
         log("Everything is up to date.")
         await Wait.timeSpan(longNotificationTime)
@@ -53,25 +60,22 @@ export namespace CloudBackup {
         progressValue.terminate()
     }
 
-    export const backupSamples = async (cloudHandler: CloudStorageHandler,
-                                        audioContext: AudioContext,
-                                        log: Procedure<string>,
-                                        progress: Progress.Handler) => {
+    const uploadSamples = async (cloudHandler: CloudStorageHandler,
+                                 audioContext: AudioContext,
+                                 log: Procedure<string>,
+                                 progress: Progress.Handler) => {
         progress(0.0)
         const [listProgress, uploadProgress] = Progress.split(progress, 2)
         const areSamplesEqual = ({uuid: a}: Sample, {uuid: b}: Sample) => a === b
         log("Start syncing samples...")
-        await Wait.timeSpan(shortNotificationTime)
         listProgress(0.25)
-        const excludeSamples: ReadonlyArray<Sample> = await OpenSampleAPI.get().all()
-        log(`Found ${excludeSamples.length} openDAW samples.`)
-        await Wait.timeSpan(shortNotificationTime)
+        const staticSamples: ReadonlyArray<Sample> = await OpenSampleAPI.get().all()
+        log(`Found ${staticSamples.length} openDAW samples.`)
         listProgress(0.50)
         const localSamples: ReadonlyArray<Sample> = await SampleStorage.list()
         log(`Found ${localSamples.length} local samples.`)
-        await Wait.timeSpan(shortNotificationTime)
         listProgress(0.75)
-        const maybeUnsyncedSamples = Arrays.subtract(localSamples, excludeSamples, areSamplesEqual)
+        const maybeUnsyncedSamples = Arrays.subtract(localSamples, staticSamples, areSamplesEqual)
         const cloudSamples: ReadonlyArray<Sample> = await cloudHandler.download(SamplesCatalogPath)
             .then(json => JSON.parse(new TextDecoder().decode(json)), () => Arrays.empty())
         const unsyncedSamples = Arrays.subtract(maybeUnsyncedSamples, cloudSamples, areSamplesEqual)
@@ -85,17 +89,16 @@ export namespace CloudBackup {
         await Wait.timeSpan(longNotificationTime)
         listProgress(1.0)
         const uploadedSampleResults: ReadonlyArray<PromiseSettledResult<Sample>> =
-            await Promises.allSettledWithLimit(unsyncedSamples.map((sample, index, {length}) =>
-                async () => {
-                    uploadProgress((index + 1) / length)
-                    log(`uploading '${sample.name}'`)
-                    const file = await SampleStorage.load(UUID.parse(sample.uuid), audioContext)
-                        .then(([{frames: channels, numberOfChannels, numberOfFrames: numFrames, sampleRate}]) =>
-                            encodeWavFloat({channels, numberOfChannels, numFrames, sampleRate}))
-                    await cloudHandler.upload(`${SamplesPath}/${sample.uuid}`, file)
-                    return sample
-                }))
-        log(`Synchronize index.json...`)
+            await Promises.allSettledWithLimit(unsyncedSamples.map((sample, index, {length}) => async () => {
+                uploadProgress((index + 1) / length)
+                log(`uploading '${sample.name}'`)
+                const file = await SampleStorage.load(UUID.parse(sample.uuid), audioContext)
+                    .then(([{frames: channels, numberOfChannels, numberOfFrames: numFrames, sampleRate}]) =>
+                        WavFile.encodeFloats({channels, numberOfChannels, numFrames, sampleRate}))
+                await cloudHandler.upload(`${SamplesPath}/${sample.uuid}`, file)
+                return sample
+            }), 1)
+        log(`Upload sample catalog...`)
         await Wait.timeSpan(longNotificationTime)
         const catalog: Array<Sample> = Arrays.merge(cloudSamples, uploadedSampleResults
             .filter(result => result.status === "fulfilled")
@@ -107,9 +110,9 @@ export namespace CloudBackup {
         progress(1.0)
     }
 
-    export const backupProjects = async (cloudHandler: CloudStorageHandler,
-                                         log: Procedure<string>,
-                                         progress: Progress.Handler) => {
+    const uploadProjects = async (cloudHandler: CloudStorageHandler,
+                                  log: Procedure<string>,
+                                  progress: Progress.Handler) => {
         progress(0.0)
         const [listProgress, uploadProgress] = Progress.split(progress, 2)
         log("Start syncing projects...")
@@ -119,7 +122,6 @@ export namespace CloudBackup {
             await cloudHandler.download(ProjectsCatalogPath)
                 .then(json => JSON.parse(new TextDecoder().decode(json)), () => ({}))
         const listLocalResult = await Promises.tryCatch(ProjectStorage.listProjects({
-            includeCover: true,
             progress: listProgress
         }))
         if (listLocalResult.status === "rejected") {
@@ -140,26 +142,26 @@ export namespace CloudBackup {
         log(`Upload ${unsyncedProjects.length} projects...`)
         await Wait.timeSpan(shortNotificationTime)
         const results = await Promises.allSettledWithLimit(unsyncedProjects
-            .map(({uuid, meta, cover}: ProjectStorage.ListEntry, index, {length}) => async () => {
+            .map(({uuid, meta}: ProjectStorage.ListEntry, index, {length}) => async () => {
                 uploadProgress((index + 1) / length)
                 const folder = `${ProjectsPath}/${UUID.toString(uuid)}`
                 const metaJson = new TextEncoder().encode(JSON.stringify(meta)).buffer
                 const project = await ProjectStorage.loadProject(uuid)
+                const optCover = await ProjectStorage.loadCover(uuid)
                 const tasks: Array<Promise<unknown>> = []
                 tasks.push(cloudHandler.upload(`${folder}/project.od`, project))
                 tasks.push(cloudHandler.upload(`${folder}/meta.json`, metaJson))
-                if (isDefined(cover)) {
-                    tasks.push(cloudHandler.upload(`${folder}/image.bin`, cover))
-                }
+                optCover.ifSome(cover => tasks.push(cloudHandler.upload(`${folder}/image.bin`, cover)))
                 log(`Uploading project '${meta.name}'`)
                 await Promises.timeout(Promise.all(tasks), TimeSpan.seconds(30), "Upload timeout (30s).")
                 return {uuid, meta}
-            }))
+            }), 1)
         const uploaded = results.filter(result => result.status === "fulfilled")
         uploaded.forEach(({value: {uuid, meta: {name, created, modified, tags, description}}}) =>
             cloudProjects[UUID.toString(uuid)] = {name, created, modified, tags, description})
         const jsonString = JSON.stringify(cloudProjects, null, 2)
         const buffer = new TextEncoder().encode(jsonString).buffer
+        log(`Upload sample catalog...`)
         await cloudHandler.upload(ProjectsCatalogPath, buffer)
         uploadProgress(1.0)
         log(`${uploaded.length} successfully uploaded.`)

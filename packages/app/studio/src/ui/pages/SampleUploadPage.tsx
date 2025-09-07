@@ -4,7 +4,7 @@ import {StudioService} from "@/service/StudioService.ts"
 import {Files, Html} from "@opendaw/lib-dom"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {estimateBpm} from "@opendaw/lib-dsp"
-import {encodeWavFloat, FilePickerAcceptTypes} from "@opendaw/studio-core"
+import {FilePickerAcceptTypes, WavFile} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "SampleUploadPage")
 
@@ -24,7 +24,7 @@ export const SampleUploadPage: PageFactory<StudioService> = ({service}: PageCont
                         const sample_rate = buffer.sampleRate
                         const duration = buffer.duration
                         const bpm = estimateBpm(duration)
-                        const wav = encodeWavFloat(buffer)
+                        const wav = WavFile.encodeFloats(buffer)
                         console.debug("name", name)
                         console.debug("sampleRate", sample_rate)
                         console.debug("duration", duration)

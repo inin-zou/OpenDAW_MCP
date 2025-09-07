@@ -5,7 +5,7 @@ import {Promises, Wait} from "@opendaw/lib-runtime"
 import {ExportStemsConfiguration} from "@opendaw/studio-adapters"
 import {Project} from "./project/Project"
 import {ProjectMeta} from "./project/ProjectMeta"
-import {encodeWavFloat} from "./Wav"
+import {WavFile} from "./WavFile"
 import {AudioWorklets} from "./AudioWorklets"
 
 export namespace AudioOfflineRenderer {
@@ -49,7 +49,7 @@ export namespace AudioOfflineRenderer {
             approveText: "Save"
         })
         if (!approved) {return}
-        const wavFile = encodeWavFloat(buffer)
+        const wavFile = WavFile.encodeFloats(buffer)
         const suggestedName = `${meta.name}.wav`
         const saveResult = await Promises.tryCatch(Files.save(wavFile, {suggestedName}))
         if (saveResult.status === "rejected" && !Errors.isAbort(saveResult.error)) {
@@ -65,7 +65,11 @@ export namespace AudioOfflineRenderer {
         for (let stemIndex = 0; stemIndex < numStems; stemIndex++) {
             const l = buffer.getChannelData(stemIndex * 2)
             const r = buffer.getChannelData(stemIndex * 2 + 1)
-            const file = encodeWavFloat({channels: [l, r], sampleRate: buffer.sampleRate, numFrames: buffer.length})
+            const file = WavFile.encodeFloats({
+                channels: [l, r],
+                sampleRate: buffer.sampleRate,
+                numFrames: buffer.length
+            })
             zip.file(`${trackNames[stemIndex]}.wav`, file, {binary: true})
         }
         const arrayBuffer = await zip.generateAsync({

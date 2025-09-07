@@ -47,9 +47,9 @@ import {Project} from "../project/Project"
 import {AudioUnitExportLayout} from "./AudioUnitExportLayout"
 import {ColorCodes} from "../ColorCodes"
 import {Html} from "@opendaw/lib-dom"
-import {encodeWavFloat} from "../Wav"
 import {DeviceBoxUtils} from "@opendaw/studio-adapters"
 import {DeviceIO} from "./DeviceIO"
+import {WavFile} from "../WavFile"
 
 export namespace DawProjectExporter {
     export interface ResourcePacker {write(path: string, buffer: ArrayBufferLike): FileReferenceSchema}
@@ -63,7 +63,7 @@ export namespace DawProjectExporter {
         boxGraph.boxes().forEach(box => box.accept<BoxVisitor>({
             visitAudioFileBox: (box: AudioFileBox): void => sampleManager.getOrCreate(box.address.uuid).data
                 .ifSome(({frames, numberOfFrames, sampleRate, numberOfChannels}) =>
-                    resourcePacker.write(`samples/${box.fileName.getValue()}.wav`, encodeWavFloat({
+                    resourcePacker.write(`samples/${box.fileName.getValue()}.wav`, WavFile.encodeFloats({
                         channels: frames,
                         duration: numberOfFrames * sampleRate,
                         numberOfChannels,

@@ -2,7 +2,7 @@ import {Arrays, ByteArrayInput, EmptyExec, UUID} from "@opendaw/lib-std"
 import {Peaks, SamplePeaks} from "@opendaw/lib-fusion"
 import {AudioData, Sample, SampleMetaData} from "@opendaw/studio-adapters"
 import {WorkerAgents} from "../WorkerAgents"
-import {encodeWavFloat} from "../Wav"
+import {WavFile} from "../WavFile"
 
 export namespace SampleStorage {
     export const clean = () => WorkerAgents.Opfs.delete("samples/v1").catch(EmptyExec)
@@ -15,7 +15,7 @@ export namespace SampleStorage {
                                 meta: SampleMetaData): Promise<void> => {
         const path = `${Folder}/${UUID.toString(uuid)}`
         return Promise.all([
-            WorkerAgents.Opfs.write(`${path}/audio.wav`, new Uint8Array(encodeWavFloat({
+            WorkerAgents.Opfs.write(`${path}/audio.wav`, new Uint8Array(WavFile.encodeFloats({
                 channels: audio.frames.slice(),
                 numFrames: audio.numberOfFrames,
                 sampleRate: audio.sampleRate
