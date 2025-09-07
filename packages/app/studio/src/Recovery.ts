@@ -34,7 +34,7 @@ export class Recovery {
 
     createBackupCommand(): Option<Provider<Promise<void>>> {
         return this.#service.profileService.getValue().map((profile: ProjectProfile) => async () => {
-            console.debug("temp storing project")
+            console.debug("backup project")
             const {project, meta, uuid} = profile
             return Promises.tryCatch(Promise.all([
                 WorkerAgents.Opfs.write(`${Recovery.#RESTORE_FILE_PATH}/uuid`, uuid),

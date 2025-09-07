@@ -1,4 +1,13 @@
-import {isDefined, Notifier, Nullable, Observable, Observer, Procedure, Subscription, Terminable} from "@opendaw/lib-std"
+import {
+    isDefined,
+    Notifier,
+    Nullable,
+    Observable,
+    Observer,
+    Procedure,
+    Subscription,
+    Terminable
+} from "@opendaw/lib-std"
 
 export type Port = {
     postMessage(message: any): void
@@ -38,6 +47,7 @@ class NativeMessenger implements Messenger {
     }
 }
 
+// with '__id__' we put in a little security that we are only communicating with the messenger we created
 class Channel implements Messenger {
     readonly #messages: Messenger
     readonly #name: string
@@ -48,13 +58,13 @@ class Channel implements Messenger {
         this.#messages = messages
         this.#name = name
         this.#subscription = messages.subscribe(data => {
-            if ("message" in data && "channel" in data && data.channel === name) {
+            if ("__id__" in data && data.__id__ === "42" && "message" in data && "channel" in data && data.channel === name) {
                 this.#notifier.notify(data.message)
             }
         })
     }
 
-    send(message: any): void {this.#messages.send({channel: this.#name, message})}
+    send(message: any): void {this.#messages.send({__id__: "42", channel: this.#name, message})}
     channel(name: string): Messenger {return new Channel(this, name)}
     subscribe(observer: Observer<MessageEvent>): Subscription {return this.#notifier.subscribe(observer)}
     terminate(): void {

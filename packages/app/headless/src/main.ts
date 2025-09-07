@@ -23,7 +23,7 @@ import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
     console.debug("Agent", Browser.userAgent)
     console.debug("isLocalHost", Browser.isLocalHost())
     document.body.textContent = "booting..."
-    WorkerAgents.install()
+    await WorkerAgents.install()
     {
         const {status, error} = await Promises.tryCatch(testFeatures())
         if (status === "rejected") {
@@ -40,7 +40,7 @@ import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
         return
     }
     {
-        const sampleAPI = new OpenSampleAPI()
+        const sampleAPI = OpenSampleAPI.get()
         const sampleManager = new MainThreadSampleManager({
             fetch: (uuid: UUID.Format, progress: Progress.Handler): Promise<[AudioData, SampleMetaData]> =>
                 sampleAPI.load(context, uuid, progress)

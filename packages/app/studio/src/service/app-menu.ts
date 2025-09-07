@@ -2,13 +2,12 @@ import {MenuItem} from "@/ui/model/menu-item"
 import {StudioService} from "@/service/StudioService"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {RouteLocation} from "@opendaw/lib-jsx"
-import {Errors, isDefined, panic, RuntimeNotifier, TimeSpan} from "@opendaw/lib-std"
+import {isDefined, panic} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
-import {CloudAuthManager} from "@/clouds/CloudAuthManager"
-import {Promises, Wait} from "@opendaw/lib-runtime"
-import {CloudSync} from "@/clouds/CloudSync"
+import {Promises} from "@opendaw/lib-runtime"
+import {CloudAuthManager, CloudSync} from "@opendaw/studio-core"
 
 export const initAppMenu = (service: StudioService) => {
     return MenuItem.root()
@@ -86,24 +85,7 @@ export const initAppMenu = (service: StudioService) => {
                                             console.debug(`Promise rejected with '${(dropboxResult.error)}'`)
                                             return
                                         }
-                                        const cloudHandler = dropboxResult.value
-                                        const notification = RuntimeNotifier.progress({headline: "Dropbox Backup"})
-                                        const log = (text: string) => notification.message = text
-                                        const syncSamplesResult = await Promises.tryCatch(CloudSync
-                                            .syncSamples(cloudHandler, service.audioContext, log))
-                                        if (syncSamplesResult.status === "rejected") {
-                                            notification.terminate()
-                                            return Errors.warn(String(syncSamplesResult.error))
-                                        }
-                                        const syncProjectsResult = await Promises.tryCatch(CloudSync
-                                            .syncProjects(cloudHandler, log))
-                                        if (syncProjectsResult.status === "rejected") {
-                                            notification.terminate()
-                                            return Errors.warn(String(syncProjectsResult.error))
-                                        }
-                                        log("Everything is up to date.")
-                                        await Wait.timeSpan(TimeSpan.seconds(2))
-                                        notification.terminate()
+                                        await CloudSync.sync(dropboxResult.value, service.audioContext)
                                     })
                             )
                         }),

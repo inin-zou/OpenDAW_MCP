@@ -125,7 +125,7 @@ export namespace Dialogs {
 
     export const progress = ({
                                  headline, message, progress, cancel, origin
-                             }: RuntimeNotification.ProgressRequest): RuntimeNotification.ProgressHandler => {
+                             }: RuntimeNotification.ProgressRequest): RuntimeNotification.ProgressUpdater => {
         const lifecycle = new Terminator()
         const buttons: ReadonlyArray<Button> = isDefined(cancel)
             ? [{
@@ -154,7 +154,7 @@ export namespace Dialogs {
         dialog.addEventListener("close", () => lifecycle.terminate(), {once: true})
         dialog.showModal()
         lifecycle.own(Terminable.create(() => dialog.close()))
-        return new class implements RuntimeNotification.ProgressHandler {
+        return new class implements RuntimeNotification.ProgressUpdater {
             set message(value: string) {messageElement.textContent = value}
             terminate(): void {lifecycle.terminate()}
         }

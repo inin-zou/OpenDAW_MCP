@@ -1,5 +1,5 @@
 import {asDefined, Errors, isDefined, isUndefined, panic, RuntimeNotifier} from "@opendaw/lib-std"
-import {CloudStorageHandler} from "@/clouds/CloudStorageHandler"
+import {CloudStorageHandler} from "./CloudStorageHandler"
 
 export class CloudAuthManager {
     static async create(): Promise<CloudAuthManager> {

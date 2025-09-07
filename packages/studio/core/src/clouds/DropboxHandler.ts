@@ -1,14 +1,14 @@
 import {Dropbox, DropboxResponse, files} from "dropbox"
 import {isDefined, Option, panic} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
-import {CloudStorageHandler} from "@/clouds/CloudStorageHandler"
+import {CloudStorageHandler} from "./CloudStorageHandler"
 
 export class DropboxHandler implements CloudStorageHandler {
-    readonly #token: string
+    readonly #accessToken: string
 
     #dropboxClient: Option<Dropbox> = Option.None
 
-    constructor(token: string) {this.#token = token}
+    constructor(accessToken: string) {this.#accessToken = accessToken}
 
     async upload(path: string, buffer: ArrayBuffer): Promise<void> {
         const client = await this.#ensureClient()
@@ -44,7 +44,7 @@ export class DropboxHandler implements CloudStorageHandler {
         return panic(error)
     }
 
-    async list(path?: string): Promise<string[]> {
+    async list(path?: string): Promise<Array<string>> {
         const client = await this.#ensureClient()
         const fullPath = path ? this.#getFullPath(path) : ""
         const response = await client.filesListFolder({path: fullPath})
@@ -60,7 +60,7 @@ export class DropboxHandler implements CloudStorageHandler {
     async #ensureClient(): Promise<Dropbox> {
         if (this.#dropboxClient.isEmpty()) {
             const DropboxModule = await import("dropbox")
-            this.#dropboxClient = Option.wrap(new DropboxModule.Dropbox({accessToken: this.#token}))
+            this.#dropboxClient = Option.wrap(new DropboxModule.Dropbox({accessToken: this.#accessToken}))
         }
         return this.#dropboxClient.unwrap()
     }

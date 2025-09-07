@@ -114,10 +114,8 @@ export namespace Promises {
         }
     }
 
-    export const allSettledWithLimit = async <T, U>(
-        tasks: ReadonlyArray<Provider<Promise<T | U>>>,
-        limit = 1
-    ): Promise<PromiseSettledResult<T | U>[]> => {
+    export const allSettledWithLimit = async <T, U>(tasks: ReadonlyArray<Provider<Promise<T | U>>>, limit = 1)
+        : Promise<PromiseSettledResult<T | U>[]> => {
         const results: PromiseSettledResult<T | U>[] = new Array(tasks.length)
         let index = 0
         const run = async () => {

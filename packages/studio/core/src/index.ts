@@ -19,6 +19,7 @@ export * from "./project/ProjectEnv"
 export * from "./project/ProjectMeta"
 export * from "./project/ProjectPaths"
 export * from "./project/ProjectProfile"
+export * from "./project/ProjectStorage"
 
 export * from "./samples/SampleStorage"
 export * from "./samples/MainThreadSampleLoader"
@@ -31,6 +32,10 @@ export * from "./samples/SampleProvider"
 export * from "./sync-log/Commit"
 export * from "./sync-log/SyncLogReader"
 export * from "./sync-log/SyncLogWriter"
+
+export * from "./clouds/CloudAuthManager"
+export * from "./clouds/CloudStorageHandler"
+export * from "./clouds/CloudSync"
 
 export * from "./AudioDevices"
 export * from "./AudioOfflineRenderer"

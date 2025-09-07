@@ -2,7 +2,7 @@ import {assert, EmptyExec, Exec, unitValue} from "./lang"
 import {Option} from "./option"
 import {ObservableValue} from "./observables"
 import {Terminable} from "./terminable"
-import ProgressHandler = RuntimeNotification.ProgressHandler
+import ProgressHandler = RuntimeNotification.ProgressUpdater
 
 export namespace RuntimeNotification {
     export type InfoRequest = {
@@ -30,7 +30,7 @@ export namespace RuntimeNotification {
         origin?: Element
     }
 
-    export interface ProgressHandler extends Terminable {
+    export interface ProgressUpdater extends Terminable {
         set message(value: string)
     }
 
@@ -41,7 +41,7 @@ export namespace RuntimeNotification {
     export interface Notifier {
         info(request: InfoRequest): Promise<void>
         approve(request: ApproveRequest): Promise<boolean>
-        progress(request: ProgressRequest): ProgressHandler
+        progress(request: ProgressRequest): ProgressUpdater
     }
 }
 

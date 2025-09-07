@@ -2,11 +2,10 @@ import {asDefined, RuntimeNotifier, UUID} from "@opendaw/lib-std"
 import {PPQN} from "@opendaw/lib-dsp"
 import {AudioFileBox, AudioRegionBox} from "@opendaw/studio-boxes"
 import {Sample} from "@opendaw/studio-adapters"
-import {ColorCodes, InstrumentFactories, SampleStorage} from "@opendaw/studio-core"
+import {ColorCodes, InstrumentFactories, ProjectStorage, SampleStorage} from "@opendaw/studio-core"
 import {HTMLSelection} from "@/ui/HTMLSelection"
 import {StudioService} from "@/service/StudioService"
 import {Dialogs} from "../components/dialogs"
-import {ProjectStorage} from "@/project/ProjectStorage"
 
 export class SampleService {
     readonly #service: StudioService
