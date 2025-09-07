@@ -2,6 +2,7 @@ import {
     Arrays,
     asDefined,
     DefaultObservableValue,
+    Lazy,
     panic,
     Procedure,
     RuntimeNotifier,
@@ -22,10 +23,13 @@ const headers: RequestInit = {
     credentials: "include"
 }
 
-// Standard openDAW samples
+// Standard openDAW samples (considered to be non-removable)
 export class OpenSampleAPI implements SampleAPI {
     static readonly ApiRoot = "https://api.opendaw.studio/samples"
     static readonly FileRoot = "https://assets.opendaw.studio/samples"
+
+    @Lazy
+    static get(): OpenSampleAPI {return new OpenSampleAPI()}
 
     static fromAudioBuffer(buffer: AudioBuffer): AudioData {
         return {
@@ -35,6 +39,8 @@ export class OpenSampleAPI implements SampleAPI {
             numberOfChannels: buffer.numberOfChannels
         }
     }
+
+    private constructor() {}
 
     async all(): Promise<ReadonlyArray<Sample>> {
         return Promises.retry(() => fetch(`${OpenSampleAPI.ApiRoot}/list.php`, headers)

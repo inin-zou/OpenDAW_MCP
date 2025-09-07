@@ -10,7 +10,6 @@ import {
     UUID
 } from "@opendaw/lib-std"
 import {ProjectDialogs} from "@/project/ProjectDialogs"
-import {ProjectStorage} from "@/project/ProjectStorage"
 import {Dialogs} from "@/ui/components/dialogs"
 import {Promises} from "@opendaw/lib-runtime"
 import {Files} from "@opendaw/lib-dom"
@@ -20,7 +19,7 @@ import {
     ProjectBundle,
     ProjectEnv,
     ProjectMeta,
-    ProjectProfile,
+    ProjectProfile, ProjectStorage,
     SampleAPI,
     SampleImporter
 } from "@opendaw/studio-core"

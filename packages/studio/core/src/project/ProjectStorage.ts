@@ -1,24 +1,37 @@
-import {Option, tryCatch, UUID} from "@opendaw/lib-std"
+import {Option, Progress, safeExecute, tryCatch, UUID} from "@opendaw/lib-std"
 import {AudioFileBox} from "@opendaw/studio-boxes"
 import {ProjectDecoder} from "@opendaw/studio-adapters"
-import {ProjectMeta, ProjectPaths, WorkerAgents} from "@opendaw/studio-core"
+import {ProjectMeta} from "./ProjectMeta"
+import {WorkerAgents} from "../WorkerAgents"
+import {ProjectPaths} from "./ProjectPaths"
 
 export namespace ProjectStorage {
-    export const listProjects = async ({includeCover}: { includeCover?: boolean } = {}): Promise<ReadonlyArray<{
-        uuid: UUID.Format,
-        meta: ProjectMeta,
+    export type ListEntry = {
+        uuid: UUID.Format
+        meta: ProjectMeta
         cover?: ArrayBuffer
-    }>> => {
+        project?: ArrayBuffer
+    }
+
+    export type List = ReadonlyArray<ListEntry>
+
+    export const listProjects = async ({includeCover, includeProject, progress}: {
+        includeCover?: boolean
+        includeProject?: boolean
+        progress?: Progress.Handler
+    } = {}): Promise<List> => {
         return WorkerAgents.Opfs.list(ProjectPaths.Folder)
             .then(files => Promise.all(files.filter(file => file.kind === "directory")
-                .map(async ({name}) => {
+                .map(async ({name}, index, {length}) => {
+                    safeExecute(progress, (index + 1) / length)
                     const uuid = UUID.parse(name)
                     const array = await WorkerAgents.Opfs.read(ProjectPaths.projectMeta(uuid))
                     return ({
                         uuid,
                         meta: JSON.parse(new TextDecoder().decode(array)) as ProjectMeta,
-                        cover: includeCover ? (await loadCover(uuid)).unwrapOrUndefined() : undefined
-                    })
+                        cover: includeCover ? (await loadCover(uuid)).unwrapOrUndefined() : undefined,
+                        project: includeProject ? await loadProject(uuid) : undefined
+                    } satisfies ListEntry)
                 })))
     }
 

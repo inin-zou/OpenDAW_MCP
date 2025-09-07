@@ -36,14 +36,15 @@ import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
 
 window.name = "main"
 
-const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`).then(x => x.json().then(x => x as BuildInfo))
+const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`)
+    .then(x => x.json().then(x => x as BuildInfo))
 
 ;(async () => {
         if (!window.crossOriginIsolated) {return panic("window must be crossOriginIsolated")}
         console.debug("booting...")
         console.debug("WorkersUrl", WorkersUrl)
         console.debug("WorkletsUrl", WorkletsUrl)
-        WorkerAgents.install()
+        await WorkerAgents.install()
         await FontLoader.load()
         const testFeaturesResult = await Promises.tryCatch(testFeatures())
         if (testFeaturesResult.status === "rejected") {
@@ -69,7 +70,7 @@ const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`).then
                     console.debug(`AudioContext resumed (${context.state})`)), {capture: true, once: true})
         }
         const audioDevices = await AudioOutputDevice.create(context)
-        const sampleAPI = new OpenSampleAPI()
+        const sampleAPI = OpenSampleAPI.get()
         const sampleManager = new MainThreadSampleManager({
             fetch: async (uuid: UUID.Format, progress: Procedure<unitValue>): Promise<[AudioData, SampleMetaData]> =>
                 sampleAPI.load(context, uuid, progress)
@@ -102,7 +103,7 @@ const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`).then
         RuntimeNotifier.install({
             info: (request) => Dialogs.info(request),
             approve: (request) => Dialogs.approve(request),
-            progress: (request): RuntimeNotification.ProgressHandler => Dialogs.progress(request)
+            progress: (request): RuntimeNotification.ProgressUpdater => Dialogs.progress(request)
         })
         if (buildInfo.env === "production" && !Browser.isLocalHost()) {
             const uuid = buildInfo.uuid

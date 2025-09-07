@@ -34,7 +34,6 @@ import {SamplePlayback} from "@/service/SamplePlayback"
 import {Shortcuts} from "@/service/Shortcuts"
 import {ProjectProfileService} from "./ProjectProfileService"
 import {StudioSignal} from "./StudioSignal"
-import {ProjectStorage} from "@/project/ProjectStorage"
 import {SampleDialogs} from "@/ui/browse/SampleDialogs"
 import {AudioOutputDevice} from "@/audio/AudioOutputDevice"
 import {FooterLabel} from "@/service/FooterLabel"
@@ -60,6 +59,7 @@ import {
     ProjectEnv,
     ProjectMeta,
     ProjectProfile,
+    ProjectStorage,
     RestartWorklet,
     SampleAPI
 } from "@opendaw/studio-core"

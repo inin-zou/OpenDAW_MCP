@@ -1,13 +1,12 @@
 import css from "./ProjectBrowser.sass?inline"
 import {StudioService} from "@/service/StudioService"
 import {Procedure, StringComparator, TimeSpan, UUID} from "@opendaw/lib-std"
-import {ProjectStorage} from "@/project/ProjectStorage"
 import {Icon} from "@/ui/components/Icon"
 import {IconSymbol} from "@opendaw/studio-adapters"
 import {Dialogs} from "@/ui/components/dialogs"
 import {Await, createElement, DomElement, Frag, Group} from "@opendaw/lib-jsx"
 import {Html} from "@opendaw/lib-dom"
-import {ProjectMeta} from "@opendaw/studio-core"
+import {ProjectMeta, ProjectStorage} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "ProjectBrowser")
 

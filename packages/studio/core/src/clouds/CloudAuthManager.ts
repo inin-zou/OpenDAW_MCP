@@ -1,10 +1,11 @@
-import {asDefined, Errors, isDefined, isUndefined, panic, RuntimeNotifier} from "@opendaw/lib-std"
-import {CloudStorageHandler} from "@/clouds/CloudStorageHandler"
+import {asDefined, Errors, isDefined, isUndefined, panic, RuntimeNotifier, TimeSpan} from "@opendaw/lib-std"
+import {CloudStorageHandler} from "./CloudStorageHandler"
+import {Promises} from "@opendaw/lib-runtime"
 
 export class CloudAuthManager {
     static async create(): Promise<CloudAuthManager> {
         const clientId = "jtehjzxaxf3bf1l"
-        const redirectUri = "https://localhost:8080/auth-callback.html"
+        const redirectUri = "https://localhost:8080/auth-callback.html" // TODO Build this dynamically
         const {codeVerifier, codeChallenge} = await this.#createCodes()
         return new CloudAuthManager(clientId, redirectUri, codeVerifier, codeChallenge)
     }
@@ -34,6 +35,8 @@ export class CloudAuthManager {
     readonly #codeVerifier: string
     readonly #codeChallenge: string
 
+    readonly #memoizeHandler = Promises.memoizeAsync(this.#dropbox.bind(this), TimeSpan.hours(1))
+
     readonly id = CloudAuthManager.#ID++
 
     private constructor(clientId: string, redirectUri: string, codeVerifier: string, codeChallenge: string) {
@@ -44,6 +47,11 @@ export class CloudAuthManager {
     }
 
     async dropbox(): Promise<CloudStorageHandler> {
+        console.debug("call memoizeHandler")
+        return this.#memoizeHandler()
+    }
+
+    async #dropbox(): Promise<CloudStorageHandler> {
         const service = "dropbox"
         const authUrl = this.#getAuthUrl(service)
         console.debug("[CloudAuth] Opening auth window:", authUrl)

@@ -2,13 +2,12 @@ import {MenuItem} from "@/ui/model/menu-item"
 import {StudioService} from "@/service/StudioService"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {RouteLocation} from "@opendaw/lib-jsx"
-import {Errors, isDefined, panic, RuntimeNotifier, TimeSpan} from "@opendaw/lib-std"
+import {isDefined, panic} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
-import {CloudAuthManager} from "@/clouds/CloudAuthManager"
-import {Promises, Wait} from "@opendaw/lib-runtime"
-import {CloudSync} from "@/clouds/CloudSync"
+import {Promises} from "@opendaw/lib-runtime"
+import {CloudAuthManager, CloudBackup} from "@opendaw/studio-core"
 
 export const initAppMenu = (service: StudioService) => {
     return MenuItem.root()
@@ -69,7 +68,7 @@ export const initAppMenu = (service: StudioService) => {
                             parent.addMenuItem(
                                 MenuItem.default({label: "Dropbox Backup", icon: IconSymbol.Dropbox})
                                     .setTriggerProcedure(async () => {
-                                        const approveResult = await Promises.tryCatch(Dialogs.approve({
+                                        const approved = await Dialogs.approve({
                                             headline: "openDAW and your data",
                                             message: `openDAW will never store or share your personal account details. Dropbox requires permission to read “basic account info” such as your name and email, but openDAW does not use or retain this information. We only access the files you choose to synchronize. 
                                             
@@ -78,32 +77,15 @@ export const initAppMenu = (service: StudioService) => {
                                             cancelText: "Cancel",
                                             reverse: true,
                                             maxWidth: "30em"
-                                        }))
-                                        if (approveResult.status === "rejected") {return}
-                                        const manager = await CloudAuthManager.create()
+                                        })
+                                        if (!approved) {return}
+                                        const manager = await CloudAuthManager.create() // TODO move to boot time and reuse
                                         const dropboxResult = await Promises.tryCatch(manager.dropbox())
                                         if (dropboxResult.status === "rejected") {
                                             console.debug(`Promise rejected with '${(dropboxResult.error)}'`)
                                             return
                                         }
-                                        const cloudHandler = dropboxResult.value
-                                        const notification = RuntimeNotifier.progress({headline: "Dropbox Backup"})
-                                        const log = (text: string) => notification.message = text
-                                        const syncSamplesResult = await Promises.tryCatch(CloudSync
-                                            .syncSamples(cloudHandler, service.audioContext, log))
-                                        if (syncSamplesResult.status === "rejected") {
-                                            notification.terminate()
-                                            return Errors.warn(String(syncSamplesResult.error))
-                                        }
-                                        const syncProjectsResult = await Promises.tryCatch(CloudSync
-                                            .syncProjects(cloudHandler, log))
-                                        if (syncProjectsResult.status === "rejected") {
-                                            notification.terminate()
-                                            return Errors.warn(String(syncProjectsResult.error))
-                                        }
-                                        log("Everything is up to date.")
-                                        await Wait.timeSpan(TimeSpan.seconds(2))
-                                        notification.terminate()
+                                        await CloudBackup.fullBackup(dropboxResult.value, service.audioContext)
                                     })
                             )
                         }),

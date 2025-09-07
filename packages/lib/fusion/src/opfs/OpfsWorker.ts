@@ -1,6 +1,6 @@
 import {Arrays, asDefined} from "@opendaw/lib-std"
 import {Communicator, Messenger, Promises} from "@opendaw/lib-runtime"
-import {Entry, OpfsProtocol} from "./OpfsProtocol"
+import {OpfsProtocol} from "./OpfsProtocol"
 import "../types"
 
 export namespace OpfsWorker {
@@ -39,11 +39,11 @@ export namespace OpfsWorker {
                     .then(folder => folder.removeEntry(asDefined(segments.at(-1)), {recursive: true}))
             }
 
-            async list(path: string): Promise<ReadonlyArray<Entry>> {
+            async list(path: string): Promise<ReadonlyArray<OpfsProtocol.Entry>> {
                 const segments = pathToSegments(path)
                 const {status, value: folder} = await Promises.tryCatch(this.#resolveFolder(segments))
                 if (status === "rejected") {return Arrays.empty()}
-                const result: Array<Entry> = []
+                const result: Array<OpfsProtocol.Entry> = []
                 for await (const {name, kind} of folder.values()) {
                     result.push({name, kind})
                 }

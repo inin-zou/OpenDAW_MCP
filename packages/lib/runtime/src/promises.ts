@@ -4,6 +4,7 @@ import {
     Func,
     InaccessibleProperty,
     int,
+    isDefined,
     isNull,
     Nullable,
     Option,
@@ -100,10 +101,13 @@ export namespace Promises {
         }
     }
 
-    export const memoizeAsync = <T>(factory: Provider<Promise<T>>): Provider<Promise<T>> => {
+    export const memoizeAsync = <T>(factory: Provider<Promise<T>>, timeout?: TimeSpan): Provider<Promise<T>> => {
         let resolving: Nullable<Promise<T>> = null
+        let lastCall: number = Date.now()
         return () => {
-            if (isNull(resolving)) {
+            const now = Date.now()
+            if (isNull(resolving) || (isDefined(timeout) && now - lastCall > timeout.millis())) {
+                lastCall = now
                 resolving = factory()
                 resolving.catch(error => {
                     resolving = null
@@ -114,10 +118,8 @@ export namespace Promises {
         }
     }
 
-    export const allSettledWithLimit = async <T, U>(
-        tasks: ReadonlyArray<Provider<Promise<T | U>>>,
-        limit = 1
-    ): Promise<PromiseSettledResult<T | U>[]> => {
+    export const allSettledWithLimit = async <T, U>(tasks: ReadonlyArray<Provider<Promise<T | U>>>, limit = 1)
+        : Promise<PromiseSettledResult<T | U>[]> => {
         const results: PromiseSettledResult<T | U>[] = new Array(tasks.length)
         let index = 0
         const run = async () => {
