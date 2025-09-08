@@ -1,7 +1,7 @@
 import {Address, Box, BoxGraph, PointerField} from "@opendaw/lib-box"
 import {assert, ByteArrayInput, ByteArrayOutput, Option, panic, UUID} from "@opendaw/lib-std"
-import {AudioFileBox, BoxIO} from "@opendaw/studio-boxes"
 import {DeviceBox, DeviceBoxUtils} from "@opendaw/studio-adapters"
+import {BoxIO} from "@opendaw/studio-boxes"
 
 export namespace DeviceIO {
     export const exportDevice = (box: Box): ArrayBufferLike => {

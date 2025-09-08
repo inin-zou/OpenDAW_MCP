@@ -213,8 +213,30 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
         return Promise.reject("Not implemented")
     }
 
-    extractIntoNew(/*Something ;)*/): Promise<Project> {
-        // TODO
+    extractIntoNew(...audioUnits: ReadonlyArray<AudioUnitBox>): Promise<Project> {
+        const targetProject = Project.new(this.#env)
+        const copies = UUID.newSet<{ source: AudioUnitBox, copy: AudioUnitBox }>(({source: {address: {uuid}}}) => uuid)
+        copies.addMany(audioUnits.map(source => {
+            const copy = AudioUnitBox.create(this.boxGraph, UUID.generate(), box => {
+                box.type.setValue(source.type.getValue())
+                box.index.setValue(source.index.getValue())
+                box.collection.refer(targetProject.rootBox.audioUnits)
+                box.output.refer(targetProject.rootBox.outputDevice)
+            })
+            return {source, copy}
+        }))
+        audioUnits.forEach(box => {
+            // copy box
+            box.tracks // collect and remap
+            box.output // keep if the target is in audioUnits
+            box.input // take and remap
+            box.midiEffects // collect and remap
+            box.audioEffects // collect and remap
+            box.auxSends // collect if the targetBus is an input in audioUnits
+            box.collection // remap to new root
+            box.capture // take and remap
+            box.editing // unplug pointer, if any
+        })
         return Promise.reject("Not implemented")
     }
 
