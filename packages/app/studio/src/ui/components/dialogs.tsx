@@ -20,6 +20,7 @@ import {BoxesDebugView} from "@/ui/components/BoxesDebugView.tsx"
 import {ProgressBar} from "@/ui/components/ProgressBar.tsx"
 import {Colors} from "@opendaw/studio-core"
 import EmailBody from "@/ErrorMail.txt?raw"
+import {Browser} from "@opendaw/lib-dom"
 
 export namespace Dialogs {
     type Default = {
@@ -287,7 +288,13 @@ export namespace Dialogs {
                         }
                     }, {
                         text: "Dismiss",
-                        onClick: () => location.reload()
+                        onClick: () => {
+                            if (Browser.isLocalHost()) {
+                                dialog.close()
+                            } else {
+                                location.reload()
+                            }
+                        }
                     }, {
                         text: "EMail",
                         primary: true,

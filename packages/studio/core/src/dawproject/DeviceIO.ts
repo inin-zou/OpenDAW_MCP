@@ -1,7 +1,7 @@
 import {Address, Box, BoxGraph, PointerField} from "@opendaw/lib-box"
 import {assert, ByteArrayInput, ByteArrayOutput, Option, panic, UUID} from "@opendaw/lib-std"
 import {DeviceBox, DeviceBoxUtils} from "@opendaw/studio-adapters"
-import {BoxIO} from "@opendaw/studio-boxes"
+import {AudioFileBox, BoxIO} from "@opendaw/studio-boxes"
 
 export namespace DeviceIO {
     export const exportDevice = (box: Box): ArrayBufferLike => {
@@ -38,7 +38,7 @@ export namespace DeviceIO {
             const length = input.readInt()
             const array = new Int8Array(length)
             input.readBytes(array)
-            mapping.add({source: uuid, target: key === "AudioFileBox" ? uuid : UUID.generate()})
+            mapping.add({source: uuid, target: key === AudioFileBox.ClassName ? uuid : UUID.generate()})
             return {uuid, key, input: new ByteArrayInput(array.buffer)}
         }
         rawBoxes.push(readRawBox())

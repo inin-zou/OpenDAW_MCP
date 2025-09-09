@@ -300,6 +300,13 @@ class ClassWriter<E extends PointerTypes> {
                 statements: `return graph.stageBox(new ${className}({uuid, graph, name: "${className}", pointerRules: ${pointerRules}}), constructor)`,
                 returnType: className
             })
+            declaration.addProperty({
+                name: "ClassName",
+                type: "string",
+                isStatic: true,
+                isReadonly: true,
+                initializer: `"${className}"`
+            })
         } else {
             declaration.addMethod({
                 name: "create",
