@@ -36,7 +36,7 @@ export const SampleView = ({lifecycle, sampleService, sample, playback, location
                     event.stopPropagation()
                     const {status, value: meta} = await Promises.tryCatch(SampleDialogs.showEditSampleDialog(sample))
                     if (status === "resolved") {
-                        await SampleStorage.updateMeta(UUID.parse(meta.uuid), Objects.exclude(meta, "uuid"))
+                        await SampleStorage.updateSampleMeta(UUID.parse(meta.uuid), Objects.exclude(meta, "uuid"))
                         refresh()
                     }
                 }}>

@@ -26,9 +26,9 @@ export namespace UUID {
     export const validate = (uuid: UUID.Format): UUID.Format => UUID.parse(UUID.toString(uuid))
 
     export const fromDataInput = (input: DataInput): Format => {
-        const arr = new Uint8Array(length)
-        input.readBytes(new Int8Array(arr.buffer))
-        return arr
+        const array = new Uint8Array(length)
+        input.readBytes(new Int8Array(array.buffer))
+        return array
     }
 
     export const toDataOutput = (output: DataOutput, uuid: UUID.Format): void =>

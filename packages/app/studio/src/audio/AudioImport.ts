@@ -43,7 +43,7 @@ export namespace AudioImporter {
             duration: audioBuffer.duration,
             sample_rate: audioBuffer.sampleRate
         }
-        await SampleStorage.store(uuid, audioData, peaks, meta)
+        await SampleStorage.saveSample(uuid, audioData, peaks, meta)
         return {uuid: UUID.toString(uuid), ...meta}
     }
 }

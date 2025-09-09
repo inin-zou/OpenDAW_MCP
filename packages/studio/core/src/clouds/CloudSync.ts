@@ -27,7 +27,7 @@ import {WavFile} from "../WavFile"
  *
  *  flac
  */
-export namespace CloudBackup {
+export namespace CloudSync {
     const ProjectsPath = "projects"
     const ProjectsCatalogPath = `${ProjectsPath}/index.json`
     const SamplesPath = "samples"
@@ -42,8 +42,14 @@ export namespace CloudBackup {
         const notification = RuntimeNotifier.progress({headline: "Dropbox Backup", progress: progressValue})
         const [progressSamples, progressProjects] = Progress.split(progress => progressValue.setValue(progress), 2)
         const log = (text: string) => notification.message = text
+
         const {status: sampleStatus, error: sampleError} = await Promises.tryCatch(
-            uploadSamples(cloudHandler, audioContext, log, progressSamples))
+            syncSamples({
+                cloudHandler: cloudHandler,
+                audioContext: audioContext,
+                log: log,
+                progress: progressSamples
+            }))
         if (sampleStatus === "rejected") {
             notification.terminate()
             return Errors.warn(String(sampleError))
@@ -60,24 +66,86 @@ export namespace CloudBackup {
         progressValue.terminate()
     }
 
-    const uploadSamples = async (cloudHandler: CloudStorageHandler,
-                                 audioContext: AudioContext,
-                                 log: Procedure<string>,
-                                 progress: Progress.Handler) => {
+    const syncSamples = async ({cloudHandler, log, progress, audioContext}: {
+        cloudHandler: CloudStorageHandler,
+        log: Procedure<string>,
+        progress: Progress.Handler
+        audioContext: AudioContext,
+    }) => {
+        progress(0.0)
+        const [staticSamples, localSamples, cloudSamples] = await Promise.all([
+            OpenSampleAPI.get().all(),
+            SampleStorage.listSamples(),
+            cloudHandler.download(SamplesCatalogPath)
+                .then(json => JSON.parse(new TextDecoder().decode(json)), () => Arrays.empty())
+        ])
+        const [uploadProgress, downloadProgress] = Progress.split(progress, 2)
+        log("Start uploading samples...")
+        await uploadSamples({
+            cloudHandler,
+            staticSamples,
+            localSamples,
+            cloudSamples,
+            log,
+            progress: uploadProgress,
+            audioContext
+        })
+        log("Start downloading samples...")
+        await downloadSamples({
+            cloudHandler,
+            staticSamples,
+            localSamples,
+            cloudSamples,
+            log,
+            progress: downloadProgress
+        })
+    }
+
+    const downloadSamples = async (
+        {cloudHandler, staticSamples, localSamples, cloudSamples, log, progress}: {
+            cloudHandler: CloudStorageHandler,
+            staticSamples: ReadonlyArray<Sample>,
+            localSamples: ReadonlyArray<Sample>,
+            cloudSamples: ReadonlyArray<Sample>,
+            log: Procedure<string>,
+            progress: Progress.Handler
+        }) => {
+        progress(0.0)
+        const trashed = await SampleStorage.loadTrashedIds()
+        const obsolete = Arrays.intersect(trashed, cloudSamples.map(sample => sample.uuid), (a, b) => a === b)
+        if (obsolete.length > 0) {
+            const approved = await RuntimeNotifier.approve({
+                headline: "Delete Sample",
+                message: `Found ${obsolete.length} locally deleted samples. Delete from cloud as well?`,
+                approveText: "Yes",
+                cancelText: "No"
+            })
+            if (approved) {
+                const result: ReadonlyArray<PromiseSettledResult<string>> = await Promises.allSettledWithLimit(
+                    obsolete.map(uuid => () => cloudHandler.delete(`${SamplesPath}/${uuid}`).then(() => uuid)))
+                const catalog = cloudSamples.slice()
+                result
+                    .filter(result => result.status === "fulfilled")
+                    .forEach(({value}) => Arrays.removeIf(catalog, ({uuid}) => value === uuid))
+                await saveSampleCatalog(cloudHandler, catalog)
+            }
+        }
+    }
+
+    const uploadSamples = async (
+        {cloudHandler, staticSamples, localSamples, cloudSamples, log, progress, audioContext}: {
+            cloudHandler: CloudStorageHandler,
+            staticSamples: ReadonlyArray<Sample>,
+            localSamples: ReadonlyArray<Sample>,
+            cloudSamples: ReadonlyArray<Sample>,
+            audioContext: AudioContext,
+            log: Procedure<string>,
+            progress: Progress.Handler
+        }) => {
         progress(0.0)
         const [listProgress, uploadProgress] = Progress.split(progress, 2)
         const areSamplesEqual = ({uuid: a}: Sample, {uuid: b}: Sample) => a === b
-        log("Start syncing samples...")
-        listProgress(0.25)
-        const staticSamples: ReadonlyArray<Sample> = await OpenSampleAPI.get().all()
-        log(`Found ${staticSamples.length} openDAW samples.`)
-        listProgress(0.50)
-        const localSamples: ReadonlyArray<Sample> = await SampleStorage.list()
-        log(`Found ${localSamples.length} local samples.`)
-        listProgress(0.75)
         const maybeUnsyncedSamples = Arrays.subtract(localSamples, staticSamples, areSamplesEqual)
-        const cloudSamples: ReadonlyArray<Sample> = await cloudHandler.download(SamplesCatalogPath)
-            .then(json => JSON.parse(new TextDecoder().decode(json)), () => Arrays.empty())
         const unsyncedSamples = Arrays.subtract(maybeUnsyncedSamples, cloudSamples, areSamplesEqual)
         if (unsyncedSamples.length === 0) {
             log("No unsynced samples found.")
@@ -92,7 +160,7 @@ export namespace CloudBackup {
             await Promises.allSettledWithLimit(unsyncedSamples.map((sample, index, {length}) => async () => {
                 uploadProgress((index + 1) / length)
                 log(`uploading '${sample.name}'`)
-                const file = await SampleStorage.load(UUID.parse(sample.uuid), audioContext)
+                const file = await SampleStorage.loadSample(UUID.parse(sample.uuid), audioContext)
                     .then(([{frames: channels, numberOfChannels, numberOfFrames: numFrames, sampleRate}]) =>
                         WavFile.encodeFloats({channels, numberOfChannels, numFrames, sampleRate}))
                 await cloudHandler.upload(`${SamplesPath}/${sample.uuid}`, file)
@@ -103,11 +171,14 @@ export namespace CloudBackup {
         const catalog: Array<Sample> = Arrays.merge(cloudSamples, uploadedSampleResults
             .filter(result => result.status === "fulfilled")
             .map(result => result.value), areSamplesEqual)
+        await saveSampleCatalog(cloudHandler, catalog)
+        progress(1.0)
+    }
+
+    const saveSampleCatalog = async (cloudHandler: CloudStorageHandler, catalog: ReadonlyArray<Sample>) => {
         const jsonString = JSON.stringify(catalog, null, 2)
-        console.debug(jsonString)
         const buffer = new TextEncoder().encode(jsonString).buffer
         await cloudHandler.upload(SamplesCatalogPath, buffer)
-        progress(1.0)
     }
 
     const uploadProjects = async (cloudHandler: CloudStorageHandler,

@@ -65,7 +65,7 @@ export class SampleService {
             if (isUsed && !isOnline) {
                 await Dialogs.info({headline: "Cannot Delete Sample", message: `${name} is used by a project.`})
             } else {
-                await SampleStorage.remove(UUID.parse(uuid))
+                await SampleStorage.deleteSample(UUID.parse(uuid))
             }
         }
     }

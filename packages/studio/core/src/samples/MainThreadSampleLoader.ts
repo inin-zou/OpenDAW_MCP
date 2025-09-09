@@ -68,7 +68,7 @@ export class MainThreadSampleLoader implements SampleLoader {
 
     #get(): void {
         let version = this.#version
-        SampleStorage.load(this.#uuid, this.#manager.context)
+        SampleStorage.loadSample(this.#uuid, this.#manager.context)
             .then(
                 ([data, peaks, meta]) => {
                     if (this.#version !== version) {
@@ -111,7 +111,7 @@ export class MainThreadSampleLoader implements SampleLoader {
             audio.frames,
             audio.numberOfFrames,
             audio.numberOfChannels) as ArrayBuffer
-        const storeResult = await Promises.tryCatch(SampleStorage.store(this.#uuid, audio, peaks, meta))
+        const storeResult = await Promises.tryCatch(SampleStorage.saveSample(this.#uuid, audio, peaks, meta))
         if (this.#version !== version) {return}
         if (storeResult.status === "resolved") {
             this.#data = Option.wrap(audio)

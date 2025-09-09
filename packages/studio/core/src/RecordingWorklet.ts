@@ -120,7 +120,7 @@ export class RecordingWorklet extends AudioWorkletNode implements Terminable, Sa
         const bpm = BPMTools.detect(frames[0], sample_rate)
         const duration = totalSamples / sample_rate
         const meta: SampleMetaData = {name: "Recording", bpm, sample_rate, duration}
-        await SampleStorage.store(this.uuid, audioData, peaks as ArrayBuffer, meta)
+        await SampleStorage.saveSample(this.uuid, audioData, peaks as ArrayBuffer, meta)
         this.#setState({type: "loaded"})
         this.terminate()
     }

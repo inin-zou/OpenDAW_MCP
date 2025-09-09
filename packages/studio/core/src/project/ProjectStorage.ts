@@ -1,6 +1,7 @@
 import {Option, Progress, safeExecute, tryCatch, UUID} from "@opendaw/lib-std"
 import {AudioFileBox} from "@opendaw/studio-boxes"
 import {ProjectDecoder} from "@opendaw/studio-adapters"
+import {Promises} from "@opendaw/lib-runtime"
 import {ProjectMeta} from "./ProjectMeta"
 import {WorkerAgents} from "../WorkerAgents"
 import {ProjectPaths} from "./ProjectPaths"
@@ -59,5 +60,12 @@ export namespace ProjectStorage {
         return new Set<string>(uuids)
     }
 
-    export const deleteProject = async (uuid: UUID.Format) => WorkerAgents.Opfs.delete(ProjectPaths.projectFolder(uuid))
+    export const deleteProject = async (uuid: UUID.Format) => {
+        const {status, value} = await Promises.tryCatch(WorkerAgents.Opfs.read(`${ProjectPaths.Folder}/trash.json`))
+        const array = status === "rejected" ? [] : JSON.parse(new TextDecoder().decode(value))
+        array.push(UUID.toString(uuid))
+        const trash = new TextEncoder().encode(JSON.stringify(array))
+        await WorkerAgents.Opfs.write(`${ProjectPaths.Folder}/trash.json`, trash)
+        await WorkerAgents.Opfs.delete(ProjectPaths.projectFolder(uuid))
+    }
 }

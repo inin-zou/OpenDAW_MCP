@@ -1,4 +1,4 @@
-import {asDefined, Func, int, Nullable, NumberArray, panic} from "./lang"
+import {asDefined, Func, int, Nullable, NumberArray, panic, Predicate} from "./lang"
 
 export enum Sorting {Ascending = 1, Descending = -1}
 
@@ -64,6 +64,11 @@ export class Arrays {
         if (index === -1) {return panic(`${element} not found in ${array}`)}
         array.splice(index, 1)
     }
+    static readonly removeIf = <T>(array: Array<T>, predicate: Predicate<T>): void => {
+        for (let i = array.length - 1; i >= 0; i--) {
+            if (predicate(array[i])) {array.splice(i, 1)}
+        }
+    }
     static readonly removeOpt = <T>(array: Array<T>, element: T): boolean => {
         const index: int = array.indexOf(element)
         if (index === -1) {return false}
@@ -100,6 +105,11 @@ export class Arrays {
                        excludeArray: ReadonlyArray<T>,
                        compareFn: (a: T, b: T) => boolean): Array<T> {
         return array.filter(item => !excludeArray.some(excludeItem => compareFn(item, excludeItem)))
+    }
+    static intersect<T>(array: ReadonlyArray<T>,
+                        other: ReadonlyArray<T>,
+                        compareFn: (a: T, b: T) => boolean): Array<T> {
+        return array.filter(item => other.some(includeItem => compareFn(item, includeItem)))
     }
     static merge<T>(baseArray: ReadonlyArray<T>,
                     mergeIntoArray: ReadonlyArray<T>,

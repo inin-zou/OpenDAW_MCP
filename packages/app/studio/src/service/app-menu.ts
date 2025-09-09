@@ -7,7 +7,7 @@ import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
 import {Promises} from "@opendaw/lib-runtime"
-import {CloudAuthManager, CloudBackup} from "@opendaw/studio-core"
+import {CloudAuthManager, CloudSync} from "@opendaw/studio-core"
 
 export const initAppMenu = (service: StudioService) => {
     return MenuItem.root()
@@ -85,7 +85,7 @@ export const initAppMenu = (service: StudioService) => {
                                             console.debug(`Promise rejected with '${(dropboxResult.error)}'`)
                                             return
                                         }
-                                        await CloudBackup.fullBackup(dropboxResult.value, service.audioContext)
+                                        await CloudSync.fullBackup(dropboxResult.value, service.audioContext)
                                     })
                             )
                         }),

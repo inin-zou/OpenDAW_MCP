@@ -28,7 +28,7 @@ export namespace Serializer {
             input.readBytes(bytes)
             const {status, error} = tryCatch(() => fields[key]?.read(new ByteArrayInput(bytes.buffer)))
             if (status === "failure") {
-                console.warn(error)
+                console.warn(fields, error)
             }
         }
     }
