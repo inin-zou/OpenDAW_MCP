@@ -1,7 +1,9 @@
 import {
+    Arrays,
     asDefined,
     asInstanceOf,
     assert,
+    ByteArrayInput,
     clamp,
     float,
     int,
@@ -12,17 +14,21 @@ import {
     UUID
 } from "@opendaw/lib-std"
 import {ppqn, PPQN} from "@opendaw/lib-dsp"
-import {BoxGraph, Field, IndexedBox, PointerField, StringField} from "@opendaw/lib-box"
+import {Address, Box, BoxGraph, Field, IndexedBox, PointerField, StringField} from "@opendaw/lib-box"
 import {AudioUnitType, Pointers} from "@opendaw/studio-enums"
 import {
     AudioBusBox,
+    AudioFileBox,
     AudioUnitBox,
+    AuxSendBox,
+    BoxIO,
     CaptureAudioBox,
     CaptureMidiBox,
     NoteClipBox,
     NoteEventBox,
     NoteEventCollectionBox,
     NoteRegionBox,
+    SelectionBox,
     TrackBox,
     ValueClipBox,
     ValueEventCollectionBox,
@@ -30,6 +36,7 @@ import {
 } from "@opendaw/studio-boxes"
 import {
     AnyClipBox,
+    AnyRegionBox,
     AudioUnitBoxAdapter,
     CaptureBox,
     EffectPointerType,
@@ -267,6 +274,72 @@ export class ProjectApi {
         const {rootBox} = this.#project
         IndexedBox.removeOrder(rootBox.audioUnits, audioUnitBox.index.getValue())
         audioUnitBox.delete()
+    }
+
+    // This version ignores selected items, buses and aux-sends. All outputs will be redirected to the primary output.
+    async extractIntoNew(audioUnits: ReadonlyArray<AudioUnitBox>,
+                         option: { includeAux?: boolean, includeBus?: boolean } = {}): Promise<Project> {
+        assert(Arrays.satisfy(audioUnits, (a, b) => a.graph === b.graph), "AudioUnits must share the same BoxGraph")
+        // TODO Implement include options.
+        assert(!option.includeAux && !option.includeBus, "Options are not yet implemented")
+        const targetProject = Project.new(this.#project.env)
+        const {boxGraph, masterBusBox, masterAudioUnit, rootBox} = targetProject
+        const dependencies = audioUnits
+            .flatMap(box => Array.from(box.graph.dependenciesOf(box).boxes))
+            .filter(box => box.name !== SelectionBox.ClassName && box.name !== AuxSendBox.ClassName)
+        const uuidMap = UUID.newSet<{ source: UUID.Format, target: UUID.Format }>(({source}) => source)
+        const allAdded = uuidMap.addMany([
+            ...audioUnits
+                .filter(({output: {targetAddress}}) => targetAddress.nonEmpty())
+                .map(box => ({
+                    source: box.output.targetAddress.unwrap().uuid,
+                    target: masterBusBox.address.uuid
+                })),
+            ...audioUnits
+                .map(box => ({
+                    source: box.collection.targetAddress.unwrap("AudioUnitBox was not connect to a RootBox").uuid,
+                    target: rootBox.audioUnits.address.uuid
+                })),
+            ...audioUnits
+                .map(box => ({source: box.address.uuid, target: UUID.generate()})),
+            ...dependencies
+                .map(({address: {uuid}, name}) =>
+                    ({source: uuid, target: name === AudioFileBox.ClassName ? uuid : UUID.generate()}))
+        ])
+        assert(allAdded, "Some mapping are redundant")
+        boxGraph.beginTransaction()
+        PointerField.decodeWith({
+            map: (_pointer: PointerField, newAddress: Option<Address>): Option<Address> =>
+                newAddress.map(address => uuidMap.opt(address.uuid).match({
+                    none: () => address,
+                    some: ({target}) => address.moveTo(target)
+                }))
+        }, () => {
+            audioUnits
+                .toSorted((a, b) => a.index.getValue() - b.index.getValue())
+                .forEach((source: AudioUnitBox, index) => {
+                    const input = new ByteArrayInput(source.toArrayBuffer())
+                    const key = source.name as keyof BoxIO.TypeMap
+                    const uuid = uuidMap.get(source.address.uuid).target
+                    const copy = boxGraph.createBox(key, uuid, box => box.read(input)) as AudioUnitBox
+                    copy.index.setValue(index)
+                })
+            masterAudioUnit.index.setValue(audioUnits.length)
+            dependencies
+                .forEach((source: Box) => {
+                    const input = new ByteArrayInput(source.toArrayBuffer())
+                    const key = source.name as keyof BoxIO.TypeMap
+                    const uuid = uuidMap.get(source.address.uuid).target
+                    boxGraph.createBox(key, uuid, box => box.read(input))
+                })
+        })
+        boxGraph.endTransaction()
+        boxGraph.verifyPointers()
+        return targetProject
+    }
+
+    mergeInto(...sources: ReadonlyArray<{ source: Project | AnyRegionBox, insertAt: ppqn }>): Promise<void> {
+        return Promise.reject("Not implemented")
     }
 
     #createAudioUnit(type: AudioUnitType, capture: Option<CaptureBox>, index?: int): AudioUnitBox {
