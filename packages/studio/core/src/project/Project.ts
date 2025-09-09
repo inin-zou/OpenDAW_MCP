@@ -1,4 +1,5 @@
 import {
+    Arrays,
     assert,
     ByteArrayInput,
     ByteArrayOutput,
@@ -219,7 +220,11 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
     }
 
     // This version ignores selected items, buses and aux-sends. All outputs will be redirected to the primary output.
-    async extractIntoNew(...audioUnits: ReadonlyArray<AudioUnitBox>): Promise<Project> {
+    async extractIntoNew(audioUnits: ReadonlyArray<AudioUnitBox>,
+                         option: { includeAux?: boolean, includeBus?: boolean } = {}): Promise<Project> {
+        assert(Arrays.satisfy(audioUnits, (a, b) => a.graph === b.graph), "AudioUnits must share the same BoxGraph")
+        // TODO Implement include options.
+        assert(!option.includeAux || !option.includeBus, "Options are not yet implemented")
         const targetProject = Project.new(this.#env)
         const {boxGraph, masterBusBox, masterAudioUnit, rootBox} = targetProject
         const dependencies = audioUnits
@@ -235,7 +240,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
                 })),
             ...audioUnits
                 .map(box => ({
-                    source: box.collection.targetAddress.unwrap("AudioUnitBox was not connect to graph").uuid,
+                    source: box.collection.targetAddress.unwrap("AudioUnitBox was not connect to a RootBox").uuid,
                     target: rootBox.audioUnits.address.uuid
                 })),
             ...audioUnits
@@ -244,7 +249,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
                 .map(({address: {uuid}, name}) =>
                     ({source: uuid, target: name === AudioFileBox.ClassName ? uuid : UUID.generate()}))
         ])
-        assert(allAdded, "Internal Error")
+        assert(allAdded, "Some mapping are redundant")
         boxGraph.beginTransaction()
         PointerField.decodeWith({
             map: (_pointer: PointerField, newAddress: Option<Address>): Option<Address> =>

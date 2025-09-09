@@ -21,7 +21,7 @@ export const installTrackHeaderMenu = (service: StudioService,
     return parent.addMenuItem(
         MenuItem.default({label: "Test Extract", hidden: !Browser.isLocalHost()})
             .setTriggerProcedure(() => editing.modify(async () => {
-                const newProject = await project.extractIntoNew(trackBoxAdapter.audioUnit)
+                const newProject = await project.extractIntoNew([trackBoxAdapter.audioUnit])
                 service.fromProject(newProject, "NEW")
             })),
         MenuItem.default({label: "Enabled", checked: trackBoxAdapter.enabled.getValue()})
