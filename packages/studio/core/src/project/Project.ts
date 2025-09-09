@@ -228,25 +228,22 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
         const dependencies = audioUnits
             .flatMap(box => Array.from(box.graph.dependenciesOf(box).boxes))
             .filter(box => box.name !== SelectionBox.ClassName)
-        const uuidMap = UUID.newSet<{ source: UUID.Format, target: UUID.Format, debug: string }>(({source}) => source)
+        const uuidMap = UUID.newSet<{ source: UUID.Format, target: UUID.Format }>(({source}) => source)
         const allAdded = uuidMap.addMany([
             ...audioUnits.flatMap(box => ([
                 {
                     source: box.output.targetAddress.unwrap("AudioUnitBox was not connect to graph").uuid,
-                    target: masterBusBox.address.uuid,
-                    debug: "output"
+                    target: masterBusBox.address.uuid
                 }, {
                     source: box.collection.targetAddress.unwrap("AudioUnitBox was not connect to graph").uuid,
-                    target: rootBox.audioUnits.address.uuid,
-                    debug: "collection"
+                    target: rootBox.audioUnits.address.uuid
                 }
             ])),
-            ...audioUnits.map(box => ({source: box.address.uuid, target: UUID.generate(), debug: "audio-units"})),
+            ...audioUnits.map(box => ({source: box.address.uuid, target: UUID.generate()})),
             ...dependencies.map(({address: {uuid}, name}) =>
-                ({source: uuid, target: name === AudioFileBox.ClassName ? uuid : UUID.generate(), debug: name}))
+                ({source: uuid, target: name === AudioFileBox.ClassName ? uuid : UUID.generate()}))
         ])
         assert(allAdded, "Internal Error")
-        uuidMap.values().forEach(({target, debug}) => console.debug(UUID.toString(target), debug))
         boxGraph.beginTransaction()
         PointerField.decodeWith({
             map: (_pointer: PointerField, newAddress: Option<Address>): Option<Address> =>
