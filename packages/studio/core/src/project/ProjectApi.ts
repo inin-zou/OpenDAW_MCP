@@ -277,8 +277,8 @@ export class ProjectApi {
     }
 
     // This version ignores selected items, buses and aux-sends. All outputs will be redirected to the primary output.
-    async extractIntoNew(audioUnits: ReadonlyArray<AudioUnitBox>,
-                         option: { includeAux?: boolean, includeBus?: boolean } = {}): Promise<Project> {
+    extractIntoNew(audioUnits: ReadonlyArray<AudioUnitBox>,
+                   option: { includeAux?: boolean, includeBus?: boolean } = {}): Project {
         assert(Arrays.satisfy(audioUnits, (a, b) => a.graph === b.graph), "AudioUnits must share the same BoxGraph")
         // TODO Implement include options.
         assert(!option.includeAux && !option.includeBus, "Options are not yet implemented")
