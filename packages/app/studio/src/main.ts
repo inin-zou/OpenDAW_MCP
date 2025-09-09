@@ -40,6 +40,7 @@ const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`)
     .then(x => x.json().then(x => x as BuildInfo))
 
 ;(async () => {
+        console.time("boot")
         if (!window.crossOriginIsolated) {return panic("window must be crossOriginIsolated")}
         console.debug("booting...")
         console.debug("WorkersUrl", WorkersUrl)
@@ -150,5 +151,6 @@ const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`)
         try {indexedDB.deleteDatabase("audio-file-cache")} catch (_: any) {}
         // delete obsolete samples
         SampleStorage.clean().then()
+        console.timeEnd("boot")
     }
 )()
