@@ -16,6 +16,7 @@ import {
     AudioBusBox,
     AudioFileBox,
     AudioUnitBox,
+    AuxSendBox,
     BoxIO,
     GrooveShuffleBox,
     RootBox,
@@ -213,16 +214,17 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
     }
 
     merge(options: { insert: ppqn }, ...projects: ReadonlyArray<Project>): Promise<Project> {
-        // TODO
+        // TODO collect all audio-units
         return Promise.reject("Not implemented")
     }
 
+    // This version ignores selected items, buses and aux-sends. All outputs will be redirected to the primary output.
     async extractIntoNew(...audioUnits: ReadonlyArray<AudioUnitBox>): Promise<Project> {
         const targetProject = Project.new(this.#env)
-        const {boxGraph, masterBusBox, rootBox} = targetProject
+        const {boxGraph, masterBusBox, masterAudioUnit, rootBox} = targetProject
         const dependencies = audioUnits
             .flatMap(box => Array.from(box.graph.dependenciesOf(box).boxes))
-            .filter(box => box.name !== SelectionBox.ClassName)
+            .filter(box => box.name !== SelectionBox.ClassName && box.name !== AuxSendBox.ClassName)
         const uuidMap = UUID.newSet<{ source: UUID.Format, target: UUID.Format }>(({source}) => source)
         const allAdded = uuidMap.addMany([
             ...audioUnits
@@ -260,6 +262,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
                     const copy = boxGraph.createBox(key, uuid, box => box.read(input)) as AudioUnitBox
                     copy.index.setValue(index)
                 })
+            masterAudioUnit.index.setValue(audioUnits.length)
             dependencies
                 .forEach((source: Box) => {
                     const input = new ByteArrayInput(source.toArrayBuffer())
