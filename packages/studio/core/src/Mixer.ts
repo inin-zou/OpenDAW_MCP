@@ -17,7 +17,7 @@ interface ChannelStripState {
 
 export class Mixer implements Terminable {
     readonly #terminator: Terminator = new Terminator()
-    readonly #states: SortedSet<UUID.Format, ChannelStripState>
+    readonly #states: SortedSet<UUID.Bytes, ChannelStripState>
     readonly #solo: Set<AudioUnitBoxAdapter>
     readonly #virtualSolo: Set<AudioUnitBoxAdapter>
     readonly #deferUpdate: DeferExec

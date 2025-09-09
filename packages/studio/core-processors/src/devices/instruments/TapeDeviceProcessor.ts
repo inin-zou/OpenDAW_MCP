@@ -42,7 +42,7 @@ export class TapeDeviceProcessor extends AbstractProcessor implements DeviceProc
         this.eventInput.clear()
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
     get incoming(): Processor {return this}
     get outgoing(): Processor {return this}
     get audioOutput(): AudioBuffer {return this.#audioOutput}

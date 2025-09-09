@@ -36,7 +36,7 @@ export class ValueEventCollectionBoxAdapter implements BoxAdapter {
     readonly #box: ValueEventCollectionBox
 
     readonly #changeNotifier: Notifier<this>
-    readonly #adapters: SortedSet<UUID.Format, ValueEventBoxAdapter>
+    readonly #adapters: SortedSet<UUID.Bytes, ValueEventBoxAdapter>
     readonly #events: EventCollection<ValueEventBoxAdapter>
 
     constructor(context: BoxAdaptersContext, box: ValueEventCollectionBox) {
@@ -165,7 +165,7 @@ export class ValueEventCollectionBoxAdapter implements BoxAdapter {
     terminate() {this.#terminator.terminate()}
 
     get box(): ValueEventCollectionBox {return this.#box}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get numOwners(): int {return this.#box.owners.pointerHub.filter(Pointers.ValueEventCollection).length}
     get events(): EventCollection<ValueEventBoxAdapter> {return this.#events}

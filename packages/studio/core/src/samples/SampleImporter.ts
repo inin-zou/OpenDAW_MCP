@@ -3,7 +3,7 @@ import {Sample} from "@opendaw/studio-adapters"
 
 export type SampleImporter = {
     importSample(sample: {
-        uuid: UUID.Format,
+        uuid: UUID.Bytes,
         name: string,
         arrayBuffer: ArrayBuffer,
         progressHandler?: Progress.Handler

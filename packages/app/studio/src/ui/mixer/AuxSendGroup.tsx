@@ -15,7 +15,7 @@ import {Colors, Project} from "@opendaw/studio-core"
 const className = Html.adoptStyleSheet(css, "AuxSendGroup")
 
 type AuxSendEntry = {
-    uuid: UUID.Format
+    uuid: UUID.Bytes
     element: HTMLElement
     terminator: Terminator
 }
@@ -82,7 +82,7 @@ export const AuxSendGroup = ({lifecycle, project, audioUnitAdapter}: Construct) 
             <Icon symbol={IconSymbol.Add}/>
         </MenuButton>
     )
-    const entries: SortedSet<UUID.Format, AuxSendEntry> = UUID.newSet(entry => entry.uuid)
+    const entries: SortedSet<UUID.Bytes, AuxSendEntry> = UUID.newSet(entry => entry.uuid)
     lifecycle.own(audioUnitAdapter.auxSends.catchupAndSubscribe({
         onAdd: (adapter: AuxSendBoxAdapter) => {
             const terminator = lifecycle.spawn()

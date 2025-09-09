@@ -26,7 +26,7 @@ export class TapeDeviceBoxAdapter implements InstrumentDeviceBoxAdapter {
     }
 
     get box(): TapeDeviceBox {return this.#box}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get labelField(): StringField {return this.#box.label}
     get iconField(): StringField {return this.#box.icon}

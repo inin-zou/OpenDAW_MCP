@@ -22,8 +22,8 @@ export class ModularAdapter implements BoxAdapter {
     readonly #context: BoxAdaptersContext
     readonly #box: ModularBox
 
-    readonly #modules: SortedSet<UUID.Format, ModuleAdapter>
-    readonly #connections: SortedSet<UUID.Format, ModuleConnectionAdapter>
+    readonly #modules: SortedSet<UUID.Bytes, ModuleAdapter>
+    readonly #connections: SortedSet<UUID.Bytes, ModuleConnectionAdapter>
 
     constructor(context: BoxAdaptersContext, box: ModularBox) {
         this.#context = context
@@ -77,7 +77,7 @@ export class ModularAdapter implements BoxAdapter {
 
     get box(): ModularBox {return this.#box}
     get address(): Address {return this.#box.address}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get editingField(): Field<Pointers.Editing> {return this.#box.editing}
     get labelField(): StringField {return this.#box.label}
     get modules(): ReadonlyArray<ModuleAdapter> {return this.#modules.values()}

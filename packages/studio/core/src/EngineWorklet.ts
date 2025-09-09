@@ -49,10 +49,10 @@ export class EngineWorklet extends AudioWorkletNode implements Engine {
     readonly #countInBeatsTotal: DefaultObservableValue<int> = new DefaultObservableValue(4)
     readonly #countInBeatsRemaining: DefaultObservableValue<int> = new DefaultObservableValue(0)
     readonly #metronomeEnabled: DefaultObservableValue<boolean> = new DefaultObservableValue(false)
-    readonly #markerState: DefaultObservableValue<Nullable<[UUID.Format, int]>> = new DefaultObservableValue<Nullable<[UUID.Format, int]>>(null)
+    readonly #markerState: DefaultObservableValue<Nullable<[UUID.Bytes, int]>> = new DefaultObservableValue<Nullable<[UUID.Bytes, int]>>(null)
     readonly #notifyClipNotification: Notifier<ClipNotification>
     readonly #notifyNoteSignals: Notifier<NoteSignal>
-    readonly #playingClips: Array<UUID.Format>
+    readonly #playingClips: Array<UUID.Bytes>
     readonly #commands: EngineCommands
     readonly #isReady: Promise<void>
 
@@ -103,13 +103,13 @@ export class EngineWorklet extends AudioWorkletNode implements Engine {
                     }
                     panic(): void {dispatcher.dispatchAndForget(this.panic)}
                     noteSignal(signal: NoteSignal): void {dispatcher.dispatchAndForget(this.noteSignal, signal)}
-                    ignoreNoteRegion(uuid: UUID.Format): void {
+                    ignoreNoteRegion(uuid: UUID.Bytes): void {
                         dispatcher.dispatchAndForget(this.ignoreNoteRegion, uuid)
                     }
-                    scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void {
+                    scheduleClipPlay(clipIds: ReadonlyArray<UUID.Bytes>): void {
                         dispatcher.dispatchAndForget(this.scheduleClipPlay, clipIds)
                     }
-                    scheduleClipStop(trackIds: ReadonlyArray<UUID.Format>): void {
+                    scheduleClipStop(trackIds: ReadonlyArray<UUID.Bytes>): void {
                         dispatcher.dispatchAndForget(this.scheduleClipStop, trackIds)
                     }
                     terminate(): void {dispatcher.dispatchAndForget(this.terminate)}
@@ -117,7 +117,7 @@ export class EngineWorklet extends AudioWorkletNode implements Engine {
         Communicator.executor<EngineToClient>(messenger.channel("engine-to-client"), {
                 log: (message: string): void => console.log("WORKLET", message),
                 ready: (): void => resolve(),
-                fetchAudio: (uuid: UUID.Format): Promise<AudioData> => {
+                fetchAudio: (uuid: UUID.Bytes): Promise<AudioData> => {
                     return new Promise((resolve, reject) => {
                         const handler = project.sampleManager.getOrCreate(uuid)
                         handler.subscribe(state => {
@@ -141,7 +141,7 @@ export class EngineWorklet extends AudioWorkletNode implements Engine {
                     changes.started.forEach(uuid => this.#playingClips.push(uuid))
                     this.#notifyClipNotification.notify({type: "sequencing", changes})
                 },
-                switchMarkerState: (state: Nullable<[UUID.Format, int]>): void => this.#markerState.setValue(state)
+                switchMarkerState: (state: Nullable<[UUID.Bytes, int]>): void => this.#markerState.setValue(state)
             } satisfies EngineToClient
         )
         this.#terminator.ownAll(
@@ -167,19 +167,19 @@ export class EngineWorklet extends AudioWorkletNode implements Engine {
     get position(): ObservableValue<ppqn> {return this.#position}
     get playbackTimestamp(): MutableObservableValue<number> {return this.#playbackTimestamp}
     get metronomeEnabled(): MutableObservableValue<boolean> {return this.#metronomeEnabled}
-    get markerState(): ObservableValue<Nullable<[UUID.Format, int]>> {return this.#markerState}
+    get markerState(): ObservableValue<Nullable<[UUID.Bytes, int]>> {return this.#markerState}
     get project(): Project {return this.#project}
 
     isReady(): Promise<void> {return this.#isReady}
     queryLoadingComplete(): Promise<boolean> {return this.#commands.queryLoadingComplete()}
     noteSignal(signal: NoteSignal): void {this.#commands.noteSignal(signal)}
     subscribeNotes(observer: Observer<NoteSignal>): Subscription {return this.#notifyNoteSignals.subscribe(observer)}
-    ignoreNoteRegion(uuid: UUID.Format): void {this.#commands.ignoreNoteRegion(uuid)}
-    scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void {
+    ignoreNoteRegion(uuid: UUID.Bytes): void {this.#commands.ignoreNoteRegion(uuid)}
+    scheduleClipPlay(clipIds: ReadonlyArray<UUID.Bytes>): void {
         this.#notifyClipNotification.notify({type: "waiting", clips: clipIds})
         this.#commands.scheduleClipPlay(clipIds)
     }
-    scheduleClipStop(trackIds: ReadonlyArray<UUID.Format>): void {
+    scheduleClipStop(trackIds: ReadonlyArray<UUID.Bytes>): void {
         this.#commands.scheduleClipStop(trackIds)
     }
     subscribeClipNotification(observer: Observer<ClipNotification>): Subscription {

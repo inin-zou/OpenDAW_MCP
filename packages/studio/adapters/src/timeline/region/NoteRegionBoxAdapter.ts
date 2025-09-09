@@ -115,7 +115,7 @@ export class NoteRegionBoxAdapter implements LoopableRegionBoxAdapter<NoteEventC
     }
 
     get box(): NoteRegionBox {return this.#box}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get position(): ppqn {return this.#box.position.getValue()}
     get duration(): ppqn {return this.#box.duration.getValue()}

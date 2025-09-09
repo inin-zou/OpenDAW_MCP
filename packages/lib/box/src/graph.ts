@@ -26,7 +26,7 @@ import {GraphEdges} from "./graph-edges"
 
 export type BoxFactory<BoxMap> = (name: keyof BoxMap,
                                   graph: BoxGraph<BoxMap>,
-                                  uuid: UUID.Format,
+                                  uuid: UUID.Bytes,
                                   constructor: Procedure<Box>) => Box
 
 export interface TransactionListener {
@@ -93,7 +93,7 @@ export class BoxGraph<BoxMap = any> {
     inTransaction(): boolean {return this.#inTransaction}
     constructingBox(): boolean {return this.#constructingBox}
 
-    createBox(name: keyof BoxMap, uuid: UUID.Format, constructor: Procedure<Box>): Box {
+    createBox(name: keyof BoxMap, uuid: UUID.Bytes, constructor: Procedure<Box>): Box {
         return this.#boxFactory.unwrap("No box-factory installed")(name as keyof BoxMap, this, uuid, constructor)
     }
 
@@ -141,7 +141,7 @@ export class BoxGraph<BoxMap = any> {
         this.#immediateUpdateListeners.proxy.onUpdate(update)
     }
 
-    findBox<B extends Box = Box>(uuid: UUID.Format): Option<B> {
+    findBox<B extends Box = Box>(uuid: UUID.Bytes): Option<B> {
         return this.#boxes.opt(uuid) as Option<B>
     }
 
@@ -300,7 +300,7 @@ export class BoxGraph<BoxMap = any> {
         const boxes: Array<{
             creationIndex: int,
             name: keyof BoxMap,
-            uuid: UUID.Format,
+            uuid: UUID.Bytes,
             boxStream: ByteArrayInput
         }> = []
         for (let i = 0; i < numBoxes; i++) {

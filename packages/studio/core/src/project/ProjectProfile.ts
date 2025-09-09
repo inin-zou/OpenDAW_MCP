@@ -5,7 +5,7 @@ import {WorkerAgents} from "../WorkerAgents"
 import {ProjectPaths} from "./ProjectPaths"
 
 export class ProjectProfile {
-    readonly #uuid: UUID.Format
+    readonly #uuid: UUID.Bytes
     readonly #project: Project
     readonly #meta: ProjectMeta
 
@@ -16,7 +16,7 @@ export class ProjectProfile {
     #saved: boolean
     #hasChanges: boolean = false
 
-    constructor(uuid: UUID.Format,
+    constructor(uuid: UUID.Bytes,
                 project: Project,
                 meta: ProjectMeta,
                 cover: Option<ArrayBuffer>,
@@ -30,7 +30,7 @@ export class ProjectProfile {
         this.#metaUpdated = new Notifier<ProjectMeta>()
     }
 
-    get uuid(): UUID.Format {return this.#uuid}
+    get uuid(): UUID.Bytes {return this.#uuid}
     get project(): Project {return this.#project}
     get meta(): ProjectMeta {return this.#meta}
     get cover(): Option<ArrayBuffer> {return this.#cover}

@@ -9,7 +9,7 @@ export class MarkerTrackAdapter implements Terminable {
     readonly #object: MarkerTrack
 
     readonly changeNotifier: Notifier<void>
-    readonly #adapters: SortedSet<UUID.Format, MarkerBoxAdapter>
+    readonly #adapters: SortedSet<UUID.Bytes, MarkerBoxAdapter>
     readonly #events: EventCollection<MarkerBoxAdapter>
     readonly #subscription: Subscription
 

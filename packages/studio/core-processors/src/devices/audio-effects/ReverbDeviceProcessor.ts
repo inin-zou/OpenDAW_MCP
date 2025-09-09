@@ -56,7 +56,7 @@ export class ReverbDeviceProcessor extends AudioProcessor implements AudioEffect
         this.eventInput.clear()
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
 
     get audioOutput(): AudioBuffer {return this.#output}
 

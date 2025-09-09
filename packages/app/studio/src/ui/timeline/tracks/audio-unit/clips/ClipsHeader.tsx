@@ -45,7 +45,7 @@ export const ClipsHeader = ({lifecycle, service}: Construct) => {
             element.appendChild(selector)
             terminator.ownAll(
                 Events.subscribe(playIcon, "pointerdown", () => {
-                    const clipsIds: Array<UUID.Format> = []
+                    const clipsIds: Array<UUID.Bytes> = []
                     rootBoxAdapter.audioUnits.adapters()
                         .forEach(unit => unit.tracks.values()
                             .forEach(track => track.clips.collection.getAdapterByIndex(index)
@@ -53,7 +53,7 @@ export const ClipsHeader = ({lifecycle, service}: Construct) => {
                     engine.scheduleClipPlay(clipsIds)
                 }),
                 Events.subscribe(stopIcon, "pointerdown", () => {
-                    const trackIds: Array<UUID.Format> = []
+                    const trackIds: Array<UUID.Bytes> = []
                     rootBoxAdapter.audioUnits.adapters()
                         .forEach(unit => unit.tracks.values()
                             .forEach(track => trackIds.push(track.uuid)))

@@ -32,7 +32,7 @@ export class GraphEdges {
     }
 
     unwatchVerticesOf(...boxes: ReadonlyArray<Box>): void {
-        const map: Func<Vertex, UUID.Format> = ({box: {address: {uuid}}}) => uuid
+        const map: Func<Vertex, UUID.Bytes> = ({box: {address: {uuid}}}) => uuid
         for (const {address: {uuid}} of boxes) {
             this.#removeSameBox(this.#requiresTarget, uuid, map)
             this.#removeSameBox(this.#requiresPointer, uuid, map)
@@ -102,12 +102,12 @@ export class GraphEdges {
         })
     }
 
-    #collectSameBox<T>(set: SortedSet<Address, T>, id: UUID.Format, map: Func<T, UUID.Format>): ReadonlyArray<T> {
+    #collectSameBox<T>(set: SortedSet<Address, T>, id: UUID.Bytes, map: Func<T, UUID.Bytes>): ReadonlyArray<T> {
         const range = Address.boxRange(set, id, map)
         return isDefined(range) ? set.values().slice(range[0], range[1]) : Arrays.empty()
     }
 
-    #removeSameBox<T>(set: SortedSet<Address, T>, id: UUID.Format, map: Func<T, UUID.Format>): void {
+    #removeSameBox<T>(set: SortedSet<Address, T>, id: UUID.Bytes, map: Func<T, UUID.Bytes>): void {
         const range = Address.boxRange(set, id, map)
         if (isDefined(range)) {set.removeRange(range[0], range[1])}
     }

@@ -17,7 +17,7 @@ export class AudioFileBoxAdapter implements BoxAdapter {
     }
 
     get box(): AudioFileBox {return this.#box}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get startInSeconds(): number {return this.#box.startInSeconds.getValue()}
     get endInSeconds(): number {return this.#box.endInSeconds.getValue()}

@@ -3,5 +3,5 @@ import {Addressable, Box} from "@opendaw/lib-box"
 
 export interface BoxAdapter extends Addressable, Terminable {
     get box(): Box
-    get uuid(): UUID.Format
+    get uuid(): UUID.Bytes
 }

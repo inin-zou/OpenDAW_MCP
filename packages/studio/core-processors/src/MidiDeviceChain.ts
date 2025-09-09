@@ -19,7 +19,7 @@ export class MidiDeviceChain implements DeviceChain {
     readonly #audioUnit: AudioUnit
 
     readonly #noteSequencer: NoteSequencer
-    readonly #effects: SortedSet<UUID.Format, MidiEffectDeviceEntry>
+    readonly #effects: SortedSet<UUID.Bytes, MidiEffectDeviceEntry>
 
     readonly #disconnector: Terminator
 

@@ -27,8 +27,8 @@ export class EngineFacade implements Engine {
     readonly #isRecording: DefaultObservableValue<boolean> = new DefaultObservableValue(false)
     readonly #isCountingIn: DefaultObservableValue<boolean> = new DefaultObservableValue(false)
     readonly #metronomeEnabled: DefaultObservableValue<boolean> = new DefaultObservableValue(false)
-    readonly #markerState: DefaultObservableValue<Nullable<[UUID.Format, int]>> =
-        new DefaultObservableValue<Nullable<[UUID.Format, int]>>(null)
+    readonly #markerState: DefaultObservableValue<Nullable<[UUID.Bytes, int]>> =
+        new DefaultObservableValue<Nullable<[UUID.Bytes, int]>>(null)
 
     #worklet: Option<EngineWorklet> = Option.None
 
@@ -73,7 +73,7 @@ export class EngineFacade implements Engine {
     get playbackTimestamp(): ObservableValue<ppqn> {return this.#playbackTimestamp}
     get countInBeatsTotal(): ObservableValue<int> {return this.#countInBeatsTotal}
     get countInBeatsRemaining(): ObservableValue<int> {return this.#countInBeatsRemaining}
-    get markerState(): DefaultObservableValue<Nullable<[UUID.Format, int]>> {return this.#markerState}
+    get markerState(): DefaultObservableValue<Nullable<[UUID.Bytes, int]>> {return this.#markerState}
     get project(): Project {return this.#worklet.unwrap("No worklet to get project").project}
 
     isReady(): Promise<void> {return this.#worklet.mapOr(worklet => worklet.isReady(), Promise.resolve())}
@@ -88,16 +88,16 @@ export class EngineFacade implements Engine {
     subscribeNotes(observer: Observer<NoteSignal>): Subscription {
         return this.#worklet.unwrap("No worklet to subscribeNotes").subscribeNotes(observer)
     }
-    ignoreNoteRegion(uuid: UUID.Format): void {
+    ignoreNoteRegion(uuid: UUID.Bytes): void {
         this.#worklet.unwrap("No worklet to ignoreNoteRegion").ignoreNoteRegion(uuid)
     }
     noteSignal(signal: NoteSignal): void {
         this.#worklet.unwrap("No worklet to noteOn").noteSignal(signal)
     }
-    scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void {
+    scheduleClipPlay(clipIds: ReadonlyArray<UUID.Bytes>): void {
         this.#worklet.unwrap("No worklet to scheduleClipPlay").scheduleClipPlay(clipIds)
     }
-    scheduleClipStop(trackIds: ReadonlyArray<UUID.Format>): void {
+    scheduleClipStop(trackIds: ReadonlyArray<UUID.Bytes>): void {
         this.#worklet.unwrap("No worklet to scheduleClipStop").scheduleClipStop(trackIds)
     }
 

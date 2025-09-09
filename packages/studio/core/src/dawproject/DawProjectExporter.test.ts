@@ -20,14 +20,14 @@ describe("DawProjectExport", () => {
             audioContext: InaccessibleProperty as any,
             audioWorklets: InaccessibleProperty as any,
             sampleManager: new class implements SampleManager {
-                record(_loader: SampleLoader & { uuid: UUID.Format }): void {
+                record(_loader: SampleLoader & { uuid: UUID.Bytes }): void {
                     throw new Error("Method not implemented.")
                 }
-                getOrCreate(format: UUID.Format): SampleLoader {
+                getOrCreate(format: UUID.Bytes): SampleLoader {
                     return new class implements SampleLoader {
                         data: Option<AudioData> = Option.None
                         peaks: Option<Peaks> = Option.None
-                        uuid: UUID.Format = format
+                        uuid: UUID.Bytes = format
                         state: SampleLoaderState = {type: "progress", progress: 0.0}
                         meta: Option<any> = Option.None
                         invalidate(): void {throw new Error("Method not implemented.")}
@@ -36,8 +36,8 @@ describe("DawProjectExport", () => {
                         }
                     }
                 }
-                remove(_uuid: UUID.Format): void {return panic("Method not implemented.")}
-                invalidate(_uuid: UUID.Format): void {return panic("Method not implemented.")}
+                remove(_uuid: UUID.Bytes): void {return panic("Method not implemented.")}
+                invalidate(_uuid: UUID.Bytes): void {return panic("Method not implemented.")}
             }
         }, arrayBuffer)
         const schema = DawProjectExporter.write(project, {

@@ -44,7 +44,7 @@ describe("Address", () => {
         })
 
         it("should reconstruct address from layout", () => {
-            const layout: [UUID.Format, Int16Array] = [uuidC, new Int16Array([1, 2])]
+            const layout: [UUID.Bytes, Int16Array] = [uuidC, new Int16Array([1, 2])]
             const addr = Address.reconstruct(layout)
             expect(addr.uuid).toEqual(uuidC)
             expect(Array.from(addr.fieldKeys)).toEqual([1, 2])

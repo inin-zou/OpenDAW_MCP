@@ -31,7 +31,7 @@ export class MixProcessor extends AudioProcessor implements AudioDeviceProcessor
         this.readAllParameters()
     }
 
-    get uuid(): UUID.Format {return this.#device.uuid}
+    get uuid(): UUID.Bytes {return this.#device.uuid}
     get incoming(): Processor {return this}
     get outgoing(): Processor {return this}
 

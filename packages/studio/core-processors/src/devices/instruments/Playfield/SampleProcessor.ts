@@ -61,7 +61,7 @@ export class SampleProcessor extends AudioProcessor implements DeviceProcessor, 
         this.readAllParameters()
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
     get incoming(): Processor {return this}
     get outgoing(): Processor {return this}
     get audioOutput(): AudioBuffer {return this.#audioOutput}

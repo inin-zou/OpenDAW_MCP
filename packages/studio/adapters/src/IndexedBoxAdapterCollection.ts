@@ -34,7 +34,7 @@ export class IndexedBoxAdapterCollection<A extends IndexedBoxAdapter, P extends 
     }
 
     readonly #field: Field<P>
-    readonly #entries: SortedSet<UUID.Format, { adapter: A, subscription: Subscription }>
+    readonly #entries: SortedSet<UUID.Bytes, { adapter: A, subscription: Subscription }>
     readonly #listeners: Listeners<IndexedAdapterCollectionListener<A>>
     readonly #subscription: Subscription
 
@@ -82,7 +82,7 @@ export class IndexedBoxAdapterCollection<A extends IndexedBoxAdapter, P extends 
         return idx === -1 ? Option.None : Option.wrap(this.adapters()[idx])
     }
 
-    getAdapterById(uuid: UUID.Format): Option<A> {return this.#entries.opt(uuid).map(({adapter}) => adapter)}
+    getAdapterById(uuid: UUID.Bytes): Option<A> {return this.#entries.opt(uuid).map(({adapter}) => adapter)}
 
     getMinFreeIndex(): int {
         const adapters = this.adapters()

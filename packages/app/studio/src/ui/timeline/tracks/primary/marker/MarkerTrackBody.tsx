@@ -36,7 +36,7 @@ export const MarkerTrackBody = ({lifecycle, service}: Construct) => {
             const pointer = range.xToUnit(localX)
             const marker = events.lowerEqual(pointer)
             if (marker === null) {return null}
-            const state: Nullable<[UUID.Format, int]> = markerState.getValue()
+            const state: Nullable<[UUID.Bytes, int]> = markerState.getValue()
             let markerWidth: number
             if (state === null || !UUID.equals(marker.uuid, state[0])) {
                 markerWidth = MarkerRenderer.computeWidth(context, marker, false, 1)

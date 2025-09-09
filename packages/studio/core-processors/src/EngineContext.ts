@@ -14,9 +14,9 @@ export interface EngineContext extends BoxAdaptersContext, Terminable {
     get mixer(): Mixer
     get engineToClient(): EngineToClient
 
-    getAudioUnit(uuid: UUID.Format): AudioUnit
+    getAudioUnit(uuid: UUID.Bytes): AudioUnit
     registerProcessor(processor: Processor): Terminable
     registerEdge(source: Processor, target: Processor): Terminable
     subscribeProcessPhase(observer: Observer<ProcessPhase>): Subscription
-    ignoresRegion(uuid: UUID.Format): boolean
+    ignoresRegion(uuid: UUID.Bytes): boolean
 }

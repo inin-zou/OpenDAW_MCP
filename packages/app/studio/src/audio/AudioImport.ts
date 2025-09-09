@@ -7,7 +7,7 @@ import {SamplePeaks} from "@opendaw/lib-fusion"
 
 export namespace AudioImporter {
     export type Creation = {
-        uuid?: UUID.Format,
+        uuid?: UUID.Bytes,
         name: string,
         arrayBuffer: ArrayBuffer,
         progressHandler: Progress.Handler

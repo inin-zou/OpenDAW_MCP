@@ -121,7 +121,7 @@ export class BoxForge<E extends PointerTypes> {
             declarations: [{
                 name: "create",
                 initializer: `<K extends keyof TypeMap, V extends TypeMap[K]>(
-					name: K, graph: BoxGraph<TypeMap>, uuid: UUID.Format, constructor?: Procedure<V>): V => {
+					name: K, graph: BoxGraph<TypeMap>, uuid: UUID.Bytes, constructor?: Procedure<V>): V => {
       				switch (name) {${boxes.map(({class: {name}}) =>
                     `case "${name}": return ${name}.create(graph, uuid, constructor as Procedure<${name}>) as V`).join("\n")}
 				default: return panic(\`Unknown box class '\${name}'\`)
@@ -294,7 +294,7 @@ class ClassWriter<E extends PointerTypes> {
                 isStatic: true,
                 parameters: [
                     {name: "graph", type: "BoxGraph"},
-                    {name: "uuid", type: "UUID.Format"},
+                    {name: "uuid", type: "UUID.Bytes"},
                     {name: "constructor", type: `Procedure<${className}>`, hasQuestionToken: true}
                 ],
                 statements: `return graph.stageBox(new ${className}({uuid, graph, name: "${className}", pointerRules: ${pointerRules}}), constructor)`,

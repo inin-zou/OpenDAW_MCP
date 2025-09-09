@@ -13,7 +13,7 @@ import {Html} from "@opendaw/lib-dom"
 const className = Html.adoptStyleSheet(css, "Modular")
 
 type ModularTab = {
-    uuid: UUID.Format
+    uuid: UUID.Bytes
     button: Element
     terminable: Terminable
 }
@@ -28,7 +28,7 @@ export const Modular = ({lifecycle, service}: Construct) => {
     const boxAdapters = project.boxAdapters
     const navigation: HTMLElement = <nav/>
     const container: HTMLDivElement = <div className="container"/>
-    const availableSystems: SortedSet<UUID.Format, ModularTab> = UUID.newSet(entry => entry.uuid)
+    const availableSystems: SortedSet<UUID.Bytes, ModularTab> = UUID.newSet(entry => entry.uuid)
     const addModularSystem = (adapter: ModularAdapter) => {
         const terminator: Terminator = new Terminator()
         const button = <ModularTabButton lifecycle={terminator}
@@ -42,7 +42,7 @@ export const Modular = ({lifecycle, service}: Construct) => {
         })
         assert(added, `Could not add tab button for ${adapter}`)
     }
-    const removeModularSystem = (uuid: UUID.Format) => {
+    const removeModularSystem = (uuid: UUID.Bytes) => {
         const tab = availableSystems.removeByKey(uuid)
         tab.button.remove()
         tab.terminable.terminate()

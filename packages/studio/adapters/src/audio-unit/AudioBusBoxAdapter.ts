@@ -23,7 +23,7 @@ export class AudioBusBoxAdapter implements DeviceBoxAdapter {
         return this.#box.subscribe(Propagation.Children, () => observer(this))
     }
 
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get box(): AudioBusBox {return this.#box}
     get enabledField(): BooleanField {return this.#box.enabled}

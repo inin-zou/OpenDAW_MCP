@@ -27,7 +27,7 @@ type FooBoxFields = {
 }
 
 class FooBox extends Box<PointerType.C, FooBoxFields> {
-    static create(graph: BoxGraph, uuid: UUID.Format): FooBox {
+    static create(graph: BoxGraph, uuid: UUID.Bytes): FooBox {
         return graph.stageBox(new FooBox({
             uuid, graph: graph, name: "FooBox", pointerRules: {
                 accepts: [PointerType.C],
@@ -100,7 +100,7 @@ export namespace BoxIO {
         "BarBox": BarBox
     }
 
-    export const create = <K extends keyof TypeMap, V extends TypeMap[K]>(type: K, graph: BoxGraph, uuid: UUID.Format): V => {
+    export const create = <K extends keyof TypeMap, V extends TypeMap[K]>(type: K, graph: BoxGraph, uuid: UUID.Bytes): V => {
         switch (type) {
             case "FooBox":
                 return FooBox.create(graph, uuid) as V
@@ -127,7 +127,7 @@ type BarBoxFields = {
 }
 
 class BarBox extends Box<UnreferenceableType, BarBoxFields> {
-    static create(graph: BoxGraph, uuid: UUID.Format): BarBox {
+    static create(graph: BoxGraph, uuid: UUID.Bytes): BarBox {
         return graph.stageBox(new BarBox({
             uuid,
             graph: graph,

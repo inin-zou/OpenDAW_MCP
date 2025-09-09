@@ -8,7 +8,7 @@ class AudioLoaderWorklet implements SampleLoader {
 
     #data: Option<AudioData> = Option.None
 
-    constructor(readonly uuid: UUID.Format, readonly engineToClient: EngineToClient) {
+    constructor(readonly uuid: UUID.Bytes, readonly engineToClient: EngineToClient) {
         engineToClient.fetchAudio(uuid).then((data) => this.#data = Option.wrap(data))
     }
 
@@ -23,7 +23,7 @@ class AudioLoaderWorklet implements SampleLoader {
 
 export class AudioManagerWorklet implements SampleManager {
     readonly #engineToClient: EngineToClient
-    readonly #set: SortedSet<UUID.Format, SampleLoader>
+    readonly #set: SortedSet<UUID.Bytes, SampleLoader>
 
     constructor(engineToClient: EngineToClient) {
         this.#engineToClient = engineToClient
@@ -32,10 +32,10 @@ export class AudioManagerWorklet implements SampleManager {
 
     record(_loader: SampleLoader): void {}
 
-    getOrCreate(uuid: UUID.Format): SampleLoader {
+    getOrCreate(uuid: UUID.Bytes): SampleLoader {
         return this.#set.getOrCreate(uuid, uuid => new AudioLoaderWorklet(uuid, this.#engineToClient))
     }
 
-    remove(_uuid: UUID.Format) {}
-    invalidate(_uuid: UUID.Format) {}
+    remove(_uuid: UUID.Bytes) {}
+    invalidate(_uuid: UUID.Bytes) {}
 }

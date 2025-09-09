@@ -60,8 +60,8 @@ export namespace ProjectDialogs {
         return promise
     }
 
-    export const showBrowseDialog = async (service: StudioService): Promise<[UUID.Format, ProjectMeta]> => {
-        const {resolve, reject, promise} = Promise.withResolvers<[UUID.Format, ProjectMeta]>()
+    export const showBrowseDialog = async (service: StudioService): Promise<[UUID.Bytes, ProjectMeta]> => {
+        const {resolve, reject, promise} = Promise.withResolvers<[UUID.Bytes, ProjectMeta]>()
         const dialog: HTMLDialogElement = (
             <Dialog headline={"Browse Projects"}
                     icon={IconSymbol.FileList}

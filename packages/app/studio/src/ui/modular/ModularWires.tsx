@@ -26,7 +26,7 @@ export const ModularWires = ({lifecycle, environment, camera}: Construct) => {
     const vitalSigns = lifecycle.own(new VitalSigns())
     const wires: SVGGraphicsElement = <g classList="wires"/>
     const svg: SVGSVGElement = <svg classList={className} viewBox="0 0 1 1">{wires}</svg>
-    const connections: SortedSet<UUID.Format, ConnectionView> = UUID.newSet(view => view.adapter.uuid)
+    const connections: SortedSet<UUID.Bytes, ConnectionView> = UUID.newSet(view => view.adapter.uuid)
     const updateWirePath = (path: SVGPathElement, {x: x1, y: y1}: Point, {x: x2, y: y2}: Point): void => {
         const dx = x2 - x1
         const dy = y2 - y1
@@ -73,8 +73,8 @@ export const ModularWires = ({lifecycle, environment, camera}: Construct) => {
         updateQueue.clear()
         connections.forEach(connection => updateConnection(connection))
     })
-    const modules: SortedSet<UUID.Format, {
-        uuid: UUID.Format,
+    const modules: SortedSet<UUID.Bytes, {
+        uuid: UUID.Bytes,
         subscriptions: Subscription
     }> = UUID.newSet(entry => entry.uuid)
     lifecycle.own(environment.modularAdapter.catchupAndSubscribe({
@@ -118,7 +118,7 @@ export const ModularWires = ({lifecycle, environment, camera}: Construct) => {
                 terminate: () => path.remove()
             })
         },
-        highlight: (connection: UUID.Format): Terminable => {
+        highlight: (connection: UUID.Bytes): Terminable => {
             connections.get(connection).wire.classList.add("highlight")
             return {terminate: () => connections.get(connection).wire.classList.remove("highlight")}
         }

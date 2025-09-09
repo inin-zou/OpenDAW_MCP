@@ -66,7 +66,7 @@ export class NoteSequencer implements NoteEventSource, Terminable {
         )
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
 
     terminate(): void {this.#terminator.terminate()}
 

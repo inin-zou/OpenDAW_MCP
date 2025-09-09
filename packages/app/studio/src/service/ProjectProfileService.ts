@@ -74,7 +74,7 @@ export class ProjectProfileService implements MutableObservableValue<Option<Proj
         })
     }
 
-    async loadExisting(uuid: UUID.Format, meta: ProjectMeta) {
+    async loadExisting(uuid: UUID.Bytes, meta: ProjectMeta) {
         const project: Project = await ProjectStorage.loadProject(uuid).then(buffer => Project.load(this.#env, buffer))
         await SampleUtils.verify(project.boxGraph, this.#importer, this.#sampleAPI, this.#sampleManager)
         const cover = await ProjectStorage.loadCover(uuid)

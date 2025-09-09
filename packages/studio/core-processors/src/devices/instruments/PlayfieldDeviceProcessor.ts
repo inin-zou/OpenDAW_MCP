@@ -16,8 +16,8 @@ export class PlayfieldDeviceProcessor implements DeviceProcessor, NoteEventTarge
 
     readonly #sequencer: PlayfieldSequencer
     readonly #mixProcessor: MixProcessor
-    readonly #sampleSet: SortedSet<UUID.Format, {
-        uuid: UUID.Format,
+    readonly #sampleSet: SortedSet<UUID.Bytes, {
+        uuid: UUID.Bytes,
         processor: SampleProcessor,
         terminable: Terminable
     }>
@@ -84,7 +84,7 @@ export class PlayfieldDeviceProcessor implements DeviceProcessor, NoteEventTarge
         }
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
     get adapter(): PlayfieldDeviceBoxAdapter {return this.#adapter}
     get audioOutput(): AudioBuffer {return this.#mixProcessor.audioOutput}
 

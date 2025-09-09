@@ -79,7 +79,7 @@ export class DeviceMount implements Terminable {
         })
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
 
     terminate(): void {
         this.#optEditor = Option.None

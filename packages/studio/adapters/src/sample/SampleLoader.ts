@@ -6,7 +6,7 @@ import {SampleLoaderState} from "./SampleLoaderState"
 export interface SampleLoader {
     get data(): Option<AudioData>
     get peaks(): Option<Peaks>
-    get uuid(): UUID.Format
+    get uuid(): UUID.Bytes
     get state(): SampleLoaderState
     invalidate(): void
     subscribe(observer: Observer<SampleLoaderState>): Subscription

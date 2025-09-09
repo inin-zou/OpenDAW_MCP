@@ -3,38 +3,35 @@ import {assert, Comparator, Func, int, panic} from "./lang"
 import {SortedSet} from "./sorted-set"
 import {DataInput, DataOutput} from "./data"
 import {Crypto} from "./crypto"
-import {Maps} from "./maps"
 
 declare const crypto: Crypto
 
 export namespace UUID {
-    export type Format = Readonly<Uint8Array>
+    export type Bytes = Readonly<Uint8Array>
     export type String = `${string}-${string}-${string}-${string}-${string}`
 
     export const length = 16 as const
 
-    export const generate = (): Format => {
-        return fromUint8Array(crypto.getRandomValues(new Uint8Array(length)))
-    }
+    export const generate = (): Bytes => fromUint8Array(crypto.getRandomValues(new Uint8Array(length)))
 
-    export const sha256 = async (buffer: ArrayBuffer): Promise<Format> => {
+    export const sha256 = async (buffer: ArrayBuffer): Promise<Bytes> => {
         const isVitest = typeof process !== "undefined" && process.env?.VITEST === "true"
         return crypto.subtle.digest("SHA-256", isVitest ? new Uint8Array(buffer.slice(0)) : buffer)
             .then(buffer => fromUint8Array(new Uint8Array(buffer.slice(0, length))))
     }
 
-    export const validate = (uuid: UUID.Format): UUID.Format => UUID.parse(UUID.toString(uuid))
+    export const validate = (uuid: UUID.Bytes): UUID.Bytes => UUID.parse(UUID.toString(uuid))
 
-    export const fromDataInput = (input: DataInput): Format => {
+    export const fromDataInput = (input: DataInput): Bytes => {
         const array = new Uint8Array(length)
         input.readBytes(new Int8Array(array.buffer))
         return array
     }
 
-    export const toDataOutput = (output: DataOutput, uuid: UUID.Format): void =>
+    export const toDataOutput = (output: DataOutput, uuid: UUID.Bytes): void =>
         output.writeBytes(new Int8Array(uuid.buffer))
 
-    export const toString = (format: Format): UUID.String => {
+    export const toString = (format: Bytes): UUID.String => {
         const hex: string[] = Arrays.create(index => (index + 0x100).toString(16).substring(1), 256)
         return (hex[format[0]] + hex[format[1]] +
             hex[format[2]] + hex[format[3]] + "-" +
@@ -58,7 +55,7 @@ export namespace UUID {
         return bytes
     }
 
-    export const Comparator: Comparator<Format> = (a: Format, b: Format): int => {
+    export const Comparator: Comparator<Bytes> = (a: Bytes, b: Bytes): int => {
         if (a.length !== length || b.length !== length) {
             return panic("Unexpected array length for uuid(v4)")
         }
@@ -69,25 +66,19 @@ export namespace UUID {
         return 0
     }
 
-    export const equals = (a: UUID.Format, b: UUID.Format): boolean => Comparator(a, b) === 0
+    export const equals = (a: UUID.Bytes, b: UUID.Bytes): boolean => Comparator(a, b) === 0
 
-    export const newSet = <T>(key: Func<T, Format>) => new SortedSet<Format, T>(key, Comparator)
+    export const newSet = <T>(key: Func<T, Bytes>) => new SortedSet<Bytes, T>(key, Comparator)
 
-    export const Lowest: Format = parse("00000000-0000-4000-8000-000000000000")
-    export const Highest: Format = parse("FFFFFFFF-FFFF-4FFF-BFFF-FFFFFFFFFFFF")
-    export const fromInt = (value: int): Format => {
+    export const Lowest: Bytes = parse("00000000-0000-4000-8000-000000000000")
+    export const Highest: Bytes = parse("FFFFFFFF-FFFF-4FFF-BFFF-FFFFFFFFFFFF")
+    export const fromInt = (value: int): Bytes => {
         const result = new Uint8Array(Lowest)
         const array = new Uint8Array(new Uint32Array([value]).buffer)
         for (let i = 0; i < 4; i++) {
             result[i] = array[i]
         }
         return result
-    }
-
-    export class SimpleIdDecoder {
-        readonly #uuids: Map<string, UUID.Format>
-        constructor() {this.#uuids = new Map<string, UUID.Format>()}
-        getOrCreate(id: string): UUID.Format {return Maps.createIfAbsent(this.#uuids, id, () => UUID.generate())}
     }
 
     const fromUint8Array = (arr: Uint8Array): Uint8Array => {

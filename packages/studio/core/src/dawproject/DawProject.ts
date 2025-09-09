@@ -5,11 +5,11 @@ import {Project} from "../project/Project"
 import {DawProjectExporter} from "./DawProjectExporter"
 
 export namespace DawProject {
-    export type Resource = { uuid: UUID.Format, path: string, name: string, buffer: ArrayBuffer }
+    export type Resource = { uuid: UUID.Bytes, path: string, name: string, buffer: ArrayBuffer }
 
     export interface ResourceProvider {
         fromPath(path: string): Resource
-        fromUUID(uuid: UUID.Format): Resource
+        fromUUID(uuid: UUID.Bytes): Resource
     }
 
     export const decode = async (buffer: ArrayBuffer | NonSharedBuffer): Promise<{
@@ -37,7 +37,7 @@ export namespace DawProject {
             metaData, project, resources: {
                 fromPath: (path: string): Resource => resources
                     .find(resource => resource.path === path) ?? panic("Resource not found"),
-                fromUUID: (uuid: UUID.Format): Resource => resources
+                fromUUID: (uuid: UUID.Bytes): Resource => resources
                     .find(resource => UUID.equals(resource.uuid, uuid)) ?? panic("Resource not found")
             }
         }

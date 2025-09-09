@@ -5,8 +5,8 @@ export namespace ProjectPaths {
     export const ProjectFile = "project.od"
     export const ProjectMetaFile = "meta.json"
     export const ProjectCoverFile = "image.bin"
-    export const projectFile = (uuid: UUID.Format): string => `${(projectFolder(uuid))}/${ProjectFile}`
-    export const projectMeta = (uuid: UUID.Format): string => `${(projectFolder(uuid))}/${ProjectMetaFile}`
-    export const projectCover = (uuid: UUID.Format): string => `${(projectFolder(uuid))}/${ProjectCoverFile}`
-    export const projectFolder = (uuid: UUID.Format): string => `${Folder}/${UUID.toString(uuid)}`
+    export const projectFile = (uuid: UUID.Bytes): string => `${(projectFolder(uuid))}/${ProjectFile}`
+    export const projectMeta = (uuid: UUID.Bytes): string => `${(projectFolder(uuid))}/${ProjectMetaFile}`
+    export const projectCover = (uuid: UUID.Bytes): string => `${(projectFolder(uuid))}/${ProjectCoverFile}`
+    export const projectFolder = (uuid: UUID.Bytes): string => `${Folder}/${UUID.toString(uuid)}`
 }

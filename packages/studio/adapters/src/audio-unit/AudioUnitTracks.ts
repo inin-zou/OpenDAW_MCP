@@ -13,7 +13,7 @@ export class AudioUnitTracks implements Terminable {
 
     readonly #regionNotifier: Notifier<void> = new Notifier<void>()
     readonly #collection: IndexedBoxAdapterCollection<TrackBoxAdapter, Pointers.TrackCollection>
-    readonly #subscriptions: SortedSet<UUID.Format, { uuid: UUID.Format, subscription: Subscription }>
+    readonly #subscriptions: SortedSet<UUID.Bytes, { uuid: UUID.Bytes, subscription: Subscription }>
     readonly #subscription: Subscription
 
     constructor(adapter: AudioUnitBoxAdapter, boxAdapters: BoxAdapters) {

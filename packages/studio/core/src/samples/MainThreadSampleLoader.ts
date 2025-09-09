@@ -19,7 +19,7 @@ import {SampleStorage} from "./SampleStorage"
 export class MainThreadSampleLoader implements SampleLoader {
     readonly #manager: MainThreadSampleManager
 
-    readonly #uuid: UUID.Format
+    readonly #uuid: UUID.Bytes
     readonly #notifier: Notifier<SampleLoaderState>
 
     #meta: Option<SampleMetaData> = Option.None
@@ -28,7 +28,7 @@ export class MainThreadSampleLoader implements SampleLoader {
     #state: SampleLoaderState = {type: "progress", progress: 0.0}
     #version: int = 0
 
-    constructor(manager: MainThreadSampleManager, uuid: UUID.Format) {
+    constructor(manager: MainThreadSampleManager, uuid: UUID.Bytes) {
         this.#manager = manager
         this.#uuid = uuid
 
@@ -53,7 +53,7 @@ export class MainThreadSampleLoader implements SampleLoader {
         return this.#notifier.subscribe(observer)
     }
 
-    get uuid(): UUID.Format {return this.#uuid}
+    get uuid(): UUID.Bytes {return this.#uuid}
     get data(): Option<AudioData> {return this.#data}
     get meta(): Option<SampleMetaData> {return this.#meta}
     get peaks(): Option<Peaks> {return this.#peaks}

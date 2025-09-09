@@ -52,7 +52,7 @@ export class GrooveShuffleBoxAdapter implements GrooveAdapter {
     warp(position: ppqn): ppqn {return this.#groove.warp(position)}
 
     get box(): GrooveShuffleBox {return this.#box}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
 
     parameterAt(fieldIndices: FieldKeys): AutomatableParameterFieldAdapter {return this.#parametric.parameterAt(fieldIndices)}

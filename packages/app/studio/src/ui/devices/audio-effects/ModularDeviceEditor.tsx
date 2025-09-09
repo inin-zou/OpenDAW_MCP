@@ -24,7 +24,7 @@ type Construct = {
 }
 
 type UserInterfaceElement = {
-    uuid: UUID.Format
+    uuid: UUID.Bytes
     element: Element
     terminable: Terminable
 }
@@ -32,7 +32,7 @@ type UserInterfaceElement = {
 export const ModularDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
     const {project} = service
     const userInterface: HTMLElement = <div className={className}/>
-    const elements: SortedSet<UUID.Format, UserInterfaceElement> = UUID.newSet(entry => entry.uuid)
+    const elements: SortedSet<UUID.Bytes, UserInterfaceElement> = UUID.newSet(entry => entry.uuid)
     const addElement = (box: Box): void => {
         const success = box.accept<BoxVisitor<true>>({
             visitDeviceInterfaceKnobBox: (box: DeviceInterfaceKnobBox): true => {

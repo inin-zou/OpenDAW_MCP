@@ -37,8 +37,8 @@ export class TracksManager implements Terminable {
     readonly #factory: TrackFactory
 
     readonly #terminator: Terminator
-    readonly #audioUnits: SortedSet<UUID.Format, { uuid: UUID.Format, lifecycle: Terminable }>
-    readonly #tracks: SortedSet<UUID.Format, TrackContext>
+    readonly #audioUnits: SortedSet<UUID.Bytes, { uuid: UUID.Bytes, lifecycle: Terminable }>
+    readonly #tracks: SortedSet<UUID.Bytes, TrackContext>
     readonly #maxClipsIndex: DefaultObservableValue<int>
 
     #currentClipModifier: Option<ClipModifier> = Option.None

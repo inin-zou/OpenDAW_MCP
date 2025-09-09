@@ -15,9 +15,9 @@ export interface Engine extends Terminable {
     panic(): void
     noteSignal(signal: NoteSignal): void
     subscribeNotes(observer: Observer<NoteSignal>): Subscription
-    ignoreNoteRegion(uuid: UUID.Format): void
-    scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void
-    scheduleClipStop(trackIds: ReadonlyArray<UUID.Format>): void
+    ignoreNoteRegion(uuid: UUID.Bytes): void
+    scheduleClipPlay(clipIds: ReadonlyArray<UUID.Bytes>): void
+    scheduleClipStop(trackIds: ReadonlyArray<UUID.Bytes>): void
     subscribeClipNotification(observer: Observer<ClipNotification>): Subscription
 
     get position(): ObservableValue<ppqn>
@@ -28,6 +28,6 @@ export interface Engine extends Terminable {
     get playbackTimestamp(): ObservableValue<ppqn>
     get countInBeatsTotal(): ObservableValue<int>
     get countInBeatsRemaining(): ObservableValue<number>
-    get markerState(): ObservableValue<Nullable<[UUID.Format, int]>>
+    get markerState(): ObservableValue<Nullable<[UUID.Bytes, int]>>
     get project(): Project
 }

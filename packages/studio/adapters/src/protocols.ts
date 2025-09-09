@@ -17,16 +17,16 @@ export interface EngineCommands extends Terminable {
     panic(): void
     // feeds a note request into an audio-unit identified by uuid
     noteSignal(signal: NoteSignal): void
-    ignoreNoteRegion(uuid: UUID.Format): void
+    ignoreNoteRegion(uuid: UUID.Bytes): void
     // timeline clip playback management
-    scheduleClipPlay(clipIds: ReadonlyArray<UUID.Format>): void
-    scheduleClipStop(trackIds: ReadonlyArray<UUID.Format>): void
+    scheduleClipPlay(clipIds: ReadonlyArray<UUID.Bytes>): void
+    scheduleClipStop(trackIds: ReadonlyArray<UUID.Bytes>): void
 }
 
 export interface EngineToClient {
     log(message: string): void
-    fetchAudio(uuid: UUID.Format): Promise<AudioData>
+    fetchAudio(uuid: UUID.Bytes): Promise<AudioData>
     notifyClipSequenceChanges(changes: ClipSequencingUpdates): void
-    switchMarkerState(state: Nullable<[UUID.Format, int]>): void
+    switchMarkerState(state: Nullable<[UUID.Bytes, int]>): void
     ready(): void
 }

@@ -109,7 +109,7 @@ export namespace InstrumentFactories {
     export const Named = {Vaporisateur, Playfield, Nano, Tape}
     export type Keys = keyof typeof Named
 
-    const useFile = (boxGraph: BoxGraph, fileUUID: UUID.Format, name: string) => boxGraph.findBox<AudioFileBox>(fileUUID)
+    const useFile = (boxGraph: BoxGraph, fileUUID: UUID.Bytes, name: string) => boxGraph.findBox<AudioFileBox>(fileUUID)
         .unwrapOrElse(() => AudioFileBox.create(boxGraph, fileUUID, box => {
             box.fileName.setValue(name)
         }))

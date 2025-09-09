@@ -42,7 +42,7 @@ import WorkletsUrl from "@opendaw/studio-core/processors.js?url"
     {
         const sampleAPI = OpenSampleAPI.get()
         const sampleManager = new MainThreadSampleManager({
-            fetch: (uuid: UUID.Format, progress: Progress.Handler): Promise<[AudioData, SampleMetaData]> =>
+            fetch: (uuid: UUID.Bytes, progress: Progress.Handler): Promise<[AudioData, SampleMetaData]> =>
                 sampleAPI.load(context, uuid, progress)
         }, context)
 

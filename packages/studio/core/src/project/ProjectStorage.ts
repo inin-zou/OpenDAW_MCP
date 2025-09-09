@@ -8,7 +8,7 @@ import {ProjectPaths} from "./ProjectPaths"
 
 export namespace ProjectStorage {
     export type ListEntry = {
-        uuid: UUID.Format
+        uuid: UUID.Bytes
         meta: ProjectMeta
         cover?: ArrayBuffer
         project?: ArrayBuffer
@@ -36,11 +36,11 @@ export namespace ProjectStorage {
                 })))
     }
 
-    export const loadProject = async (uuid: UUID.Format): Promise<ArrayBuffer> => {
+    export const loadProject = async (uuid: UUID.Bytes): Promise<ArrayBuffer> => {
         return WorkerAgents.Opfs.read(ProjectPaths.projectFile(uuid)).then(array => array.buffer as ArrayBuffer)
     }
 
-    export const loadCover = async (uuid: UUID.Format): Promise<Option<ArrayBuffer>> => {
+    export const loadCover = async (uuid: UUID.Bytes): Promise<Option<ArrayBuffer>> => {
         return WorkerAgents.Opfs.read(ProjectPaths.projectCover(uuid))
             .then(array => Option.wrap(array.buffer as ArrayBuffer), () => Option.None)
     }
@@ -60,7 +60,7 @@ export namespace ProjectStorage {
         return new Set<string>(uuids)
     }
 
-    export const deleteProject = async (uuid: UUID.Format) => {
+    export const deleteProject = async (uuid: UUID.Bytes) => {
         const {status, value} = await Promises.tryCatch(WorkerAgents.Opfs.read(`${ProjectPaths.Folder}/trash.json`))
         const array = status === "rejected" ? [] : JSON.parse(new TextDecoder().decode(value))
         array.push(UUID.toString(uuid))

@@ -288,7 +288,7 @@ export class ProjectApi {
         const dependencies = audioUnits
             .flatMap(box => Array.from(box.graph.dependenciesOf(box).boxes))
             .filter(box => box.name !== SelectionBox.ClassName && box.name !== AuxSendBox.ClassName)
-        const uuidMap = UUID.newSet<{ source: UUID.Format, target: UUID.Format }>(({source}) => source)
+        const uuidMap = UUID.newSet<{ source: UUID.Bytes, target: UUID.Bytes }>(({source}) => source)
         const allAdded = uuidMap.addMany([
             ...audioUnits
                 .filter(({output: {targetAddress}}) => targetAddress.nonEmpty())

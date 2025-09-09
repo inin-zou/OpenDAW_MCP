@@ -67,7 +67,7 @@ export const SelectionRectangle =
                 }
                 selection.deselectAll()
                 const enclosed: Array<T> = []
-                const selected: SortedSet<UUID.Format, T> = UUID.newSet<T>(adapter => adapter.uuid)
+                const selected: SortedSet<UUID.Bytes, T> = UUID.newSet<T>(adapter => adapter.uuid)
                 return Option.wrap({
                     update: (event: Dragging.Event) => {
                         const clientRect = svg.getBoundingClientRect()

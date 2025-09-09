@@ -29,8 +29,8 @@ export namespace DeviceIO {
         const version = input.readInt()
         assert(header === "openDAW:device", `wrong header: ${header}`)
         assert(version === 1, `wrong version: ${version}`)
-        const mapping = UUID.newSet<{ source: UUID.Format, target: UUID.Format }>(({source}) => source)
-        type RawBox = { uuid: UUID.Format, key: keyof BoxIO.TypeMap, input: ByteArrayInput }
+        const mapping = UUID.newSet<{ source: UUID.Bytes, target: UUID.Bytes }>(({source}) => source)
+        type RawBox = { uuid: UUID.Bytes, key: keyof BoxIO.TypeMap, input: ByteArrayInput }
         const rawBoxes: Array<RawBox> = []
         const readRawBox = (): RawBox => {
             const uuid = UUID.fromDataInput(input)

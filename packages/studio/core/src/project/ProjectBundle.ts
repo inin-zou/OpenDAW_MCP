@@ -39,7 +39,7 @@ export namespace ProjectBundle {
 
     export const decode = async (env: ProjectEnv,
                                  arrayBuffer: ArrayBuffer,
-                                 openProfileUUID?: UUID.Format): Promise<ProjectProfile> => {
+                                 openProfileUUID?: UUID.Bytes): Promise<ProjectProfile> => {
         const {default: JSZip} = await import("jszip")
         const zip = await JSZip.loadAsync(arrayBuffer)
         if (await asDefined(zip.file("version")).async("text") !== "1") {

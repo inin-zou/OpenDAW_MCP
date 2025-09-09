@@ -51,7 +51,7 @@ export class AudioUnitBoxAdapter implements DeviceHost, BoxAdapter {
     }
 
     get box(): AudioUnitBox {return this.#box}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get indexField(): Int32Field {return this.#box.index}
     get type(): AudioUnitType {return this.#box.type.getValue() as AudioUnitType}

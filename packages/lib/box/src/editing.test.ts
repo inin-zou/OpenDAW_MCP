@@ -18,7 +18,7 @@ type BarBoxFields = {
 }
 
 class BarBox extends Box<UnreferenceableType, BarBoxFields> {
-    static create(graph: BoxGraph, uuid: UUID.Format, constructor?: Procedure<BarBox>): BarBox {
+    static create(graph: BoxGraph, uuid: UUID.Bytes, constructor?: Procedure<BarBox>): BarBox {
         return graph.stageBox(new BarBox({uuid, graph, name: "BarBox", pointerRules: NoPointers}), constructor)
     }
 
@@ -54,7 +54,7 @@ describe("editing", () => {
     }
 
     beforeEach<TestScene>((scene: TestScene) => {
-        const graph = new BoxGraph<any>(Option.wrap((name: keyof any, graph: BoxGraph, uuid: UUID.Format, constructor: Procedure<Box>) => {
+        const graph = new BoxGraph<any>(Option.wrap((name: keyof any, graph: BoxGraph, uuid: UUID.Bytes, constructor: Procedure<Box>) => {
             switch (name) {
                 case "BarBox":
                     return BarBox.create(graph, uuid, constructor)

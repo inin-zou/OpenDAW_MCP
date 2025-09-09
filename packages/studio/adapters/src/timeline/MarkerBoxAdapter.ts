@@ -35,7 +35,7 @@ export class MarkerBoxAdapter implements BoxAdapter, Event {
     }
 
     get box(): MarkerBox {return this.#box}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get position(): int {return this.#box.position.getValue()}
     get plays(): int {return this.#box.plays.getValue()}

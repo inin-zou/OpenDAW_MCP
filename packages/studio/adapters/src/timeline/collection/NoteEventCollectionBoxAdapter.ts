@@ -38,7 +38,7 @@ export class NoteEventCollectionBoxAdapter implements BoxAdapter, SelectableLoca
     readonly #box: NoteEventCollectionBox
 
     readonly #changeNotifier: Notifier<this>
-    readonly #adapters: SortedSet<UUID.Format, NoteEventBoxAdapter>
+    readonly #adapters: SortedSet<UUID.Bytes, NoteEventBoxAdapter>
     readonly #events: EventCollection<NoteEventBoxAdapter>
 
     #minPitch: int = 60
@@ -132,7 +132,7 @@ export class NoteEventCollectionBoxAdapter implements BoxAdapter, SelectableLoca
     terminate() {this.#terminator.terminate()}
 
     get box(): NoteEventCollectionBox {return this.#box}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get numOwners(): int {return this.#box.owners.pointerHub.filter(Pointers.NoteEventCollection).length}
     get events(): EventCollection<NoteEventBoxAdapter> {

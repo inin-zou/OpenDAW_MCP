@@ -73,7 +73,7 @@ const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`)
         const audioDevices = await AudioOutputDevice.create(context)
         const sampleAPI = OpenSampleAPI.get()
         const sampleManager = new MainThreadSampleManager({
-            fetch: async (uuid: UUID.Format, progress: Procedure<unitValue>): Promise<[AudioData, SampleMetaData]> =>
+            fetch: async (uuid: UUID.Bytes, progress: Procedure<unitValue>): Promise<[AudioData, SampleMetaData]> =>
                 sampleAPI.load(context, uuid, progress)
         } satisfies SampleProvider, context)
         const service: StudioService =

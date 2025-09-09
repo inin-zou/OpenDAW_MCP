@@ -100,7 +100,7 @@ export class AudioRegionBoxAdapter implements LoopableRegionBoxAdapter<never> {
 
     get box(): AudioRegionBox {return this.#box}
 
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get position(): int {return this.#box.position.getValue()}
     get duration(): int {

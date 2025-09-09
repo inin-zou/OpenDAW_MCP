@@ -100,7 +100,7 @@ export class ValueClipBoxAdapter implements ClipBoxAdapter<ValueEventCollectionB
     }
 
     get box(): ValueClipBox {return this.#box}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get indexField(): Int32Field {return this.#box.index}
     get duration(): ppqn {return this.#box.duration.getValue()}

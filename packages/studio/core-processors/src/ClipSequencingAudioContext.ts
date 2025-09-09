@@ -7,8 +7,8 @@ import {ClipSequencing, Section} from "@opendaw/studio-adapters"
 import {ClipSequencingUpdates} from "@opendaw/studio-adapters"
 
 // Just convenient to identify which UUID is for which type
-type ClipKey = UUID.Format
-type TrackKey = UUID.Format
+type ClipKey = UUID.Bytes
+type TrackKey = UUID.Bytes
 
 class TrackState {
     waiting: Option<Option<AnyClipBoxAdapter>> = Option.None

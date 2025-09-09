@@ -12,7 +12,7 @@ export namespace SampleDialogs {
     export const nativeFileBrowser = async (multiple: boolean = true) =>
         Promises.tryCatch(Files.open({...FilePickerAcceptTypes.WavFiles, multiple}))
 
-    export const missingSampleDialog = async (importer: SampleImporter, uuid: UUID.Format, name: string): Promise<Sample> => {
+    export const missingSampleDialog = async (importer: SampleImporter, uuid: UUID.Bytes, name: string): Promise<Sample> => {
         const {resolve, reject, promise} = Promise.withResolvers<Sample>()
         const dialog: HTMLDialogElement = (
             <Dialog headline="Missing Sample"

@@ -29,7 +29,7 @@ export class InsertReturnAudioChain implements DeviceChain {
 
     readonly #terminator = new Terminator()
 
-    readonly #effects: SortedSet<UUID.Format, EffectDeviceEntry>
+    readonly #effects: SortedSet<UUID.Bytes, EffectDeviceEntry>
     readonly #disconnector: Terminator
 
     #orderedEffects: Array<AudioEffectDeviceProcessor> = []

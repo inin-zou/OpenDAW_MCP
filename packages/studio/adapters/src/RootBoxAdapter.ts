@@ -34,7 +34,7 @@ export class RootBoxAdapter implements BoxAdapter {
         this.#pianoMode = new PianoModeAdapter(this.#box.pianoMode)
     }
 
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get box(): RootBox {return this.#box}
     get audioBusses(): BoxAdapterCollection<AudioBusBoxAdapter> {return this.#audioBusses}

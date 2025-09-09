@@ -54,17 +54,17 @@ interface Modification {
 export class NewUpdate implements Modification {
     readonly type = "new"
 
-    readonly #uuid: UUID.Format
+    readonly #uuid: UUID.Bytes
     readonly #name: string
     readonly #settings: ArrayBufferLike
 
-    constructor(uuid: UUID.Format, name: string, settings: ArrayBufferLike) {
+    constructor(uuid: UUID.Bytes, name: string, settings: ArrayBufferLike) {
         this.#uuid = uuid
         this.#name = name
         this.#settings = settings
     }
 
-    get uuid(): UUID.Format {return this.#uuid}
+    get uuid(): UUID.Bytes {return this.#uuid}
     get name(): string {return this.#name}
     get settings(): ArrayBufferLike {return this.#settings}
 
@@ -189,17 +189,17 @@ export class PointerUpdate implements Modification {
 export class DeleteUpdate implements Modification {
     readonly type = "delete"
 
-    readonly #uuid: UUID.Format
+    readonly #uuid: UUID.Bytes
     readonly #name: string
     readonly #settings: ArrayBufferLike
 
-    constructor(uuid: UUID.Format, name: string, settings: ArrayBufferLike) {
+    constructor(uuid: UUID.Bytes, name: string, settings: ArrayBufferLike) {
         this.#uuid = uuid
         this.#name = name
         this.#settings = settings
     }
 
-    get uuid(): UUID.Format {return this.#uuid}
+    get uuid(): UUID.Bytes {return this.#uuid}
     get name(): string {return this.#name}
     get settings(): ArrayBufferLike {return this.#settings}
 

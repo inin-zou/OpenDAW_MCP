@@ -47,7 +47,7 @@ export class OpenSampleAPI implements SampleAPI {
             .then(x => x.json(), () => []))
     }
 
-    async get(uuid: UUID.Format): Promise<Sample> {
+    async get(uuid: UUID.Bytes): Promise<Sample> {
         const url = `${OpenSampleAPI.ApiRoot}/get.php?uuid=${UUID.toString(uuid)}`
         const sample: Sample = await Promises.retry(() => network.limitFetch(url, headers)
             .then(x => x.json()))
@@ -55,7 +55,7 @@ export class OpenSampleAPI implements SampleAPI {
         return Object.freeze({...sample, cloud: "cloud:openDAW"})
     }
 
-    async load(context: AudioContext, uuid: UUID.Format, progress: Procedure<unitValue>): Promise<[AudioData, Sample]> {
+    async load(context: AudioContext, uuid: UUID.Bytes, progress: Procedure<unitValue>): Promise<[AudioData, Sample]> {
         console.debug(`load ${UUID.toString(uuid)}`)
         return this.get(uuid)
             .then(({uuid, name, bpm}) => Promises.retry(() => network

@@ -89,7 +89,7 @@ export class VaporisateurDeviceProcessor extends AudioProcessor implements Instr
         this.eventInput.clear()
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
     get audioOutput(): AudioBuffer {return this.#audioOutput}
     get adapter(): VaporisateurDeviceBoxAdapter {return this.#adapter}
 

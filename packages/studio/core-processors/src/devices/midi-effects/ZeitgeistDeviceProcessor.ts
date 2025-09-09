@@ -38,7 +38,7 @@ export class ZeitgeistDeviceProcessor extends EventProcessor implements MidiEffe
         )
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
 
     index(): int {return this.#adapter.indexField.getValue()}
     adapter(): ZeitgeistDeviceBoxAdapter {return this.#adapter}

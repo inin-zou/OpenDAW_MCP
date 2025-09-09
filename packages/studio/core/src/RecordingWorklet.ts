@@ -28,7 +28,7 @@ import {PeaksWriter} from "./PeaksWriter"
 export class RecordingWorklet extends AudioWorkletNode implements Terminable, SampleLoader {
     readonly #terminator: Terminator = new Terminator()
 
-    readonly uuid: UUID.Format = UUID.generate()
+    readonly uuid: UUID.Bytes = UUID.generate()
 
     readonly #output: Array<ReadonlyArray<Float32Array>>
     readonly #notifier: Notifier<SampleLoaderState>

@@ -56,7 +56,7 @@ export interface WiringPreview {
     begin(connector: ConnectorViewAdapter, pointer: Point): {
         update: (pointer: Point, locked: boolean) => void
     } & Terminable
-    highlight(connection: UUID.Format): Terminable
+    highlight(connection: UUID.Bytes): Terminable
 }
 
 export class ModularEnvironment implements Terminable {
@@ -67,7 +67,7 @@ export class ModularEnvironment implements Terminable {
     readonly #terminator: Terminator
     readonly #selection: Selection<ModuleAdapter>
 
-    readonly #modules: SortedSet<UUID.Format, ModuleViewAdapter>
+    readonly #modules: SortedSet<UUID.Bytes, ModuleViewAdapter>
     readonly #connectors: SortedSet<Address, ConnectorViewAdapter>
 
     #wiringPreview: Option<WiringPreview> = Option.None
@@ -110,7 +110,7 @@ export class ModularEnvironment implements Terminable {
         viewAdapter.moduleAdapter.attributes
     }
 
-    unregisterModule(uuid: UUID.Format): void {
+    unregisterModule(uuid: UUID.Bytes): void {
         console.debug(`unregisterModule(${UUID.toString(uuid)})`)
         this.#modules.removeByKey(uuid).lifecycle.terminate()
     }

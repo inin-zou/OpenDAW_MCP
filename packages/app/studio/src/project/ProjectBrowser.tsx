@@ -12,7 +12,7 @@ const className = Html.adoptStyleSheet(css, "ProjectBrowser")
 
 type Construct = {
     service: StudioService
-    select: Procedure<[UUID.Format, ProjectMeta]>
+    select: Procedure<[UUID.Bytes, ProjectMeta]>
 }
 
 export const ProjectBrowser = ({service, select}: Construct) => {

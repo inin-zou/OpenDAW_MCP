@@ -31,7 +31,7 @@ export class UnknownMidiEffectDeviceProcessor extends EventProcessor implements 
         return Terminable.create(() => this.#source = Option.None)
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
     get incoming(): Processor {return this}
     get outgoing(): Processor {return this}
 

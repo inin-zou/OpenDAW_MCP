@@ -26,7 +26,7 @@ import {FilteredSelection} from "./FilteredSelection"
  */
 export class VertexSelection implements Selection<SelectableVertex> {
     readonly #lifeTime: Terminator
-    readonly #entityMap: SortedSet<UUID.Format, SelectionEntry> // sorted on entity
+    readonly #entityMap: SortedSet<UUID.Bytes, SelectionEntry> // sorted on entity
     readonly #selectableMap: SortedSet<Address, SelectionEntry> // sorted on selectable
     readonly #listeners: Listeners<SelectionListener<SelectableVertex>>
 

@@ -8,7 +8,7 @@ import {CaptureAudio} from "./CaptureAudio"
 export class CaptureDevices implements Terminable {
     readonly #project: Project
     readonly #subscription: Subscription
-    readonly #captures: SortedSet<UUID.Format, Capture>
+    readonly #captures: SortedSet<UUID.Bytes, Capture>
 
     constructor(project: Project) {
         this.#project = project
@@ -29,7 +29,7 @@ export class CaptureDevices implements Terminable {
 
     get project(): Project {return this.#project}
 
-    get(uuid: UUID.Format): Option<Capture> {return this.#captures.opt(uuid)}
+    get(uuid: UUID.Bytes): Option<Capture> {return this.#captures.opt(uuid)}
 
     setArm(subject: Capture, exclusive: boolean): void {
         const arming = !subject.armed.getValue()

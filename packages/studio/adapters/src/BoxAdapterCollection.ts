@@ -9,7 +9,7 @@ export interface AdapterCollectionListener<ADAPTER extends BoxAdapter> {
 }
 
 export class BoxAdapterCollection<ADAPTER extends BoxAdapter> implements Terminable {
-    readonly #entries: SortedSet<UUID.Format, ADAPTER>
+    readonly #entries: SortedSet<UUID.Bytes, ADAPTER>
     readonly #listeners: Listeners<AdapterCollectionListener<ADAPTER>>
     readonly #subscription: Subscription
 

@@ -69,7 +69,7 @@ export class StereoToolDeviceProcessor extends AudioProcessor implements AudioEf
         this.#processed = false
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
 
     get audioOutput(): AudioBuffer {return this.#output}
 

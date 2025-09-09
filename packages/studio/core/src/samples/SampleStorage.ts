@@ -10,7 +10,7 @@ export namespace SampleStorage {
 
     export const Folder = "samples/v2"
 
-    export const saveSample = async (uuid: UUID.Format,
+    export const saveSample = async (uuid: UUID.Bytes,
                                      audio: AudioData,
                                      peaks: ArrayBuffer,
                                      meta: SampleMetaData): Promise<void> => {
@@ -26,12 +26,12 @@ export namespace SampleStorage {
         ]).then(EmptyExec)
     }
 
-    export const updateSampleMeta = async (uuid: UUID.Format, meta: SampleMetaData): Promise<void> => {
+    export const updateSampleMeta = async (uuid: UUID.Bytes, meta: SampleMetaData): Promise<void> => {
         const path = `${Folder}/${UUID.toString(uuid)}`
         return WorkerAgents.Opfs.write(`${path}/meta.json`, new TextEncoder().encode(JSON.stringify(meta)))
     }
 
-    export const loadSample = async (uuid: UUID.Format, context: AudioContext): Promise<[AudioData, Peaks, SampleMetaData]> => {
+    export const loadSample = async (uuid: UUID.Bytes, context: AudioContext): Promise<[AudioData, Peaks, SampleMetaData]> => {
         const path = `${Folder}/${UUID.toString(uuid)}`
         return Promise.all([
             WorkerAgents.Opfs.read(`${path}/audio.wav`)
@@ -48,7 +48,7 @@ export namespace SampleStorage {
         }, peaks, meta])
     }
 
-    export const deleteSample = async (uuid: UUID.Format): Promise<void> => {
+    export const deleteSample = async (uuid: UUID.Bytes): Promise<void> => {
         const path = `${Folder}/${UUID.toString(uuid)}`
         const uuids = await loadTrashedIds()
         uuids.push(UUID.toString(uuid))

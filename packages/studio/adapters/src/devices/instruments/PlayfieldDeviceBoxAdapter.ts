@@ -33,7 +33,7 @@ export class PlayfieldDeviceBoxAdapter implements InstrumentDeviceBoxAdapter {
     reset(): void {this.#samples.adapters().forEach(adapter => adapter.box.delete())}
 
     get box(): PlayfieldDeviceBox {return this.#box}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get notesAddress(): Address {return this.#box.address.append(1000)}
     get labelField(): StringField {return this.#box.label}

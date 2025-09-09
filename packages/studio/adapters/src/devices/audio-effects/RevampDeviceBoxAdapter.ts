@@ -25,7 +25,7 @@ export class RevampDeviceBoxAdapter implements AudioEffectDeviceAdapter {
     }
 
     get box(): RevampDeviceBox {return this.#box}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get indexField(): Int32Field {return this.#box.index}
     get labelField(): StringField {return this.#box.label}

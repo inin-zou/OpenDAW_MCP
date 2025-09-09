@@ -12,7 +12,7 @@ export class TrackRegions {
     readonly #terminator: Terminator
     readonly #changeNotifier: Notifier<void>
     readonly #collection: RegionCollection<AnyRegionBoxAdapter>
-    readonly #adapters: SortedSet<UUID.Format, AnyRegionBoxAdapter>
+    readonly #adapters: SortedSet<UUID.Bytes, AnyRegionBoxAdapter>
 
     constructor(adapter: TrackBoxAdapter, boxAdapters: BoxAdapters) {
         this.#trackBoxAdapter = adapter

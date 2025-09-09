@@ -281,7 +281,7 @@ export class StudioService implements ProjectEnv {
     async loadTemplate(name: string): Promise<unknown> {return this.profileService.loadTemplate(name)}
     async exportZip() {return this.profileService.exportBundle()}
     async importZip() {return this.profileService.importBundle()}
-    async deleteProject(uuid: UUID.Format, meta: ProjectMeta): Promise<void> {
+    async deleteProject(uuid: UUID.Bytes, meta: ProjectMeta): Promise<void> {
         if (this.profileService.getValue().ifSome(profile => UUID.equals(profile.uuid, uuid)) === true) {
             await this.closeProject()
         }
@@ -353,7 +353,7 @@ export class StudioService implements ProjectEnv {
     }
 
     async importSample({uuid, name, arrayBuffer, progressHandler = Progress.Empty}: {
-        uuid?: UUID.Format,
+        uuid?: UUID.Bytes,
         name: string,
         arrayBuffer: ArrayBuffer,
         progressHandler?: Progress.Handler

@@ -9,7 +9,7 @@ export namespace MarkerRenderer {
     export const createTrackRenderer = (canvas: HTMLCanvasElement,
                                         range: TimelineRange,
                                         {events}: MarkerTrackAdapter,
-                                        markerState: DefaultObservableValue<Nullable<[UUID.Format, int]>>) =>
+                                        markerState: DefaultObservableValue<Nullable<[UUID.Bytes, int]>>) =>
         new CanvasPainter(canvas, ({context}) => {
             const {width, height} = canvas
             const {fontFamily, fontSize} = getComputedStyle(canvas)
@@ -17,7 +17,7 @@ export namespace MarkerRenderer {
             context.textBaseline = "middle"
             context.font = `${parseFloat(fontSize) * devicePixelRatio}px ${fontFamily}`
             const renderMarker = (curr: MarkerBoxAdapter, next?: MarkerBoxAdapter): void => {
-                const state: Nullable<[UUID.Format, int]> = markerState.getValue()
+                const state: Nullable<[UUID.Bytes, int]> = markerState.getValue()
                 const isPlaying = isDefined(state) && UUID.equals(curr.uuid, state[0])
                 MarkerRenderer.renderMarker(context, range, curr, height, isPlaying, isDefined(state) ? state[1] : 0, next)
             }

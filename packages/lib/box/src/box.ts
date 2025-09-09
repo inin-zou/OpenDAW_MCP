@@ -27,7 +27,7 @@ import {Update} from "./updates"
 import {Propagation} from "./dispatchers"
 
 export type BoxConstruct<T extends PointerTypes> = {
-    uuid: UUID.Format
+    uuid: UUID.Bytes
     graph: BoxGraph
     name: string
     pointerRules: PointerRules<T>

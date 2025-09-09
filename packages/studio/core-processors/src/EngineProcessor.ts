@@ -65,7 +65,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
     readonly #engineToClient: EngineToClient
     readonly #boxAdapters: BoxAdapters
     readonly #audioManager: SampleManager
-    readonly #audioUnits: SortedSet<UUID.Format, AudioUnit>
+    readonly #audioUnits: SortedSet<UUID.Bytes, AudioUnit>
     readonly #rootBoxAdapter: RootBoxAdapter
     readonly #timelineBoxAdapter: TimelineBoxAdapter
     readonly #parameterFieldAdapters: ParameterFieldAdapters
@@ -82,7 +82,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
     readonly #renderer: BlockRenderer
     readonly #stateSender: SyncStream.Writer
     readonly #stemExports: ReadonlyArray<AudioUnit>
-    readonly #ignoredRegions: SortedSet<UUID.Format, UUID.Format>
+    readonly #ignoredRegions: SortedSet<UUID.Bytes, UUID.Bytes>
 
     #processQueue: Option<ReadonlyArray<Processor>> = Option.None
     #primaryOutput: Option<AudioUnit> = Option.None
@@ -110,9 +110,9 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
             this.#messenger.channel("engine-to-client"),
             dispatcher => new class implements EngineToClient {
                 log(message: string): void {dispatcher.dispatchAndForget(this.log, message)}
-                fetchAudio(uuid: UUID.Format): Promise<AudioData> {return dispatcher.dispatchAndReturn(this.fetchAudio, uuid)}
+                fetchAudio(uuid: UUID.Bytes): Promise<AudioData> {return dispatcher.dispatchAndReturn(this.fetchAudio, uuid)}
                 notifyClipSequenceChanges(changes: ClipSequencingUpdates): void {dispatcher.dispatchAndForget(this.notifyClipSequenceChanges, changes)}
-                switchMarkerState(state: Nullable<[UUID.Format, int]>): void {dispatcher.dispatchAndForget(this.switchMarkerState, state)}
+                switchMarkerState(state: Nullable<[UUID.Bytes, int]>): void {dispatcher.dispatchAndForget(this.switchMarkerState, state)}
                 ready() {dispatcher.dispatchAndForget(this.ready)}
             })
         this.#audioManager = new AudioManagerWorklet(this.#engineToClient)
@@ -127,7 +127,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
         this.#mixer = new Mixer()
         this.#metronome = new Metronome(this.#timeInfo)
         this.#renderer = new BlockRenderer(this)
-        this.#ignoredRegions = UUID.newSet<UUID.Format>(uuid => uuid)
+        this.#ignoredRegions = UUID.newSet<UUID.Bytes>(uuid => uuid)
         this.#stateSender = SyncStream.writer(EngineStateSchema(), sab, x => {
             const {transporting, isCountingIn, isRecording, position} = this.#timeInfo
             x.position = position
@@ -217,8 +217,8 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
                             .ifSome(unit => unit.midiDeviceChain.noteSequencer.pushRawNoteOff(pitch))
                     }
                 },
-                ignoreNoteRegion: (uuid: UUID.Format) => this.#ignoredRegions.add(uuid),
-                scheduleClipPlay: (clipIds: ReadonlyArray<UUID.Format>) => {
+                ignoreNoteRegion: (uuid: UUID.Bytes) => this.#ignoredRegions.add(uuid),
+                scheduleClipPlay: (clipIds: ReadonlyArray<UUID.Bytes>) => {
                     // TODO What to do when recording is in progress?
                     clipIds.forEach(clipId => {
                         const optClipBox = this.#boxGraph.findBox(clipId)
@@ -231,7 +231,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
                     })
                     this.#timeInfo.transporting = true
                 },
-                scheduleClipStop: (trackIds: ReadonlyArray<UUID.Format>) => {
+                scheduleClipStop: (trackIds: ReadonlyArray<UUID.Bytes>) => {
                     trackIds.forEach(trackId => {
                         const optClipBox = this.#boxGraph.findBox(trackId)
                         if (optClipBox.isEmpty()) {
@@ -280,7 +280,7 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
         console.log = (...message: string[]) => this.#engineToClient.log(message.join(", "))
     }
 
-    ignoresRegion(uuid: UUID.Format): boolean {return this.#ignoredRegions.hasKey(uuid)}
+    ignoresRegion(uuid: UUID.Bytes): boolean {return this.#ignoredRegions.hasKey(uuid)}
 
     process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
         try {
@@ -327,8 +327,8 @@ export class EngineProcessor extends AudioWorkletProcessor implements EngineCont
         return true
     }
 
-    getAudioUnit(uuid: UUID.Format): AudioUnit {return this.#audioUnits.get(uuid)}
-    optAudioUnit(uuid: UUID.Format): Option<AudioUnit> {return this.#audioUnits.opt(uuid)}
+    getAudioUnit(uuid: UUID.Bytes): AudioUnit {return this.#audioUnits.get(uuid)}
+    optAudioUnit(uuid: UUID.Bytes): Option<AudioUnit> {return this.#audioUnits.opt(uuid)}
 
     subscribeProcessPhase(observer: Observer<ProcessPhase>): Subscription {return this.#notifier.subscribe(observer)}
 

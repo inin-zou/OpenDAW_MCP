@@ -38,7 +38,7 @@ export class AudioBusProcessor extends AbstractProcessor implements InstrumentDe
 
     get incoming(): Processor {return this}
     get outgoing(): Processor {return this}
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
 
     reset(): void {
         this.#peaks.clear()

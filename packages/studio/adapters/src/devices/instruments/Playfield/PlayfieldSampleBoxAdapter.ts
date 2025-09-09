@@ -56,7 +56,7 @@ export class PlayfieldSampleBoxAdapter implements DeviceHost, InstrumentDeviceBo
     }
 
     get box(): PlayfieldSampleBox {return this.#box}
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get peakAddress(): Address {return this.#box.address.append(1001)}
     get indexField(): Int32Field {return this.#box.index}
@@ -77,7 +77,7 @@ export class PlayfieldSampleBoxAdapter implements DeviceHost, InstrumentDeviceBo
     get isAudioUnit(): boolean {return false}
 
     file(): Option<AudioFileBoxAdapter> {return this.#file}
-    fileUUID(): UUID.Format {return this.#box.file.targetAddress.unwrap().uuid}
+    fileUUID(): UUID.Bytes {return this.#box.file.targetAddress.unwrap().uuid}
 
     resetParameters(): void {
         this.#box.mute.reset()

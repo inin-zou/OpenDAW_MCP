@@ -68,7 +68,7 @@ export class NanoDeviceProcessor extends AudioProcessor implements InstrumentDev
         this.#peakBroadcaster.clear()
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
     get audioOutput(): AudioBuffer {return this.#audioOutput}
     get adapter(): NanoDeviceBoxAdapter {return this.#adapter}
 

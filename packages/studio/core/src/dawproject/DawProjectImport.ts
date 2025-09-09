@@ -84,7 +84,7 @@ export namespace DawProjectImport {
     }
 
     export type Result = {
-        audioIds: ReadonlyArray<UUID.Format>,
+        audioIds: ReadonlyArray<UUID.Bytes>,
         skeleton: ProjectDecoder.Skeleton
     }
 
@@ -116,7 +116,7 @@ export namespace DawProjectImport {
 
         let primaryAudioBusUnitOption: Option<AudioBusUnit> = Option.None
 
-        const audioIdSet = UUID.newSet<UUID.Format>(uuid => uuid)
+        const audioIdSet = UUID.newSet<UUID.Bytes>(uuid => uuid)
         const audioUnits = new Map<string, AudioUnitBox>()
         const registerAudioUnit = (trackId: string, target: AudioUnitBox) => {
             if (audioUnits.has(trackId)) {return panic(`trackId '${trackId}' is already defined`)}

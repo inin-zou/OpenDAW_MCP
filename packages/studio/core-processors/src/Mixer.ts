@@ -4,7 +4,7 @@ import {Pointers} from "@opendaw/studio-enums"
 import {AudioUnitBox, AuxSendBox, BoxVisitor} from "@opendaw/studio-boxes"
 
 export class Mixer {
-    readonly #channelStrips: SortedSet<UUID.Format, ChannelStripProcessor>
+    readonly #channelStrips: SortedSet<UUID.Bytes, ChannelStripProcessor>
     readonly #solo: Set<ChannelStripProcessor>
     readonly #virtualSolo: Set<ChannelStripProcessor>
 

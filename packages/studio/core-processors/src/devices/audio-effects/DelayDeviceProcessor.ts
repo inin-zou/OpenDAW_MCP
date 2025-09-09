@@ -65,7 +65,7 @@ export class DelayDeviceProcessor extends AudioProcessor implements AudioEffectD
         this.eventInput.clear()
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
     get audioOutput(): AudioBuffer {return this.#output}
 
     setAudioSource(source: AudioBuffer): Terminable {

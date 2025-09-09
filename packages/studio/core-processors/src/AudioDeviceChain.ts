@@ -22,9 +22,9 @@ export class AudioDeviceChain implements DeviceChain {
     readonly #audioUnit: AudioUnit
     readonly #options: AudioUnitOptions
 
-    readonly #auxSends: SortedSet<UUID.Format, AuxSendProcessor>
+    readonly #auxSends: SortedSet<UUID.Bytes, AuxSendProcessor>
     readonly #channelStrip: ChannelStripProcessor
-    readonly #effects: SortedSet<UUID.Format, AudioEffectDeviceEntry>
+    readonly #effects: SortedSet<UUID.Bytes, AudioEffectDeviceEntry>
     readonly #disconnector: Terminator
 
     #orderedEffects: Array<AudioEffectDeviceProcessor> = []

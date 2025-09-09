@@ -63,7 +63,7 @@ export class AuxSendBoxAdapter implements BoxAdapter {
         return this.#busChangeNotifier.subscribe(observer)
     }
 
-    get uuid(): UUID.Format {return this.#box.address.uuid}
+    get uuid(): UUID.Bytes {return this.#box.address.uuid}
     get address(): Address {return this.#box.address}
     get box(): Box {return this.#box}
     get indexField(): Int32Field {return this.#box.index}

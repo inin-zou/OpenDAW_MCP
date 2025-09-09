@@ -52,7 +52,7 @@ export class ArpeggioDeviceProcessor extends EventProcessor implements MidiEffec
         this.readAllParameters()
     }
 
-    get uuid(): UUID.Format {return this.#adapter.uuid}
+    get uuid(): UUID.Bytes {return this.#adapter.uuid}
     get incoming(): Processor {return this}
     get outgoing(): Processor {return this}
     get noteEventTarget(): Option<NoteEventTarget> {return Option.wrap(this)}

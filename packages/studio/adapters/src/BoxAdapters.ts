@@ -103,7 +103,7 @@ import {UnknownMidiEffectDeviceBoxAdapter} from "./devices/midi-effects/UnknownM
 
 export class BoxAdapters implements Terminable {
     readonly #context: BoxAdaptersContext
-    readonly #adapters: SortedSet<UUID.Format, BoxAdapter>
+    readonly #adapters: SortedSet<UUID.Bytes, BoxAdapter>
     readonly #deleted: Set<Box>
 
     #terminable: Subscription
