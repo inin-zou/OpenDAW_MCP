@@ -6,6 +6,7 @@ import {MidiImport} from "@/ui/timeline/MidiImport.ts"
 import {CaptureMidiBox, TrackBox} from "@opendaw/studio-boxes"
 import {StudioService} from "@/service/StudioService"
 import {MenuCapture} from "@/ui/timeline/tracks/audio-unit/menu/capture"
+import {Browser} from "@opendaw/lib-dom"
 
 export const installTrackHeaderMenu = (service: StudioService,
                                        audioUnitBoxAdapter: AudioUnitBoxAdapter,
@@ -18,7 +19,7 @@ export const installTrackHeaderMenu = (service: StudioService,
     const {project} = service
     const {captureDevices, editing, selection} = project
     return parent.addMenuItem(
-        MenuItem.default({label: "Test Extract"})
+        MenuItem.default({label: "Test Extract", hidden: !Browser.isLocalHost()})
             .setTriggerProcedure(() => editing.modify(async () => {
                 const newProject = await project.extractIntoNew(trackBoxAdapter.audioUnit)
                 service.fromProject(newProject, "NEW")

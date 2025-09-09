@@ -225,18 +225,22 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
             .filter(box => box.name !== SelectionBox.ClassName)
         const uuidMap = UUID.newSet<{ source: UUID.Format, target: UUID.Format }>(({source}) => source)
         const allAdded = uuidMap.addMany([
-            ...audioUnits.flatMap(box => ([
-                {
-                    source: box.output.targetAddress.unwrap("AudioUnitBox was not connect to graph").uuid,
+            ...audioUnits
+                .filter(({output: {targetAddress}}) => targetAddress.nonEmpty())
+                .map(box => ({
+                    source: box.output.targetAddress.unwrap().uuid,
                     target: masterBusBox.address.uuid
-                }, {
+                })),
+            ...audioUnits
+                .map(box => ({
                     source: box.collection.targetAddress.unwrap("AudioUnitBox was not connect to graph").uuid,
                     target: rootBox.audioUnits.address.uuid
-                }
-            ])),
-            ...audioUnits.map(box => ({source: box.address.uuid, target: UUID.generate()})),
-            ...dependencies.map(({address: {uuid}, name}) =>
-                ({source: uuid, target: name === AudioFileBox.ClassName ? uuid : UUID.generate()}))
+                })),
+            ...audioUnits
+                .map(box => ({source: box.address.uuid, target: UUID.generate()})),
+            ...dependencies
+                .map(({address: {uuid}, name}) =>
+                    ({source: uuid, target: name === AudioFileBox.ClassName ? uuid : UUID.generate()}))
         ])
         assert(allAdded, "Internal Error")
         boxGraph.beginTransaction()
