@@ -220,11 +220,6 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
     async extractIntoNew(...audioUnits: ReadonlyArray<AudioUnitBox>): Promise<Project> {
         const targetProject = Project.new(this.#env)
         const {boxGraph, masterBusBox, rootBox} = targetProject
-        const writeBox = (box: Box): ArrayBuffer => {
-            const output = ByteArrayOutput.create()
-            box.write(output)
-            return output.toArrayBuffer() as ArrayBuffer
-        }
         const dependencies = audioUnits
             .flatMap(box => Array.from(box.graph.dependenciesOf(box).boxes))
             .filter(box => box.name !== SelectionBox.ClassName)
@@ -255,7 +250,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
             audioUnits
                 .toSorted((a, b) => a.index.getValue() - b.index.getValue())
                 .forEach((source: AudioUnitBox, index) => {
-                    const input = new ByteArrayInput(writeBox(source))
+                    const input = new ByteArrayInput(source.toArrayBuffer())
                     const key = source.name as keyof BoxIO.TypeMap
                     const uuid = uuidMap.get(source.address.uuid).target
                     const copy = boxGraph.createBox(key, uuid, box => box.read(input)) as AudioUnitBox
@@ -263,7 +258,7 @@ export class Project implements BoxAdaptersContext, Terminable, TerminableOwner 
                 })
             dependencies
                 .forEach((source: Box) => {
-                    const input = new ByteArrayInput(writeBox(source))
+                    const input = new ByteArrayInput(source.toArrayBuffer())
                     const key = source.name as keyof BoxIO.TypeMap
                     const uuid = uuidMap.get(source.address.uuid).target
                     boxGraph.createBox(key, uuid, box => box.read(input))
