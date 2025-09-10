@@ -68,12 +68,13 @@ export const initAppMenu = (service: StudioService) => {
                             parent.addMenuItem(
                                 MenuItem.default({label: "Dropbox Sync", icon: IconSymbol.Dropbox})
                                     .setTriggerProcedure(async () => {
+                                        // TODO Move to StudioService and update the dashboard project list, if shown
                                         const approved = await Dialogs.approve({
                                             headline: "openDAW and your data",
                                             message: `openDAW will never store or share your personal account details. Dropbox requires permission to read “basic account info” such as your name and email, but openDAW does not use or retain this information. We only access the files you choose to synchronize. 
                                             
-                                            This will open a new tab to let you login to your dropbox account.`,
-                                            approveText: "Login",
+                                            This will open a new tab to authorize your dropbox account.`,
+                                            approveText: "Ok",
                                             cancelText: "Cancel",
                                             reverse: true,
                                             maxWidth: "30em"
