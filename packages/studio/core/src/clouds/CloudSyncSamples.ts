@@ -11,19 +11,22 @@ import {WavFile} from "../WavFile"
 
 type SampleDomains = Record<"stock" | "local" | "cloud", ReadonlyArray<Sample>>
 
+// TODO Flac?
+
 export class CloudSyncSamples {
-    static readonly SamplesPath = "samples"
-    static readonly SamplesCatalogPath = `${this.SamplesPath}/index.json`
+    static readonly RemotePath = "samples"
+    static readonly RemoteCatalogPath = `${this.RemotePath}/index.json`
     static readonly areSamplesEqual = ({uuid: a}: Sample, {uuid: b}: Sample) => a === b
 
     static async start(cloudHandler: CloudStorageHandler,
                        audioContext: AudioContext,
                        progress: Progress.Handler,
                        log: Procedure<string>) {
+        log("Collecting all sample domains...")
         const [stock, local, cloud] = await Promise.all([
             OpenSampleAPI.get().all(),
             SampleStorage.listSamples(),
-            cloudHandler.download(CloudSyncSamples.SamplesCatalogPath)
+            cloudHandler.download(CloudSyncSamples.RemoteCatalogPath)
                 .then(json => JSON.parse(new TextDecoder().decode(json)))
                 .catch(reason => reason instanceof FileNotFoundError ? Arrays.empty() : panic(reason))
         ])
@@ -47,7 +50,7 @@ export class CloudSyncSamples {
 
     async #start(progress: Progress.Handler) {
         const trashed = await SampleStorage.loadTrashedIds()
-        const [uploadProgress, downloadProgress, trashProgress] = Progress.splitWithWeights(progress, [0.45, 0.10, 0.45])
+        const [uploadProgress, trashProgress, downloadProgress] = Progress.splitWithWeights(progress, [0.45, 0.10, 0.45])
         await this.#upload(uploadProgress)
         await this.#trash(trashed, trashProgress)
         await this.#download(trashed, downloadProgress)
@@ -62,7 +65,6 @@ export class CloudSyncSamples {
             progress(1.0)
             return
         }
-        this.#log(`Synchronize ${unsyncedSamples.length} unsynced samples from storage...`)
         const uploadedSampleResults: ReadonlyArray<PromiseSettledResult<Sample>> =
             await Promises.allSettledWithLimit(unsyncedSamples.map((sample, index, {length}) => async () => {
                 progress((index + 1) / length)
@@ -70,7 +72,7 @@ export class CloudSyncSamples {
                 const file = await SampleStorage.loadSample(UUID.parse(sample.uuid), this.#audioContext)
                     .then(([{frames: channels, numberOfChannels, numberOfFrames: numFrames, sampleRate}]) =>
                         WavFile.encodeFloats({channels, numberOfChannels, numFrames, sampleRate}))
-                await this.#cloudHandler.upload(`${CloudSyncSamples.SamplesPath}/${sample.uuid}`, file)
+                await this.#cloudHandler.upload(`${CloudSyncSamples.RemotePath}/${sample.uuid}`, file)
                 return sample
             }), 1)
         const catalog: Array<Sample> = Arrays.merge(cloud, uploadedSampleResults
@@ -94,7 +96,7 @@ export class CloudSyncSamples {
                 const result: ReadonlyArray<PromiseSettledResult<Sample>> = await Promises.allSettledWithLimit(
                     obsolete.map((sample, index, {length}) => async () => {
                         progress((index + 1) / length)
-                        const path = `${CloudSyncSamples.SamplesPath}/${sample.uuid}`
+                        const path = `${CloudSyncSamples.RemotePath}/${sample.uuid}`
                         this.#log(`Deleting '${sample.name}'`)
                         await this.#cloudHandler.delete(path)
                         return sample
@@ -121,7 +123,7 @@ export class CloudSyncSamples {
         const results: ReadonlyArray<PromiseSettledResult<Sample>> = await Promises.allSettledWithLimit(
             download.map((sample, index, {length}) => async () => {
                 progress((index + 1) / length)
-                const path = `${CloudSyncSamples.SamplesPath}/${sample.uuid}`
+                const path = `${CloudSyncSamples.RemotePath}/${sample.uuid}`
                 this.#log(`Downloading '${sample.name}'`)
                 const buffer = await this.#cloudHandler.download(path)
                 const audioBuffer = await this.#audioContext.decodeAudioData(buffer)
@@ -154,6 +156,6 @@ export class CloudSyncSamples {
         this.#log("Uploading sample catalog...")
         const jsonString = JSON.stringify(catalog, null, 2)
         const buffer = new TextEncoder().encode(jsonString).buffer
-        await this.#cloudHandler.upload(CloudSyncSamples.SamplesCatalogPath, buffer)
+        return this.#cloudHandler.upload(CloudSyncSamples.RemoteCatalogPath, buffer)
     }
 }

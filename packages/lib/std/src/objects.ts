@@ -13,11 +13,11 @@ export namespace Objects {
         return ({...u, ...v}) as U & V
     }
 
-    export const include = <T extends {}>(obj: T, ...keys: Array<keyof T>): Partial<T> =>
-        keys.reduce((result: Partial<T>, key) => {
-            result[key] = obj[key]
-            return result
-        }, {})
+    export const include = <T, K extends readonly (keyof T)[]>(obj: T, ...keys: K): Pick<T, K[number]> => {
+        const out = {} as Pick<T, K[number]>
+        for (const k of keys) out[k] = obj[k]
+        return out
+    }
 
     export const exclude = <T extends {}, K extends keyof T>(obj: T, ...keys: Array<K>): Omit<T, K> => {
         const exclude = new Set<keyof T>(keys)

@@ -15,7 +15,7 @@ export class Recovery {
         if (backupResult.status === "rejected" || backupResult.value.length === 0) {return Option.None}
         const readResult = await Promises.tryCatch(Promise.all([
             WorkerAgents.Opfs.read(`${Recovery.#RESTORE_FILE_PATH}/uuid`)
-                .then(x => UUID.validate(x)),
+                .then(x => UUID.validateBytes(x)),
             WorkerAgents.Opfs.read(`${Recovery.#RESTORE_FILE_PATH}/project.od`)
                 .then(x => Project.load(this.#service, x.buffer as ArrayBuffer)),
             WorkerAgents.Opfs.read(`${Recovery.#RESTORE_FILE_PATH}/meta.json`)

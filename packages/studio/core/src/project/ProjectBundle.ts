@@ -45,7 +45,7 @@ export namespace ProjectBundle {
         if (await asDefined(zip.file("version")).async("text") !== "1") {
             return panic("Unknown bundle version")
         }
-        const bundleUUID = UUID.validate(await asDefined(zip.file("uuid")).async("uint8array"))
+        const bundleUUID = UUID.validateBytes(await asDefined(zip.file("uuid")).async("uint8array"))
         console.debug(UUID.toString(bundleUUID), openProfileUUID ? UUID.toString(openProfileUUID) : "none")
         if (isDefined(openProfileUUID) && UUID.equals(openProfileUUID, bundleUUID)) {
             return panic("Project is already open")

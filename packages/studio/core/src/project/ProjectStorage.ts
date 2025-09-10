@@ -61,11 +61,15 @@ export namespace ProjectStorage {
     }
 
     export const deleteProject = async (uuid: UUID.Bytes) => {
-        const {status, value} = await Promises.tryCatch(WorkerAgents.Opfs.read(`${ProjectPaths.Folder}/trash.json`))
-        const array = status === "rejected" ? [] : JSON.parse(new TextDecoder().decode(value))
+        const array = await loadTrashedIds()
         array.push(UUID.toString(uuid))
         const trash = new TextEncoder().encode(JSON.stringify(array))
         await WorkerAgents.Opfs.write(`${ProjectPaths.Folder}/trash.json`, trash)
         await WorkerAgents.Opfs.delete(ProjectPaths.projectFolder(uuid))
+    }
+
+    export const loadTrashedIds = async (): Promise<Array<UUID.String>> => {
+        const {status, value} = await Promises.tryCatch(WorkerAgents.Opfs.read(`${ProjectPaths.Folder}/trash.json`))
+        return status === "rejected" ? [] : JSON.parse(new TextDecoder().decode(value))
     }
 }

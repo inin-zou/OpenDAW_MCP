@@ -20,7 +20,12 @@ export namespace UUID {
             .then(buffer => fromUint8Array(new Uint8Array(buffer.slice(0, length))))
     }
 
-    export const validate = (uuid: UUID.Bytes): UUID.Bytes => UUID.parse(UUID.toString(uuid))
+    export const validateBytes = (uuid: UUID.Bytes): UUID.Bytes => UUID.parse(UUID.toString(uuid))
+    export const validateString = (uuid: string): uuid is String =>
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuid)
+
+    export const asString = (uuid: string): String =>
+        validateString(uuid) ? uuid : panic(`Invalid UUID format: ${uuid}`)
 
     export const fromDataInput = (input: DataInput): Bytes => {
         const array = new Uint8Array(length)

@@ -114,8 +114,13 @@ export namespace Dialogs {
                         icon={IconSymbol.System}
                         cancelable={true}
                         buttons={buttons}>
-                    <div style={{padding: "1em 0", maxWidth}}>
-                        <p>{message}</p>
+                    <div style={{padding: "1em 0", position: "relative", maxWidth}}>
+                        <p style={{
+                            whiteSpace: "pre-line",
+                            width: "100%",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                        }}>{message}</p>
                     </div>
                 </Dialog>
             )
