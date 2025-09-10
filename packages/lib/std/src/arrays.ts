@@ -101,14 +101,14 @@ export class Arrays {
         array.length = index
         return array
     }
-    static subtract<T>(array: ReadonlyArray<T>,
-                       excludeArray: ReadonlyArray<T>,
-                       compareFn: (a: T, b: T) => boolean): Array<T> {
+    static subtract<T, U>(array: ReadonlyArray<T>,
+                          excludeArray: ReadonlyArray<U>,
+                          compareFn: (a: T, b: U) => boolean): Array<T> {
         return array.filter(item => !excludeArray.some(excludeItem => compareFn(item, excludeItem)))
     }
-    static intersect<T>(array: ReadonlyArray<T>,
-                        other: ReadonlyArray<T>,
-                        compareFn: (a: T, b: T) => boolean): Array<T> {
+    static intersect<T, U>(array: ReadonlyArray<T>,
+                           other: ReadonlyArray<U>,
+                           compareFn: (a: T, b: U) => boolean): Array<T> {
         return array.filter(item => other.some(includeItem => compareFn(item, includeItem)))
     }
     static merge<T>(baseArray: ReadonlyArray<T>,

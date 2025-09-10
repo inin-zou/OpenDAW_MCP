@@ -62,8 +62,8 @@ export class CloudAuthManager {
         const {resolve, reject, promise} = Promise.withResolvers<CloudStorageHandler>()
         const channel = new BroadcastChannel("auth-callback")
         const dialog = RuntimeNotifier.progress({
-            headline: "Cloud Authentification",
-            message: "Waiting for authentification...",
+            headline: "Cloud Service",
+            message: "Please wait for authentification...",
             cancel: () => reject(null)
         })
         channel.onmessage = async (event: MessageEvent<any>) => {

@@ -15,12 +15,13 @@ export namespace SampleStorage {
                                      peaks: ArrayBuffer,
                                      meta: SampleMetaData): Promise<void> => {
         const path = `${Folder}/${UUID.toString(uuid)}`
+        const data = new Uint8Array(WavFile.encodeFloats({
+            channels: audio.frames.slice(),
+            numFrames: audio.numberOfFrames,
+            sampleRate: audio.sampleRate
+        }))
         return Promise.all([
-            WorkerAgents.Opfs.write(`${path}/audio.wav`, new Uint8Array(WavFile.encodeFloats({
-                channels: audio.frames.slice(),
-                numFrames: audio.numberOfFrames,
-                sampleRate: audio.sampleRate
-            }))),
+            WorkerAgents.Opfs.write(`${path}/audio.wav`, data),
             WorkerAgents.Opfs.write(`${path}/peaks.bin`, new Uint8Array(peaks)),
             WorkerAgents.Opfs.write(`${path}/meta.json`, new TextEncoder().encode(JSON.stringify(meta)))
         ]).then(EmptyExec)

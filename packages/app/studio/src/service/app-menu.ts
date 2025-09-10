@@ -7,7 +7,7 @@ import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
 import {Promises} from "@opendaw/lib-runtime"
-import {CloudAuthManager, CloudSync} from "@opendaw/studio-core"
+import {CloudAuthManager, CloudSync, CloudSyncSamples} from "@opendaw/studio-core"
 
 export const initAppMenu = (service: StudioService) => {
     return MenuItem.root()
@@ -16,6 +16,16 @@ export const initAppMenu = (service: StudioService) => {
                     MenuItem.header({label: "openDAW", icon: IconSymbol.OpenDAW}),
                     MenuItem.default({label: "New"})
                         .setTriggerProcedure(() => service.closeProject()),
+                    MenuItem.default({label: "Test CloudSyncSamples"})
+                        .setTriggerProcedure(async () => {
+                            const manager = await CloudAuthManager.create() // TODO move to boot time and reuse
+                            const dropboxResult = await Promises.tryCatch(manager.dropbox())
+                            if (dropboxResult.status === "rejected") {
+                                console.debug(`Promise rejected with '${(dropboxResult.error)}'`)
+                                return
+                            }
+                            await CloudSyncSamples.start(dropboxResult.value, service.audioContext, console.debug, console.debug)
+                        }),
                     MenuItem.default({label: "Open...", shortcut: [ModfierKeys.System.Cmd, "O"]})
                         .setTriggerProcedure(() => service.browse()),
                     MenuItem.default({

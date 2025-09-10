@@ -1,7 +1,8 @@
-import {Dropbox, DropboxResponse, files} from "dropbox"
+import {Dropbox, DropboxResponse, DropboxResponseError, files} from "dropbox"
 import {isDefined, Option, panic} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {CloudStorageHandler} from "./CloudStorageHandler"
+import {FileNotFoundError} from "./FileNotFoundError"
 
 export class DropboxHandler implements CloudStorageHandler {
     readonly #accessToken: string
@@ -26,7 +27,12 @@ export class DropboxHandler implements CloudStorageHandler {
     async download(path: string): Promise<ArrayBuffer> {
         const client = await this.#ensureClient()
         const fullPath = this.#getFullPath(path)
-        const response = await client.filesDownload({path: fullPath})
+        const response = await client.filesDownload({path: fullPath}).catch(error => {
+            if (this.#isNotFoundError(error)) {
+                throw new FileNotFoundError(path)
+            }
+            return error
+        })
         const {result: {fileBlob}} = response as DropboxResponse<files.FileMetadata & { fileBlob: Blob }>
         return fileBlob.arrayBuffer()
     }
@@ -39,9 +45,7 @@ export class DropboxHandler implements CloudStorageHandler {
             error
         } = await Promises.tryCatch(client.filesGetMetadata({path: fullPath})).catch(error => (error as any))
         if (status === "resolved") return true
-        const summary: string | undefined = error?.error?.error_summary
-        if (summary && summary.includes("not_found")) return false
-        return panic(error)
+        return this.#isNotFoundError(error) ? false : panic(error)
     }
 
     async list(path?: string): Promise<Array<string>> {
@@ -71,5 +75,12 @@ export class DropboxHandler implements CloudStorageHandler {
             return filename.startsWith("/") ? filename : `/${filename}`
         }
         return path.startsWith("/") ? path : `/${path}`
+    }
+
+    #isNotFoundError(error: unknown): boolean {
+        if (!(error instanceof DropboxResponseError)) return false
+        const e = error.error as any
+        return e?.error?.[".tag"] === "path" &&
+            e.error?.path?.[".tag"] === "not_found"
     }
 }
