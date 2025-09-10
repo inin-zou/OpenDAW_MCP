@@ -13,7 +13,7 @@ type SampleDomains = Record<"stock" | "local" | "cloud", ReadonlyArray<Sample>>
 
 export class CloudSyncSamples {
     static readonly SamplesPath = "samples"
-    static readonly SamplesCatalogPath = `${this.SamplesPath}/index-404.json`
+    static readonly SamplesCatalogPath = `${this.SamplesPath}/index.json`
     static readonly areSamplesEqual = ({uuid: a}: Sample, {uuid: b}: Sample) => a === b
 
     static async start(cloudHandler: CloudStorageHandler,
