@@ -16,7 +16,7 @@ export const initAppMenu = (service: StudioService) => {
                     MenuItem.header({label: "openDAW", icon: IconSymbol.OpenDAW}),
                     MenuItem.default({label: "New"})
                         .setTriggerProcedure(() => service.closeProject()),
-                    MenuItem.default({label: "Test CloudSyncSamples"})
+                    MenuItem.default({label: "Test CloudSyncSamples", hidden: !Browser.isLocalHost()})
                         .setTriggerProcedure(async () => {
                             const manager = await CloudAuthManager.create() // TODO move to boot time and reuse
                             const dropboxResult = await Promises.tryCatch(manager.dropbox())
