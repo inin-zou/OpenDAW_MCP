@@ -49,6 +49,7 @@ import {Recovery} from "@/Recovery.ts"
 import {
     AudioOfflineRenderer,
     AudioWorklets,
+    CloudAuthManager,
     DawProject,
     DawProjectImport,
     EngineFacade,
@@ -116,6 +117,7 @@ export class StudioService implements ProjectEnv {
                 readonly audioDevices: AudioOutputDevice,
                 readonly sampleAPI: SampleAPI,
                 readonly sampleManager: MainThreadSampleManager,
+                readonly cloudAuthManager: CloudAuthManager,
                 readonly buildInfo: BuildInfo) {
         this.samplePlayback = new SamplePlayback()
         this.profileService = new ProjectProfileService({

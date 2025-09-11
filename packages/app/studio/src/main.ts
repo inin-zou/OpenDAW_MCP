@@ -21,6 +21,7 @@ import {FontLoader} from "@/ui/FontLoader"
 import {ErrorHandler} from "@/errors/ErrorHandler.ts"
 import {
     AudioWorklets,
+    CloudAuthManager,
     MainThreadSampleManager,
     OpenSampleAPI,
     SampleProvider,
@@ -76,8 +77,9 @@ const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`)
             fetch: async (uuid: UUID.Bytes, progress: Procedure<unitValue>): Promise<[AudioData, SampleMetaData]> =>
                 sampleAPI.load(context, uuid, progress)
         } satisfies SampleProvider, context)
+        const cloudAuthManager = await CloudAuthManager.create()
         const service: StudioService =
-            new StudioService(context, audioWorklets.value, audioDevices, sampleAPI, sampleManager, buildInfo)
+            new StudioService(context, audioWorklets.value, audioDevices, sampleAPI, sampleManager, cloudAuthManager, buildInfo)
         const errorHandler = new ErrorHandler(service)
         const surface = Surface.main({
             config: (surface: Surface) => {
