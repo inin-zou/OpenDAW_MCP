@@ -63,7 +63,7 @@ export const initAppMenu = (service: StudioService) => {
                             MenuItem.default({label: "DAWproject...", selectable: service.hasProfile})
                                 .setTriggerProcedure(async () => service.exportDawproject())
                         )),
-                    MenuItem.default({label: "Cloud Services", hidden: !Browser.isLocalHost()})
+                    MenuItem.default({label: "Cloud Services", hidden: !Browser.isLocalHost() && location.hash !== "#cloud"})
                         .setRuntimeChildrenProcedure(parent => {
                             parent.addMenuItem(
                                 MenuItem.default({label: "Dropbox Sync", icon: IconSymbol.Dropbox})
