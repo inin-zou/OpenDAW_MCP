@@ -1,6 +1,6 @@
 import {Dropbox, DropboxResponse, DropboxResponseError, files} from "dropbox"
-import {Errors, isDefined, Option, panic} from "@opendaw/lib-std"
-import {Promises} from "@opendaw/lib-runtime"
+import {Errors, isDefined, Option, panic, TimeSpan} from "@opendaw/lib-std"
+import {Promises, Wait} from "@opendaw/lib-runtime"
 import {CloudStorageHandler} from "./CloudStorageHandler"
 
 // written by ChatGPT
@@ -31,18 +31,26 @@ export class DropboxHandler implements CloudStorageHandler {
         }
     }
 
+    // TODO If the download fails completely, we should abort the parent task at hand
+
     async download(path: string): Promise<ArrayBuffer> {
         const client = await this.#ensureClient()
         const fullPath = this.#getFullPath(path)
-        const response = await client.filesDownload({path: fullPath}).catch(error => {
-            if (this.#isNotFoundError(error)) {
-                console.log(`The error above is expected. The file at '${path}' does not exist.`)
-                throw new Errors.FileNotFound(path)
+        let attempts = 10
+        while (attempts-- > 0) {
+            try {
+                const response = await client.filesDownload({path: fullPath})
+                const {result: {fileBlob}} = response as DropboxResponse<files.FileMetadata & { fileBlob: Blob }>
+                return fileBlob.arrayBuffer()
+            } catch (error) {
+                if (this.#isNotFoundError(error)) {
+                    console.log(`The error above is expected. The file at '${path}' does not exist.`)
+                    throw new Errors.FileNotFound(path)
+                }
+                await Wait.timeSpan(TimeSpan.seconds(1))
             }
-            return error
-        })
-        const {result: {fileBlob}} = response as DropboxResponse<files.FileMetadata & { fileBlob: Blob }>
-        return fileBlob.arrayBuffer()
+        }
+        return panic(`Failed to download '${path}' after 10 retries`)
     }
 
     async exists(path: string): Promise<boolean> {

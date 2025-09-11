@@ -60,10 +60,11 @@ export class CloudSyncSamples {
             progress(1.0)
             return
         }
+        // TODO Do not use allSettledWithLimit. If a download fails we should stop the task entirely.
         const uploadedSampleResults: ReadonlyArray<PromiseSettledResult<Sample>> =
             await Promises.allSettledWithLimit(unsyncedSamples.map((sample, index, {length}) => async () => {
                 progress((index + 1) / length)
-                this.#log(`Uploading '${sample.name}'`)
+                this.#log(`Uploading sample '${sample.name}'`)
                 const arrayBuffer = await SampleStorage.loadSample(UUID.parse(sample.uuid))
                     .then(([{frames: channels, numberOfChannels, numberOfFrames: numFrames, sampleRate}]) =>
                         WavFile.encodeFloats({channels, numberOfChannels, numFrames, sampleRate}))
@@ -117,7 +118,7 @@ export class CloudSyncSamples {
         const results: ReadonlyArray<PromiseSettledResult<Sample>> = await Promises.allSettledWithLimit(
             download.map((sample, index, {length}) => async () => {
                 progress((index + 1) / length)
-                this.#log(`Downloading '${sample.name}'`)
+                this.#log(`Downloading sample '${sample.name}'`)
                 const buffer = await this.#cloudHandler.download(CloudSyncSamples.createPath(sample.uuid))
                 const waveAudio = WavFile.decodeFloats(buffer)
                 const audioData: AudioData = {

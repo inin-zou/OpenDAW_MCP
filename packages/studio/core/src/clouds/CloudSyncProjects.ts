@@ -151,7 +151,7 @@ export class CloudSyncProjects {
                 progress((index + 1) / length)
                 const uuid = UUID.parse(uuidAsString)
                 const path = `${CloudSyncProjects.RemotePath}/${uuidAsString}`
-                this.#log(`Downloading '${meta.name}'`)
+                this.#log(`Downloading project '${meta.name}'`)
                 const projectArrayBuffer = await this.#cloudHandler.download(`${path}/project.od`)
                 const metaArrayBuffer = await this.#cloudHandler.download(`${path}/meta.json`)
                 const coverArrayBuffer = await this.#cloudHandler.download(`${path}/image.bin`)

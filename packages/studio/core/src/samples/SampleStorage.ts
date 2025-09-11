@@ -20,6 +20,7 @@ export namespace SampleStorage {
             numFrames: audio.numberOfFrames,
             sampleRate: audio.sampleRate
         }))
+        console.debug(`save sample '${path}'`)
         return Promise.all([
             WorkerAgents.Opfs.write(`${path}/audio.wav`, data),
             WorkerAgents.Opfs.write(`${path}/peaks.bin`, new Uint8Array(peaks)),

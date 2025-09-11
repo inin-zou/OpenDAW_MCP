@@ -4,7 +4,7 @@ import {OpfsProtocol} from "./OpfsProtocol"
 import "../types"
 
 export namespace OpfsWorker {
-    const DEBUG = false
+    const DEBUG = true
     const readLimiter = new Promises.Limit<Uint8Array>(1)
     const writeLimiter = new Promises.Limit<void>(1)
 
