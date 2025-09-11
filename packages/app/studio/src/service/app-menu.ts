@@ -61,7 +61,8 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                             CloudSync.sync(service.cloudAuthManager, "Dropbox").then(EmptyExec)),
                         MenuItem.default({
                             label: "GoogleDrive",
-                            icon: IconSymbol.GoogleDrive
+                            icon: IconSymbol.GoogleDrive,
+                            hidden: !Browser.isLocalHost()
                         }).setTriggerProcedure(() =>
                             CloudSync.sync(service.cloudAuthManager, "GoogleDrive").then(EmptyExec))
                     )
