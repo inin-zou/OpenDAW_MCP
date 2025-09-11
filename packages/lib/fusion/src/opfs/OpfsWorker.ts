@@ -35,6 +35,7 @@ export namespace OpfsWorker {
 
             async delete(path: string): Promise<void> {
                 const segments = pathToSegments(path)
+                if (segments.length === 0) {return this.clear()}
                 return this.#resolveFolder(segments.slice(0, -1))
                     .then(folder => folder.removeEntry(asDefined(segments.at(-1)), {recursive: true}))
             }
@@ -48,6 +49,17 @@ export namespace OpfsWorker {
                     result.push({name, kind})
                 }
                 return result
+            }
+
+            async clear(): Promise<void> {
+                const root = await navigator.storage.getDirectory()
+                for await (const [name, handle] of root.entries()) {
+                    if (handle.kind === "file") {
+                        await root.removeEntry(name)
+                    } else if (handle.kind === "directory") {
+                        await root.removeEntry(name, {recursive: true})
+                    }
+                }
             }
 
             async #resolveFile(path: string, options?: FileSystemGetDirectoryOptions): Promise<FileSystemSyncAccessHandle> {

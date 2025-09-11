@@ -2,11 +2,12 @@ import {MenuItem} from "@/ui/model/menu-item"
 import {StudioService} from "@/service/StudioService"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {RouteLocation} from "@opendaw/lib-jsx"
-import {EmptyExec, isDefined, panic} from "@opendaw/lib-std"
+import {EmptyExec, isDefined, panic, RuntimeNotifier} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
-import {CloudSync} from "@opendaw/studio-core"
+import {CloudSync, WorkerAgents} from "@opendaw/studio-core"
+import {Promises} from "@opendaw/lib-runtime"
 
 export const initAppMenu = (service: StudioService) => MenuItem.root()
     .setRuntimeChildrenProcedure(parent => {
@@ -111,13 +112,35 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                             MenuItem.default({
                                 label: "Throw an error in audio-worklet 💣",
                                 hidden: !Browser.isLocalHost()
-                            }).setTriggerProcedure(() => service.panicEngine())
+                            }).setTriggerProcedure(() => service.panicEngine()),
+                            MenuItem.default({label: "Clear Local Storage", separatorBefore: true})
+                                .setTriggerProcedure(async () => {
+                                    const approved = await RuntimeNotifier.approve({
+                                        headline: "Clear Local Storage",
+                                        message: "Are you sure? This cannot be undone!"
+                                    })
+                                    if (approved) {
+                                        const {status, error} =
+                                            await Promises.tryCatch(WorkerAgents.Opfs.delete(""))
+                                        if (status === "resolved") {
+                                            await RuntimeNotifier.info({
+                                                headline: "Clear Local Storage",
+                                                message: "Your Local Storage is cleared"
+                                            })
+                                        } else {
+                                            await RuntimeNotifier.info({
+                                                headline: "Clear Local Storage",
+                                                message: String(error)
+                                            })
+                                        }
+                                    }
+                                })
                         )
                     }),
-                MenuItem.default({label: "Imprint", separatorBefore: true})
-                    .setTriggerProcedure(() => RouteLocation.get().navigateTo("/imprint")),
-                MenuItem.default({label: "Privacy Policy"})
-                    .setTriggerProcedure(() => RouteLocation.get().navigateTo("/privacy"))
+                MenuItem.default({label: "Privacy Policy", separatorBefore: true})
+                    .setTriggerProcedure(() => RouteLocation.get().navigateTo("/privacy")),
+                MenuItem.default({label: "Imprint"})
+                    .setTriggerProcedure(() => RouteLocation.get().navigateTo("/imprint"))
             )
         }
     )
