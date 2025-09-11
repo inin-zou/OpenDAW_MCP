@@ -4,4 +4,5 @@ export interface CloudStorageHandler {
     download(path: string): Promise<ArrayBuffer>
     list(path?: string): Promise<string[]>
     delete(path: string): Promise<void>
+    alive(): Promise<void>
 }

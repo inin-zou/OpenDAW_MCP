@@ -23,6 +23,20 @@ export class GoogleDriveHandler implements CloudStorageHandler {
 
     constructor(accessToken: string) {this.#accessToken = accessToken}
 
+    async alive(): Promise<void> {
+        const params = new URLSearchParams({
+            q: `'${ROOT_ID}' in parents and trashed = false`,
+            fields: "files(id)",
+            pageSize: "1",
+            spaces: "appDataFolder"
+        })
+        const res = await fetch(`${DRIVE_FILES_API}?${params.toString()}`, {headers: this.#authHeaders()})
+        if (!res.ok) {
+            const text = await res.text()
+            return panic(`Google Drive ping failed: ${res.status} ${text}`)
+        }
+    }
+
     async upload(path: string, data: ArrayBuffer): Promise<void> {
         const {dir, base} = this.#splitPath(path)
         const parentId = await this.#ensureFolderPath(dir)

@@ -3,8 +3,6 @@ import {CloudStorageHandler} from "./CloudStorageHandler"
 import {Promises} from "@opendaw/lib-runtime"
 import {Service} from "./Service"
 
-// TODO Tokens expire after 1 hour. When receiving a 401/403, we need to re-auth.
-
 export class CloudAuthManager {
     static create(): CloudAuthManager {return new CloudAuthManager()}
 
@@ -49,7 +47,14 @@ export class CloudAuthManager {
                     return panic(`Unsupported service: ${service}`)
             }
         })
-        return memo()
+        const handler = await memo()
+        const {status} = await Promises.tryCatch(handler.alive())
+        if (status === "rejected") {
+            this.#memoizedHandlers.delete(service)
+            return this.getHandler(service)
+        }
+        console.debug(`Handler for '${service}' is alive`)
+        return handler
     }
 
     async #oauthPkceFlow(config: {

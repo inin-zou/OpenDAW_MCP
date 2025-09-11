@@ -11,6 +11,12 @@ export class DropboxHandler implements CloudStorageHandler {
 
     constructor(accessToken: string) {this.#accessToken = accessToken}
 
+    async alive(): Promise<void> {
+        const client = await this.#ensureClient()
+        const {status, error} = await Promises.tryCatch(client.usersGetCurrentAccount())
+        if (status === "rejected") return panic(error)
+    }
+
     async upload(path: string, buffer: ArrayBuffer): Promise<void> {
         const client = await this.#ensureClient()
         const fullPath = this.#getFullPath(path)
