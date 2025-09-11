@@ -1,6 +1,7 @@
 import {
     Arrays,
     EmptyExec,
+    Errors,
     isInstanceOf,
     isUndefined,
     Nullish,
@@ -17,7 +18,6 @@ import {Promises} from "@opendaw/lib-runtime"
 import {ProjectMeta} from "../project/ProjectMeta"
 import {ProjectStorage} from "../project/ProjectStorage"
 import {CloudStorageHandler} from "./CloudStorageHandler"
-import {FileNotFoundError} from "./FileNotFoundError"
 import {WorkerAgents} from "../WorkerAgents"
 import {ProjectPaths} from "../project/ProjectPaths"
 
@@ -47,7 +47,7 @@ export class CloudSyncProjects {
                 }, {})),
             cloudHandler.download(CloudSyncProjects.RemoteCatalogPath)
                 .then(json => JSON.parse(new TextDecoder().decode(json)))
-                .catch(reason => reason instanceof FileNotFoundError ? Arrays.empty() : panic(reason))
+                .catch(reason => reason instanceof Errors.FileNotFound ? Arrays.empty() : panic(reason))
         ])
         return new CloudSyncProjects(cloudHandler, {local, cloud}, log).#start(progress)
     }
@@ -156,7 +156,7 @@ export class CloudSyncProjects {
                 const metaArrayBuffer = await this.#cloudHandler.download(`${path}/meta.json`)
                 const coverArrayBuffer = await this.#cloudHandler.download(`${path}/image.bin`)
                     .then(arrayBuffer => Option.wrap(arrayBuffer))
-                    .catch(error => isInstanceOf(error, FileNotFoundError) ? Option.None : panic(error))
+                    .catch(error => isInstanceOf(error, Errors.FileNotFound) ? Option.None : panic(error))
                 Promise.all([
                     WorkerAgents.Opfs.write(ProjectPaths.projectFile(uuid), new Uint8Array(projectArrayBuffer)),
                     WorkerAgents.Opfs.write(ProjectPaths.projectMeta(uuid), new Uint8Array(metaArrayBuffer)),

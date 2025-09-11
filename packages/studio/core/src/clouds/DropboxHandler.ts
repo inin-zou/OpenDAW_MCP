@@ -1,8 +1,9 @@
 import {Dropbox, DropboxResponse, DropboxResponseError, files} from "dropbox"
-import {isDefined, Option, panic} from "@opendaw/lib-std"
+import {Errors, isDefined, Option, panic} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {CloudStorageHandler} from "./CloudStorageHandler"
-import {FileNotFoundError} from "./FileNotFoundError"
+
+// written by ChatGPT
 
 export class DropboxHandler implements CloudStorageHandler {
     readonly #accessToken: string
@@ -36,7 +37,7 @@ export class DropboxHandler implements CloudStorageHandler {
         const response = await client.filesDownload({path: fullPath}).catch(error => {
             if (this.#isNotFoundError(error)) {
                 console.log(`The error above is expected. The file at '${path}' does not exist.`)
-                throw new FileNotFoundError(path)
+                throw new Errors.FileNotFound(path)
             }
             return error
         })

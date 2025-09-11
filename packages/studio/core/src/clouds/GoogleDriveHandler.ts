@@ -1,6 +1,5 @@
 import {CloudStorageHandler} from "./CloudStorageHandler"
-import {FileNotFoundError} from "./FileNotFoundError"
-import {isDefined, Option, panic} from "@opendaw/lib-std"
+import {Errors, isDefined, Option, panic} from "@opendaw/lib-std"
 
 type DriveFile = {
     id: string
@@ -17,6 +16,8 @@ const DRIVE_FILES_API = "https://www.googleapis.com/drive/v3/files"
 const DRIVE_UPLOAD_API = "https://www.googleapis.com/upload/drive/v3/files"
 const FOLDER_MIME = "application/vnd.google-apps.folder"
 const ROOT_ID = "appDataFolder"
+
+// written by ChatGPT
 
 export class GoogleDriveHandler implements CloudStorageHandler {
     readonly #accessToken: string
@@ -80,15 +81,13 @@ export class GoogleDriveHandler implements CloudStorageHandler {
 
     async download(path: string): Promise<ArrayBuffer> {
         const fileId = await this.#resolveFileIdByPath(path)
-        if (fileId.isEmpty()) {
-            throw new FileNotFoundError(path)
-        }
+        if (fileId.isEmpty()) {throw new Errors.FileNotFound(path)}
         const res = await fetch(`${DRIVE_FILES_API}/${fileId.unwrap()}?alt=media`, {
             method: "GET",
             headers: {"Authorization": `Bearer ${this.#accessToken}`}
         })
         if (!res.ok) {
-            if (res.status === 404) throw new FileNotFoundError(path)
+            if (res.status === 404) throw new Errors.FileNotFound(path)
             const text = await res.text()
             return panic(`Google Drive download failed: ${res.status} ${text}`)
         }

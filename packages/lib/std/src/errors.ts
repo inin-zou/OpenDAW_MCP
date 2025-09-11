@@ -6,8 +6,10 @@ export namespace Errors {
     // Should be handled more gracefully from the user-interface
     export const warn = (issue: string): never => {throw new Warning(issue)}
 
+    export class FileNotFound extends Error {constructor(path: string) {super(`${path} not found`)}}
+
     export const AbortError = typeof DOMException === "undefined"
-        ? NaN : Object.freeze(new DOMException("AbortError"))
+        ? {name: "AbortError", message: ""} : Object.freeze(new DOMException("AbortError"))
 
     export const isAbort = (error: unknown): error is { name: string, message: string } =>
         error === AbortError || (isDOMException(error) && error.name === "AbortError")

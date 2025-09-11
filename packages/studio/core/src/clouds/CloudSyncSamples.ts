@@ -1,11 +1,10 @@
-import {Arrays, panic, Procedure, Progress, RuntimeNotifier, UUID} from "@opendaw/lib-std"
+import {Arrays, Errors, panic, Procedure, Progress, RuntimeNotifier, UUID} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {SamplePeaks} from "@opendaw/lib-fusion"
 import {AudioData, Sample} from "@opendaw/studio-adapters"
 import {OpenSampleAPI} from "../samples/OpenSampleAPI"
 import {SampleStorage} from "../samples/SampleStorage"
 import {CloudStorageHandler} from "./CloudStorageHandler"
-import {FileNotFoundError} from "./FileNotFoundError"
 import {WorkerAgents} from "../WorkerAgents"
 import {WavFile} from "../WavFile"
 
@@ -27,7 +26,7 @@ export class CloudSyncSamples {
             SampleStorage.listSamples(),
             cloudHandler.download(CloudSyncSamples.RemoteCatalogPath)
                 .then(json => JSON.parse(new TextDecoder().decode(json)))
-                .catch(reason => reason instanceof FileNotFoundError ? Arrays.empty() : panic(reason))
+                .catch(reason => reason instanceof Errors.FileNotFound ? Arrays.empty() : panic(reason))
         ])
         return new CloudSyncSamples(cloudHandler, {stock, local, cloud}, log).#start(progress)
     }
