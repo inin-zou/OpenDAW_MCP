@@ -3,8 +3,8 @@
 component
   @include mixins.floating(false)
   flex-direction: column
-  min-width: 30em
-  max-width: 50%
+  min-width: min(35em, 75vw)
+  max-width: min(35em, 75vw)
   padding: 2em
 
   &.error::backdrop

@@ -29,6 +29,8 @@ type MetaFields = Pick<ProjectMeta, CatalogFields>
 type Projects = Record<UUID.String, MetaFields>
 type ProjectDomains = Record<"local" | "cloud", Projects>
 
+// TODO List project folder to see if cover exists (less errors in console)
+
 export class CloudSyncProjects {
     static readonly RemotePath = "projects"
     static readonly RemoteCatalogPath = `${this.RemotePath}/index.json`

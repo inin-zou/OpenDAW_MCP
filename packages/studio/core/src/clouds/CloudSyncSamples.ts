@@ -11,6 +11,7 @@ import {WavFile} from "../WavFile"
 
 type SampleDomains = Record<"stock" | "local" | "cloud", ReadonlyArray<Sample>>
 
+// TODO Read Wav without AudioContext (keep sample-rate)
 // TODO Flac?
 
 export class CloudSyncSamples {
@@ -69,10 +70,10 @@ export class CloudSyncSamples {
             await Promises.allSettledWithLimit(unsyncedSamples.map((sample, index, {length}) => async () => {
                 progress((index + 1) / length)
                 this.#log(`Uploading '${sample.name}'`)
-                const file = await SampleStorage.loadSample(UUID.parse(sample.uuid), this.#audioContext)
+                const arrayBuffer = await SampleStorage.loadSample(UUID.parse(sample.uuid), this.#audioContext)
                     .then(([{frames: channels, numberOfChannels, numberOfFrames: numFrames, sampleRate}]) =>
                         WavFile.encodeFloats({channels, numberOfChannels, numFrames, sampleRate}))
-                await this.#cloudHandler.upload(`${CloudSyncSamples.RemotePath}/${sample.uuid}`, file)
+                await this.#cloudHandler.upload(`${CloudSyncSamples.RemotePath}/${sample.uuid}`, arrayBuffer)
                 return sample
             }), 1)
         const catalog: Array<Sample> = Arrays.merge(cloud, uploadedSampleResults

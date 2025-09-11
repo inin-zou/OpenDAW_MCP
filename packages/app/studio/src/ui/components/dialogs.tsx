@@ -142,7 +142,12 @@ export namespace Dialogs {
                     handler.close()
                 }
             }] : Arrays.empty()
-        const messageElement: HTMLParagraphElement = (<p className="message">{message}</p>)
+        const messageElement: HTMLParagraphElement = (<p style={{
+            width: "100%",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap"
+        }}>{message}</p>)
         const dialog: HTMLDialogElement = (
             <Dialog headline={headline}
                     icon={IconSymbol.System}
@@ -150,7 +155,7 @@ export namespace Dialogs {
                     buttons={buttons}>
                 {messageElement}
                 {progress && (
-                    <div style={{padding: "1em 0"}}>
+                    <div style={{padding: "1em 0", position: "relative", width: "100%"}}>
                         <ProgressBar lifecycle={lifecycle} progress={progress}/>
                     </div>
                 )}
