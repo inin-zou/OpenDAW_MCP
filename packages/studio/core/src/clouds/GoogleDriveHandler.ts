@@ -43,39 +43,29 @@ export class GoogleDriveHandler implements CloudStorageHandler {
         const parentId = await this.#ensureFolderPath(dir)
         const existing = await this.#findFileInFolder(base, parentId)
 
-        const metadata = {
-            name: base,
-            parents: [parentId]
-        }
-
-        // NOTE: pass ArrayBuffer, not Uint8Array, to avoid BlobPart typing issues
-        const body = this.#buildMultipartBody(metadata, data)
-        const headers = {
-            "Authorization": `Bearer ${this.#accessToken}`,
-            "Content-Type": `multipart/related; boundary=${body.boundary}`
-        }
-
         if (existing.nonEmpty()) {
             const fileId = existing.unwrap().id
-            const res = await fetch(`${DRIVE_UPLOAD_API}/${fileId}?uploadType=multipart`, {
+            const res = await fetch(`${DRIVE_UPLOAD_API}/${fileId}?uploadType=media`, {
                 method: "PATCH",
-                headers,
-                body: body.body
+                headers: {
+                    Authorization: `Bearer ${this.#accessToken}`,
+                    "Content-Type": "application/octet-stream"
+                },
+                body: data
             })
-            if (!res.ok) {
-                const text = await res.text()
-                return panic(`Google Drive update failed: ${res.status} ${text}`)
-            }
+            if (!res.ok) return panic(`Google Drive update failed: ${res.status} ${await res.text()}`)
         } else {
+            const meta = {name: base, parents: [parentId]}
+            const {boundary, body} = this.#buildMultipartBody(meta, data)
             const res = await fetch(`${DRIVE_UPLOAD_API}?uploadType=multipart`, {
                 method: "POST",
-                headers,
-                body: body.body
+                headers: {
+                    Authorization: `Bearer ${this.#accessToken}`,
+                    "Content-Type": `multipart/related; boundary=${boundary}`
+                },
+                body
             })
-            if (!res.ok) {
-                const text = await res.text()
-                return panic(`Google Drive upload failed: ${res.status} ${text}`)
-            }
+            if (!res.ok) return panic(`Google Drive upload failed: ${res.status} ${await res.text()}`)
         }
     }
 
