@@ -1,14 +1,10 @@
-import {asDefined, Errors, isDefined, isUndefined, panic, RuntimeNotifier, TimeSpan} from "@opendaw/lib-std"
+import {asDefined, Errors, isDefined, isUndefined, Maps, panic, RuntimeNotifier, TimeSpan} from "@opendaw/lib-std"
 import {CloudStorageHandler} from "./CloudStorageHandler"
 import {Promises} from "@opendaw/lib-runtime"
+import {Service} from "./Service"
 
 export class CloudAuthManager {
-    static async create(): Promise<CloudAuthManager> {
-        const clientId = "jtehjzxaxf3bf1l"
-        const redirectUri = `${location.origin}/auth-callback.html`
-        const {codeVerifier, codeChallenge} = await this.#createCodes()
-        return new CloudAuthManager(clientId, redirectUri, codeVerifier, codeChallenge)
-    }
+    static create(): CloudAuthManager {return new CloudAuthManager()}
 
     static async #createCodes(): Promise<{ codeVerifier: string; codeChallenge: string }> {
         const array = new Uint8Array(32)
@@ -17,7 +13,6 @@ export class CloudAuthManager {
             .replace(/\+/g, "-")
             .replace(/\//g, "_")
             .replace(/=/g, "")
-
         const encoder = new TextEncoder()
         const data = encoder.encode(codeVerifier)
         const digest = await crypto.subtle.digest("SHA-256", data)
@@ -30,27 +25,52 @@ export class CloudAuthManager {
 
     static #ID = 0
 
-    readonly #clientId: string
-    readonly #redirectUri: string
-    readonly #codeVerifier: string
-    readonly #codeChallenge: string
-
-    readonly #memoizeHandler = Promises.memoizeAsync(this.#dropbox.bind(this), TimeSpan.hours(1))
-
     readonly id = CloudAuthManager.#ID++
 
-    private constructor(clientId: string, redirectUri: string, codeVerifier: string, codeChallenge: string) {
-        this.#clientId = clientId
-        this.#redirectUri = redirectUri
-        this.#codeVerifier = codeVerifier
-        this.#codeChallenge = codeChallenge
+    readonly #memoizedHandlers = new Map<Service, () => Promise<CloudStorageHandler>>()
+
+    private constructor() {}
+
+    async getHandler(service: Service): Promise<CloudStorageHandler> {
+        const memo = Maps.createIfAbsent(this.#memoizedHandlers, service, service => {
+            switch (service) {
+                case "Dropbox": {
+                    return Promises.memoizeAsync(this.#oauthDropbox.bind(this), TimeSpan.hours(1))
+                }
+                case "GoogleDrive": {
+                    return Promises.memoizeAsync(this.#oauthGoogle.bind(this), TimeSpan.hours(1))
+                }
+                case "SFTP": {
+                    return Promises.memoizeAsync(this.#sftp.bind(this), TimeSpan.hours(1))
+                }
+                default:
+                    return panic(`Unsupported service: ${service}`)
+            }
+        })
+        return memo()
     }
 
-    async dropbox(): Promise<CloudStorageHandler> {return this.#memoizeHandler()}
-
-    async #dropbox(): Promise<CloudStorageHandler> {
-        const service = "dropbox"
-        const authUrl = this.#getAuthUrl(service)
+    async #oauthPkceFlow(config: {
+        service: string
+        clientId: string
+        authUrlBase: string
+        tokenUrl: string
+        scope: string
+        extraAuthParams?: Record<string, string>
+        extraTokenParams?: Record<string, string>
+    }): Promise<CloudStorageHandler> {
+        const redirectUri = `${location.origin}/auth-callback.html`
+        const {codeVerifier, codeChallenge} = await CloudAuthManager.#createCodes()
+        const params = new URLSearchParams({
+            client_id: config.clientId,
+            response_type: "code",
+            redirect_uri: redirectUri,
+            scope: config.scope,
+            code_challenge: codeChallenge,
+            code_challenge_method: "S256",
+            ...(config.extraAuthParams ?? {})
+        })
+        const authUrl = `${config.authUrlBase}?${params.toString()}`
         console.debug("[CloudAuth] Opening auth window:", authUrl)
         const authWindow = window.open(authUrl, "cloudAuth")
         if (isUndefined(authWindow)) {
@@ -60,7 +80,7 @@ export class CloudAuthManager {
         const channel = new BroadcastChannel("auth-callback")
         const dialog = RuntimeNotifier.progress({
             headline: "Cloud Service",
-            message: "Please wait for authentification...",
+            message: "Please wait for authentication...",
             cancel: () => reject("cancelled")
         })
         channel.onmessage = async (event: MessageEvent<any>) => {
@@ -69,9 +89,30 @@ export class CloudAuthManager {
             if (data.type === "auth-callback" && isDefined(data.code)) {
                 console.debug("[CloudAuth] Processing code from BroadcastChannel...", data.type, data.code)
                 try {
-                    const token = await this.#exchangeCodeForToken(service, data.code)
-                    console.debug("[CloudAuth] Token received successfully via broadcast")
-                    resolve(await this.#createHandler(service, token))
+                    const tokenParams = new URLSearchParams({
+                        code: data.code,
+                        grant_type: "authorization_code",
+                        client_id: config.clientId,
+                        redirect_uri: redirectUri,
+                        code_verifier: codeVerifier,
+                        ...(config.extraTokenParams ?? {})
+                    })
+                    const response = await fetch(config.tokenUrl, {
+                        method: "POST",
+                        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                        body: tokenParams.toString()
+                    })
+                    if (!response.ok) {
+                        const errorText = await response.text()
+                        console.error("[CloudAuth] Token exchange error:", errorText)
+                        return panic(`Token exchange failed: ${response.statusText}`)
+                    }
+                    const dataJson = await response.json()
+                    const accessToken = dataJson.access_token
+                    if (!accessToken) {
+                        return panic("No access_token in token response")
+                    }
+                    resolve(await this.#createHandler(config.service, accessToken))
                 } catch (err) {
                     console.debug("[CloudAuth] Token exchange failed:", err)
                     reject(err)
@@ -81,10 +122,6 @@ export class CloudAuthManager {
                 reject(null)
             }
         }
-        // the beauty is that you can reject a promise after it has been resolved.
-        // so we can be sure that this code will always be executed exactly once.
-        // we need that because we lose any access (like listening to closing) to the popup
-        // once the dropbox HTML has been loaded.
         return promise.finally(() => {
             console.debug("[CloudAuth] Closing auth window")
             authWindow.close()
@@ -93,54 +130,62 @@ export class CloudAuthManager {
         })
     }
 
-    #getAuthUrl(service: string): string {
-        switch (service) {
-            case "dropbox":
-                const params = new URLSearchParams({
-                    client_id: this.#clientId,
-                    response_type: "code",
-                    redirect_uri: this.#redirectUri,
-                    code_challenge: this.#codeChallenge,
-                    code_challenge_method: "S256",
-                    token_access_type: "offline"
-                })
-                return `https://www.dropbox.com/oauth2/authorize?${params.toString()}`
-            default:
-                throw new Error(`Unsupported service: ${service}`)
-        }
+    async #oauthDropbox(): Promise<CloudStorageHandler> {
+        return this.#oauthPkceFlow({
+            service: "dropbox",
+            clientId: "jtehjzxaxf3bf1l",
+            authUrlBase: "https://www.dropbox.com/oauth2/authorize",
+            tokenUrl: "https://api.dropboxapi.com/oauth2/token",
+            scope: "", // Dropbox scope is optional
+            extraAuthParams: {
+                token_access_type: "offline"
+            }
+        })
     }
 
-    async #exchangeCodeForToken(service: string, code: string): Promise<string> {
-        if (service !== "dropbox") {
-            throw new Error(`Token exchange not implemented for service: ${service}`)
-        }
-        const tokenUrl = "https://api.dropboxapi.com/oauth2/token"
-        const params = new URLSearchParams({
-            code: code,
-            grant_type: "authorization_code",
-            client_id: this.#clientId,
-            redirect_uri: this.#redirectUri,
-            code_verifier: this.#codeVerifier
+    async #oauthGoogle(): Promise<CloudStorageHandler> {
+        const clientId = "628747153367-gt1oqcn3trr9l9a7jhigja6l1t3f1oik.apps.googleusercontent.com"
+        const scope = "https://www.googleapis.com/auth/drive.appdata"
+
+        return Promise.reject("Not implemented")
+    }
+
+    /*async #oauthGoogle(): Promise<CloudStorageHandler> {
+        return this.#oauthPkceFlow({
+            service: "google",
+            clientId: "628747153367-gt1oqcn3trr9l9a7jhigja6l1t3f1oik.apps.googleusercontent.com",
+            authUrlBase: "https://accounts.google.com/o/oauth2/v2/auth",
+            tokenUrl: "https://oauth2.googleapis.com/token",
+            scope: "https://www.googleapis.com/auth/drive.appdata",
+            extraAuthParams: {
+                access_type: "offline",
+                include_granted_scopes: "true",
+                prompt: "consent"
+            }
         })
-        const response = await fetch(tokenUrl, {
-            method: "POST",
-            headers: {"Content-Type": "application/x-www-form-urlencoded"},
-            body: params.toString()
-        })
-        if (!response.ok) {
-            const errorText = await response.text()
-            console.error("[CloudAuth] Token exchange error:", errorText)
-            throw new Error(`Token exchange failed: ${response.statusText}`)
-        }
-        const data = await response.json()
-        return data.access_token
+    }*/
+
+    async #sftp(): Promise<CloudStorageHandler> {
+        // This is a credentials-based flow (no OAuth). Here you would:
+        // 1) Prompt the user for host, port, username, password / key.
+        // 2) Instantiate the SFTP handler with those credentials.
+        // For now, return a warning or wire up a dialog.
+        return Errors.warn("SFTP authentication flow not implemented yet. Please provide connection settings UI.")
+        // Example when implemented:
+        // const {SFTPHandler} = await import("./SFTPHandler")
+        // return new SFTPHandler({host, port, username, passwordOrKey})
     }
 
     async #createHandler(service: string, token: string): Promise<CloudStorageHandler> {
         switch (service) {
-            case "dropbox":
+            case "dropbox": {
                 const {DropboxHandler} = await import("./DropboxHandler")
                 return new DropboxHandler(token)
+            }
+            case "google": {
+                const {GoogleDriveHandler} = await import("./GoogleDriveHandler")
+                return new GoogleDriveHandler(token)
+            }
             default:
                 return panic(`Handler not implemented for service: ${service}`)
         }

@@ -77,7 +77,7 @@ const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`)
             fetch: async (uuid: UUID.Bytes, progress: Procedure<unitValue>): Promise<[AudioData, SampleMetaData]> =>
                 sampleAPI.load(context, uuid, progress)
         } satisfies SampleProvider, context)
-        const cloudAuthManager = await CloudAuthManager.create()
+        const cloudAuthManager = CloudAuthManager.create()
         const service: StudioService =
             new StudioService(context, audioWorklets.value, audioDevices, sampleAPI, sampleManager, cloudAuthManager, buildInfo)
         const errorHandler = new ErrorHandler(service)
@@ -105,7 +105,7 @@ const loadBuildInfo = async () => fetch(`/build-info.json?v=${Date.now()}`)
         installCursors()
         RuntimeNotifier.install({
             info: (request) => Dialogs.info(request),
-            approve: (request) => Dialogs.approve(request),
+            approve: (request) => Dialogs.approve({...request, reverse: true}),
             progress: (request): RuntimeNotification.ProgressUpdater => Dialogs.progress(request)
         })
         if (buildInfo.env === "production" && !Browser.isLocalHost()) {

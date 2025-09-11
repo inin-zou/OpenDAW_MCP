@@ -5,6 +5,7 @@ export enum IconSymbol {
     MainMenu,
     Dropdown,
     Dropbox,
+    GoogleDrive,
     AudioDevice,
     GuitarTab,
     Effects,

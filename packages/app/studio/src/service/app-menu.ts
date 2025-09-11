@@ -2,11 +2,10 @@ import {MenuItem} from "@/ui/model/menu-item"
 import {StudioService} from "@/service/StudioService"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {RouteLocation} from "@opendaw/lib-jsx"
-import {isDefined, panic} from "@opendaw/lib-std"
+import {EmptyExec, isDefined, panic} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
-import {Promises} from "@opendaw/lib-runtime"
 import {CloudSync} from "@opendaw/studio-core"
 
 export const initAppMenu = (service: StudioService) => MenuItem.root()
@@ -65,43 +64,21 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                 MenuItem.default({
                     label: "Cloud Services",
                     hidden: !Browser.isLocalHost() && location.hash !== "#cloud"
-                })
-                    .setRuntimeChildrenProcedure(parent => {
-                        parent.addMenuItem(
-                            MenuItem.default({label: "Dropbox Sync", icon: IconSymbol.Dropbox})
-                                .setTriggerProcedure(async () => {
-                                    const approved = await Dialogs.approve({
-                                        headline: "openDAW and your data",
-                                        message: `openDAW will never store or share your personal account details!
-                                            
-                                            Dropbox requires permission to read “basic account info” such as your name and email, but openDAW does not use or retain this information. We only access the files you choose to synchronize. 
-                                            
-                                            Clicking 'Ok' may open a new tab to authorize your dropbox.`,
-                                        approveText: "Ok",
-                                        cancelText: "Cancel",
-                                        reverse: true,
-                                        maxWidth: "30em"
-                                    })
-                                    if (!approved) {return}
-                                    const dropboxResult = await Promises.tryCatch(service.cloudAuthManager.dropbox())
-                                    if (dropboxResult.status === "rejected") {
-                                        console.debug(`Promise rejected with '${(dropboxResult.error)}'`)
-                                        return
-                                    }
-                                    const {
-                                        status,
-                                        error
-                                    } = await Promises.tryCatch(CloudSync.sync(
-                                        dropboxResult.value, "Dropbox"))
-                                    if (status === "rejected") {
-                                        await Dialogs.info({
-                                            headline: "Could not sync with Dropbox",
-                                            message: String(error)
-                                        })
-                                    }
-                                })
-                        )
-                    }),
+                }).setRuntimeChildrenProcedure(parent => {
+                    parent.addMenuItem(
+                        MenuItem.default({
+                            label: "Dropbox Sync",
+                            icon: IconSymbol.Dropbox
+                        }).setTriggerProcedure(async () =>
+                            await CloudSync.sync(service.cloudAuthManager, "Dropbox")),
+                        MenuItem.default({
+                            label: "GoogleDrive Sync",
+                            icon: IconSymbol.GoogleDrive,
+                            hidden: !Browser.isLocalHost()
+                        }).setTriggerProcedure(() =>
+                            CloudSync.sync(service.cloudAuthManager, "GoogleDrive").then(EmptyExec))
+                    )
+                }),
                 MenuItem.default({label: "Debug", separatorBefore: true})
                     .setRuntimeChildrenProcedure(parent => {
                         return parent.addMenuItem(

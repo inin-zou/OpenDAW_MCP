@@ -30,7 +30,7 @@ export class DropboxHandler implements CloudStorageHandler {
         const response = await client.filesDownload({path: fullPath}).catch(error => {
             if (this.#isNotFoundError(error)) {
                 console.log("The error above is expected. The file does not exist.")
-                throw new FileNotFoundError(path)
+                return new FileNotFoundError(path)
             }
             return error
         })

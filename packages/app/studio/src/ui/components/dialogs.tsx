@@ -6,7 +6,6 @@ import {
     Exec,
     isDefined,
     Option,
-    Procedure,
     Provider,
     RuntimeNotification,
     Terminable,
@@ -235,46 +234,6 @@ export namespace Dialogs {
             </Dialog>
         )
         Surface.get(origin).body.appendChild(dialog)
-        dialog.showModal()
-    }
-
-    export const newItem = (headline: string, suggestion: string, factory: Procedure<string>): void => {
-        const input: HTMLInputElement = (
-            <input type="text" value={suggestion} autofocus
-                   style={{
-                       width: "100%",
-                       backgroundColor: "rgba(0, 0, 0, 0.2)",
-                       outline: "none",
-                       border: "none"
-                   }}/>
-        )
-        const dialog: HTMLDialogElement = (
-            <Dialog headline={headline}
-                    icon={IconSymbol.Add}
-                    cancelable={true}
-                    buttons={[{
-                        text: "Cancel",
-                        primary: false,
-                        onClick: handler => handler.close()
-                    }, {
-                        text: "Create",
-                        primary: true,
-                        onClick: handler => {
-                            factory(input.value)
-                            handler.close()
-                        }
-                    }]}>
-                <div style={{padding: "1em 0"}}>{input}</div>
-            </Dialog>
-        )
-        input.onfocus = () => input.select()
-        input.onkeydown = event => {
-            if (event.code === "Enter") {
-                factory(input.value)
-                dialog.close()
-            }
-        }
-        document.body.appendChild(dialog)
         dialog.showModal()
     }
 
