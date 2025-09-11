@@ -60,7 +60,7 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                             CloudSync.sync(service.cloudAuthManager, "Dropbox").then(EmptyExec)),
                         MenuItem.default({
                             label: "GoogleDrive",
-                            icon: IconSymbol.GoogleDrive,
+                            icon: IconSymbol.GoogleDrive
                         }).setTriggerProcedure(() =>
                             CloudSync.sync(service.cloudAuthManager, "GoogleDrive").then(EmptyExec))
                     )
@@ -115,7 +115,9 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                         )
                     }),
                 MenuItem.default({label: "Imprint", separatorBefore: true})
-                    .setTriggerProcedure(() => RouteLocation.get().navigateTo("/imprint"))
+                    .setTriggerProcedure(() => RouteLocation.get().navigateTo("/imprint")),
+                MenuItem.default({label: "Privacy Policy"})
+                    .setTriggerProcedure(() => RouteLocation.get().navigateTo("/privacy"))
             )
         }
     )
