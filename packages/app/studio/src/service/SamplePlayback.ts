@@ -22,16 +22,13 @@ export type PlaybackEvent = {
 }
 
 export class SamplePlayback {
-    readonly #context: AudioContext
     readonly #audio: HTMLAudioElement
     readonly #notifiers: ArrayMultimap<string, Procedure<PlaybackEvent>>
     readonly #linearVolume: DefaultObservableValue<unitValue>
 
     #current: Option<string> = Option.None
 
-    constructor(context: AudioContext) {
-        this.#context = context
-
+    constructor() {
         this.#audio = new Audio()
         this.#audio.crossOrigin = "use-credentials"
         this.#audio.preload = "auto"
@@ -53,7 +50,7 @@ export class SamplePlayback {
             this.#watchAudio(uuidAsString)
             this.#notify(uuidAsString, {type: "buffering"})
 
-            SampleStorage.loadSample(UUID.parse(uuidAsString), this.#context)
+            SampleStorage.loadSample(UUID.parse(uuidAsString))
                 .then(([audio]) => {
                     this.#audio.src = URL.createObjectURL(new Blob([WavFile.encodeFloats({
                         channels: audio.frames.slice(),

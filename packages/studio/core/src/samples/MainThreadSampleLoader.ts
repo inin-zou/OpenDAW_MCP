@@ -68,26 +68,24 @@ export class MainThreadSampleLoader implements SampleLoader {
 
     #get(): void {
         let version = this.#version
-        SampleStorage.loadSample(this.#uuid, this.#manager.context)
-            .then(
-                ([data, peaks, meta]) => {
-                    if (this.#version !== version) {
-                        console.warn(`Ignore obsolete version: ${this.#version} / ${version}`)
-                        return
-                    }
-                    this.#data = Option.wrap(data)
-                    this.#meta = Option.wrap(meta)
-                    this.#peaks = Option.wrap(peaks)
-                    this.#setState({type: "loaded"})
-                },
-                (error: any) => {
-                    if (error instanceof Error && error.message.startsWith("timeoout")) {
-                        this.#setState({type: "error", reason: error.message})
-                        return console.warn(`Sample ${UUID.toString(this.#uuid)} timed out.`)
-                    } else {
-                        return this.#fetch()
-                    }
-                })
+        SampleStorage.loadSample(this.#uuid).then(([data, peaks, meta]) => {
+                if (this.#version !== version) {
+                    console.warn(`Ignore obsolete version: ${this.#version} / ${version}`)
+                    return
+                }
+                this.#data = Option.wrap(data)
+                this.#meta = Option.wrap(meta)
+                this.#peaks = Option.wrap(peaks)
+                this.#setState({type: "loaded"})
+            },
+            (error: any) => {
+                if (error instanceof Error && error.message.startsWith("timeoout")) {
+                    this.#setState({type: "error", reason: error.message})
+                    return console.warn(`Sample ${UUID.toString(this.#uuid)} timed out.`)
+                } else {
+                    return this.#fetch()
+                }
+            })
     }
 
     async #fetch(): Promise<void> {

@@ -71,9 +71,11 @@ export const initAppMenu = (service: StudioService) => {
                                         // TODO Move to StudioService and update the dashboard project list, if shown
                                         const approved = await Dialogs.approve({
                                             headline: "openDAW and your data",
-                                            message: `openDAW will never store or share your personal account details. Dropbox requires permission to read “basic account info” such as your name and email, but openDAW does not use or retain this information. We only access the files you choose to synchronize. 
+                                            message: `openDAW will never store or share your personal account details!
                                             
-                                            This will open a new tab to authorize your dropbox account.`,
+                                            Dropbox requires permission to read “basic account info” such as your name and email, but openDAW does not use or retain this information. We only access the files you choose to synchronize. 
+                                            
+                                            Clicking 'Ok' will open a new tab to authorize your dropbox.`,
                                             approveText: "Ok",
                                             cancelText: "Cancel",
                                             reverse: true,
@@ -90,7 +92,7 @@ export const initAppMenu = (service: StudioService) => {
                                             status,
                                             error
                                         } = await Promises.tryCatch(CloudSync.sync(
-                                            dropboxResult.value, "Dropbox", service.audioContext))
+                                            dropboxResult.value, "Dropbox"))
                                         if (status === "rejected") {
                                             await Dialogs.info({
                                                 headline: "Could not sync with Dropbox",

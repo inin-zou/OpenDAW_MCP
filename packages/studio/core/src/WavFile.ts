@@ -1,15 +1,63 @@
-import {Arrays} from "@opendaw/lib-std"
+import {Arrays, panic} from "@opendaw/lib-std"
 
 export namespace WavFile {
-    export const encodeFloats = (audio: {
+    const MAGIC_RIFF = 0x46464952
+    const MAGIC_WAVE = 0x45564157
+    const MAGIC_FMT = 0x20746d66
+    const MAGIC_DATA = 0x61746164
+
+    export type Audio = {
         channels: ReadonlyArray<Float32Array>,
         sampleRate: number,
         numFrames: number
-    } | AudioBuffer): ArrayBuffer => {
-        const MAGIC_RIFF = 0x46464952
-        const MAGIC_WAVE = 0x45564157
-        const MAGIC_FMT = 0x20746d66
-        const MAGIC_DATA = 0x61746164
+    }
+
+    export const decodeFloats = (buffer: ArrayBuffer): Audio => {
+        const view = new DataView(buffer)
+        if (view.getUint32(0, true) !== MAGIC_RIFF
+            || view.getUint32(8, true) !== MAGIC_WAVE) {
+            return panic("Not a RIFF/WAVE file")
+        }
+        let fmtOffset = -1
+        let dataOffset = -1
+        let dataSize = 0
+        for (let o = 12; o + 8 <= view.byteLength;) {
+            const id = view.getUint32(o, true)
+            const size = view.getUint32(o + 4, true)
+            const next = o + 8 + ((size + 1) & ~1)
+            if (id === MAGIC_FMT) fmtOffset = o + 8
+            if (id === MAGIC_DATA) {
+                dataOffset = o + 8
+                dataSize = size
+            }
+            o = next
+        }
+        if (fmtOffset < 0 || dataOffset < 0) {
+            return panic("Missing fmt or data chunk")
+        }
+        const audioFormat = view.getUint16(fmtOffset, true)  // 3 = IEEE float
+        const numChannels = view.getUint16(fmtOffset + 2, true)
+        const sampleRate = view.getUint32(fmtOffset + 4, true)
+        const blockAlign = view.getUint16(fmtOffset + 12, true)
+        const bitsPerSample = view.getUint16(fmtOffset + 14, true)
+        if (audioFormat !== 3 || bitsPerSample !== 32) {
+            return panic("Expected 32-bit float WAV (format 3)")
+        }
+        if (blockAlign !== numChannels * 4) {
+            return panic("Invalid block alignment")
+        }
+        const numFrames = Math.floor(dataSize / blockAlign)
+        const interleaved = new Float32Array(buffer, dataOffset, numFrames * numChannels)
+        const channels = Arrays.create(() => new Float32Array(numFrames), numChannels)
+        for (let i = 0, w = 0; i < numFrames; i++) {
+            for (let c = 0; c < numChannels; c++) {
+                channels[c][i] = interleaved[w++]
+            }
+        }
+        return {channels, sampleRate, numFrames}
+    }
+
+    export const encodeFloats = (audio: Audio | AudioBuffer): ArrayBuffer => {
         const bytesPerChannel = Float32Array.BYTES_PER_ELEMENT
         const sampleRate = audio.sampleRate
         let numFrames: number

@@ -143,6 +143,7 @@ export namespace Dialogs {
                 }
             }] : Arrays.empty()
         const messageElement: HTMLParagraphElement = (<p style={{
+            margin: "1em 0 0.5em 0",
             width: "100%",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -155,9 +156,7 @@ export namespace Dialogs {
                     buttons={buttons}>
                 {messageElement}
                 {progress && (
-                    <div style={{padding: "1em 0", position: "relative", width: "100%"}}>
-                        <ProgressBar lifecycle={lifecycle} progress={progress}/>
-                    </div>
+                    <ProgressBar lifecycle={lifecycle} progress={progress}/>
                 )}
             </Dialog>
         )

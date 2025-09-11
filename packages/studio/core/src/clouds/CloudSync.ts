@@ -4,16 +4,17 @@ import {CloudStorageHandler} from "./CloudStorageHandler"
 import {CloudSyncSamples} from "./CloudSyncSamples"
 import {CloudSyncProjects} from "./CloudSyncProjects"
 
+// TODO Update views after syncing
+// TODO Test Dropbox on PROD (Needs adjustment in dev console)
+
 export namespace CloudSync {
-    export const sync = async (cloudHandler: CloudStorageHandler,
-                               cloudName: string,
-                               audioContext: AudioContext) => {
+    export const sync = async (cloudHandler: CloudStorageHandler, cloudName: string) => {
         const progressValue = new DefaultObservableValue<unitValue>(0.0)
         const notification = RuntimeNotifier.progress({headline: `${cloudName} Sync`, progress: progressValue})
         const [progressSamples, progressProjects] = Progress.split(progress => progressValue.setValue(progress), 2)
         const log = (text: string) => notification.message = text
         try {
-            await CloudSyncSamples.start(cloudHandler, audioContext, progressSamples, log)
+            await CloudSyncSamples.start(cloudHandler, progressSamples, log)
             await CloudSyncProjects.start(cloudHandler, progressProjects, log)
             log("Everything is up to date.")
             await Wait.timeSpan(TimeSpan.seconds(2))

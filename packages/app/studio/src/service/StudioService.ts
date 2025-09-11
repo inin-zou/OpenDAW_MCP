@@ -117,7 +117,7 @@ export class StudioService implements ProjectEnv {
                 readonly sampleAPI: SampleAPI,
                 readonly sampleManager: MainThreadSampleManager,
                 readonly buildInfo: BuildInfo) {
-        this.samplePlayback = new SamplePlayback(audioContext)
+        this.samplePlayback = new SamplePlayback()
         this.profileService = new ProjectProfileService({
             env: this, importer: this, sampleAPI: this.sampleAPI, sampleManager: this.sampleManager
         })

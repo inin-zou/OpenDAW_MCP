@@ -1,4 +1,4 @@
-import {Arrays, ByteArrayInput, EmptyExec, UUID} from "@opendaw/lib-std"
+import {ByteArrayInput, EmptyExec, UUID} from "@opendaw/lib-std"
 import {Promises} from "@opendaw/lib-runtime"
 import {Peaks, SamplePeaks} from "@opendaw/lib-fusion"
 import {AudioData, Sample, SampleMetaData} from "@opendaw/studio-adapters"
@@ -32,20 +32,20 @@ export namespace SampleStorage {
         return WorkerAgents.Opfs.write(`${path}/meta.json`, new TextEncoder().encode(JSON.stringify(meta)))
     }
 
-    export const loadSample = async (uuid: UUID.Bytes, context: AudioContext): Promise<[AudioData, Peaks, SampleMetaData]> => {
+    export const loadSample = async (uuid: UUID.Bytes): Promise<[AudioData, Peaks, SampleMetaData]> => {
         const path = `${Folder}/${UUID.toString(uuid)}`
         return Promise.all([
             WorkerAgents.Opfs.read(`${path}/audio.wav`)
-                .then(bytes => context.decodeAudioData(bytes.buffer as ArrayBuffer)),
+                .then(bytes => WavFile.decodeFloats(bytes.buffer as ArrayBuffer)),
             WorkerAgents.Opfs.read(`${path}/peaks.bin`)
                 .then(bytes => SamplePeaks.from(new ByteArrayInput(bytes.buffer))),
             WorkerAgents.Opfs.read(`${path}/meta.json`)
                 .then(bytes => JSON.parse(new TextDecoder().decode(bytes)))
         ]).then(([buffer, peaks, meta]) => [{
             sampleRate: buffer.sampleRate,
-            numberOfFrames: buffer.length,
-            numberOfChannels: buffer.numberOfChannels,
-            frames: Arrays.create(index => buffer.getChannelData(index), buffer.numberOfChannels)
+            numberOfFrames: buffer.numFrames,
+            numberOfChannels: buffer.channels.length,
+            frames: buffer.channels
         }, peaks, meta])
     }
 
