@@ -96,7 +96,8 @@ export class GoogleDriveHandler implements CloudStorageHandler {
             const params = new URLSearchParams({
                 q,
                 fields: "files(id,name,mimeType),nextPageToken",
-                pageSize: "1000"
+                pageSize: "1000",
+                spaces: "appDataFolder"
             })
             if (pageToken) params.set("pageToken", pageToken)
             const res = await fetch(`${DRIVE_FILES_API}?${params.toString()}`, {
@@ -193,7 +194,8 @@ export class GoogleDriveHandler implements CloudStorageHandler {
         const params = new URLSearchParams({
             q,
             fields: "files(id,name,mimeType)",
-            pageSize: "1"
+            pageSize: "1",
+            spaces: "appDataFolder"
         })
         const res = await fetch(`${DRIVE_FILES_API}?${params.toString()}`, {headers: this.#authHeaders()})
         if (!res.ok) {
@@ -214,7 +216,8 @@ export class GoogleDriveHandler implements CloudStorageHandler {
         const params = new URLSearchParams({
             q,
             fields: "files(id,name,mimeType)",
-            pageSize: "1"
+            pageSize: "1",
+            spaces: "appDataFolder"
         })
         const res = await fetch(`${DRIVE_FILES_API}?${params.toString()}`, {headers: this.#authHeaders()})
         if (!res.ok) {

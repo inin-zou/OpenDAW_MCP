@@ -59,7 +59,7 @@
     const channel = new BroadcastChannel('auth-callback');
     window.onbeforeunload = () => channel.postMessage({type: 'closed'})
 
-    function postAndClose(message){
+    function postAndClose(message) {
         try {
             channel.postMessage(message);
             channel.close();

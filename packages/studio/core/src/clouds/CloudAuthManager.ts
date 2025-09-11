@@ -3,6 +3,8 @@ import {CloudStorageHandler} from "./CloudStorageHandler"
 import {Promises} from "@opendaw/lib-runtime"
 import {Service} from "./Service"
 
+// TODO Tokens expire after 1 hour. When receiving a 401/403, we need to re-auth.
+
 export class CloudAuthManager {
     static create(): CloudAuthManager {return new CloudAuthManager()}
 
@@ -146,6 +148,7 @@ export class CloudAuthManager {
     async #oauthGoogle(): Promise<CloudStorageHandler> {
         const clientId = "628747153367-gt1oqcn3trr9l9a7jhigja6l1t3f1oik.apps.googleusercontent.com"
         const scope = "https://www.googleapis.com/auth/drive.appdata"
+
         const redirectUri = `${location.origin}/auth-callback.html`
         const params = new URLSearchParams({
             client_id: clientId,
@@ -157,10 +160,12 @@ export class CloudAuthManager {
         })
         const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
         console.debug("[CloudAuth] Opening auth window:", authUrl)
+
         const authWindow = window.open(authUrl, "cloudAuth")
         if (isUndefined(authWindow)) {
             return Errors.warn("Failed to open authentication window. Please check popup blockers.")
         }
+
         const {resolve, reject, promise} = Promise.withResolvers<CloudStorageHandler>()
         const channel = new BroadcastChannel("auth-callback")
         const dialog = RuntimeNotifier.progress({
@@ -168,6 +173,7 @@ export class CloudAuthManager {
             message: "Please authorize access to app data...",
             cancel: () => reject("cancelled")
         })
+
         channel.onmessage = async (event: MessageEvent<any>) => {
             const data = asDefined(event.data, "No data")
             console.debug("[CloudAuth] Received via BroadcastChannel:", this.id, data)
@@ -183,6 +189,7 @@ export class CloudAuthManager {
                 reject(null)
             }
         }
+
         return promise.finally(() => {
             console.debug("[CloudAuth] Closing auth window")
             authWindow.close()
