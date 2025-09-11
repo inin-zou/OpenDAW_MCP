@@ -34,21 +34,7 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                             .setTriggerProcedure(() => service.importZip()),
                         MenuItem.default({
                             label: "DAWproject..."
-                        }).setTriggerProcedure(async () => {
-                            if (Browser.isLocalHost()) {
-                                return service.importDawproject()
-                            } else {
-                                const approved = await Dialogs.approve({
-                                    headline: "DAWproject Early Preview",
-                                    message: "Please be aware that the import may not work as expected.",
-                                    approveText: "Import",
-                                    cancelText: "Cancel"
-                                })
-                                if (approved) {
-                                    return service.importDawproject()
-                                }
-                            }
-                        })
+                        }).setTriggerProcedure(() => service.importDawproject().then(EmptyExec, EmptyExec))
                     )),
                 MenuItem.default({label: "Export", selectable: service.hasProfile})
                     .setRuntimeChildrenProcedure(parent => parent.addMenuItem(
@@ -62,18 +48,18 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                             .setTriggerProcedure(async () => service.exportDawproject())
                     )),
                 MenuItem.default({
-                    label: "Cloud Services",
+                    label: "Cloud Backup",
                     separatorBefore: true,
                     hidden: !Browser.isLocalHost() && location.hash !== "#cloud"
                 }).setRuntimeChildrenProcedure(parent => {
                     parent.addMenuItem(
                         MenuItem.default({
-                            label: "Dropbox Sync",
+                            label: "Dropbox",
                             icon: IconSymbol.Dropbox
                         }).setTriggerProcedure(async () =>
                             await CloudSync.sync(service.cloudAuthManager, "Dropbox")),
                         MenuItem.default({
-                            label: "GoogleDrive Sync",
+                            label: "GoogleDrive",
                             icon: IconSymbol.GoogleDrive,
                             hidden: !Browser.isLocalHost()
                         }).setTriggerProcedure(() =>
