@@ -111,7 +111,7 @@ export namespace Promises {
                 resolving = factory()
                 resolving.catch(error => {
                     resolving = null
-                    throw error
+                    return error
                 })
             }
             return resolving

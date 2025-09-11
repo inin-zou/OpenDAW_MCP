@@ -5,7 +5,7 @@ import {Promises} from "@opendaw/lib-runtime"
 export class CloudAuthManager {
     static async create(): Promise<CloudAuthManager> {
         const clientId = "jtehjzxaxf3bf1l"
-        const redirectUri = "https://localhost:8080/auth-callback.html" // TODO Build this dynamically
+        const redirectUri = `${location.origin}/auth-callback.html`
         const {codeVerifier, codeChallenge} = await this.#createCodes()
         return new CloudAuthManager(clientId, redirectUri, codeVerifier, codeChallenge)
     }
@@ -46,10 +46,7 @@ export class CloudAuthManager {
         this.#codeChallenge = codeChallenge
     }
 
-    async dropbox(): Promise<CloudStorageHandler> {
-        console.debug("call memoizeHandler")
-        return this.#memoizeHandler()
-    }
+    async dropbox(): Promise<CloudStorageHandler> {return this.#memoizeHandler()}
 
     async #dropbox(): Promise<CloudStorageHandler> {
         const service = "dropbox"
@@ -64,7 +61,7 @@ export class CloudAuthManager {
         const dialog = RuntimeNotifier.progress({
             headline: "Cloud Service",
             message: "Please wait for authentification...",
-            cancel: () => reject(null)
+            cancel: () => reject("cancelled")
         })
         channel.onmessage = async (event: MessageEvent<any>) => {
             const data = asDefined(event.data, "No data")
