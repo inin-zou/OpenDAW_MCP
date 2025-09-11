@@ -55,16 +55,13 @@
     <p>Please wait...</p>
 </div>
 <script>
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const error = params.get('error');
     const container = document.getElementById('container');
     const channel = new BroadcastChannel('auth-callback');
     window.onbeforeunload = () => channel.postMessage({type: 'closed'})
-    if (code !== null) {
+
+    function postAndClose(message){
         try {
-            const channel = new BroadcastChannel('auth-callback');
-            channel.postMessage({type: 'auth-callback', code: code});
+            channel.postMessage(message);
             channel.close();
             window.onbeforeunload = null
             window.close();
@@ -75,8 +72,25 @@
                     <p style="font-family: monospace; word-break: break-all; margin-top: 1rem; padding: 0.5rem; background: #f3f4f6; border-radius: 4px;">${error}</p>
                 `;
         }
-    } else if (error !== null) {
-        const errorDesc = params.get('error_description') || 'Authentication failed';
+    }
+
+    // Support both code flow (?code=...) and implicit flow (#access_token=...)
+    const qs = new URLSearchParams(window.location.search);
+    const code = qs.get('code');
+    const error = qs.get('error');
+
+    // Parse hash for access_token
+    const hash = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
+    const hs = new URLSearchParams(hash);
+    const accessToken = hs.get('access_token');
+    const tokenError = hs.get('error');
+
+    if (code !== null) {
+        postAndClose({type: 'auth-callback', code});
+    } else if (accessToken !== null) {
+        postAndClose({type: 'auth-callback', access_token: accessToken});
+    } else if (error !== null || tokenError !== null) {
+        const errorDesc = qs.get('error_description') || hs.get('error_description') || 'Authentication failed';
         container.innerHTML = `
                 <div class="error">⚠️</div>
                 <h1>Authentication Failed</h1>

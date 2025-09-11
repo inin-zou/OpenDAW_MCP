@@ -16,6 +16,7 @@ type DriveListResponse = {
 const DRIVE_FILES_API = "https://www.googleapis.com/drive/v3/files"
 const DRIVE_UPLOAD_API = "https://www.googleapis.com/upload/drive/v3/files"
 const FOLDER_MIME = "application/vnd.google-apps.folder"
+const ROOT_ID = "appDataFolder"
 
 export class GoogleDriveHandler implements CloudStorageHandler {
     readonly #accessToken: string
@@ -151,14 +152,14 @@ export class GoogleDriveHandler implements CloudStorageHandler {
     }
 
     async #resolveFolderId(path: string): Promise<Option<string>> {
-        if (path === "/" || path.trim() === "") return Option.wrap("root")
+        if (path === "/" || path.trim() === "") return Option.wrap(ROOT_ID)
         const parts = path.replace(/^\/*/, "").split("/").filter(Boolean)
         return this.#resolveFolderPath(parts)
     }
 
     // Resolve a folder path without creating anything
     async #resolveFolderPath(parts: string[]): Promise<Option<string>> {
-        let currentId: string = "root"
+        let currentId: string = ROOT_ID
         for (const part of parts) {
             const next = await this.#findFolderInFolder(part, currentId)
             if (next.isEmpty()) return Option.None
@@ -169,7 +170,7 @@ export class GoogleDriveHandler implements CloudStorageHandler {
 
     // Ensure folder path exists, create missing segments
     async #ensureFolderPath(parts: string[]): Promise<string> {
-        let currentId: string = "root"
+        let currentId: string = ROOT_ID
         for (const part of parts) {
             const found = await this.#findFolderInFolder(part, currentId)
             if (found.nonEmpty()) {

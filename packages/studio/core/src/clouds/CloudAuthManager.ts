@@ -146,24 +146,50 @@ export class CloudAuthManager {
     async #oauthGoogle(): Promise<CloudStorageHandler> {
         const clientId = "628747153367-gt1oqcn3trr9l9a7jhigja6l1t3f1oik.apps.googleusercontent.com"
         const scope = "https://www.googleapis.com/auth/drive.appdata"
-
-        return Promise.reject("Not implemented")
-    }
-
-    /*async #oauthGoogle(): Promise<CloudStorageHandler> {
-        return this.#oauthPkceFlow({
-            service: "google",
-            clientId: "628747153367-gt1oqcn3trr9l9a7jhigja6l1t3f1oik.apps.googleusercontent.com",
-            authUrlBase: "https://accounts.google.com/o/oauth2/v2/auth",
-            tokenUrl: "https://oauth2.googleapis.com/token",
-            scope: "https://www.googleapis.com/auth/drive.appdata",
-            extraAuthParams: {
-                access_type: "offline",
-                include_granted_scopes: "true",
-                prompt: "consent"
-            }
+        const redirectUri = `${location.origin}/auth-callback.html`
+        const params = new URLSearchParams({
+            client_id: clientId,
+            response_type: "token",
+            redirect_uri: redirectUri,
+            scope,
+            include_granted_scopes: "true",
+            prompt: "consent"
         })
-    }*/
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+        console.debug("[CloudAuth] Opening auth window:", authUrl)
+        const authWindow = window.open(authUrl, "cloudAuth")
+        if (isUndefined(authWindow)) {
+            return Errors.warn("Failed to open authentication window. Please check popup blockers.")
+        }
+        const {resolve, reject, promise} = Promise.withResolvers<CloudStorageHandler>()
+        const channel = new BroadcastChannel("auth-callback")
+        const dialog = RuntimeNotifier.progress({
+            headline: "Google Drive",
+            message: "Please authorize access to app data...",
+            cancel: () => reject("cancelled")
+        })
+        channel.onmessage = async (event: MessageEvent<any>) => {
+            const data = asDefined(event.data, "No data")
+            console.debug("[CloudAuth] Received via BroadcastChannel:", this.id, data)
+            if (data.type === "auth-callback" && isDefined(data.access_token)) {
+                try {
+                    const accessToken = data.access_token
+                    resolve(await this.#createHandler("google", accessToken))
+                } catch (err) {
+                    reject(err)
+                }
+            } else if (data.type === "closed") {
+                console.debug("[CloudAuth] Callback window closed")
+                reject(null)
+            }
+        }
+        return promise.finally(() => {
+            console.debug("[CloudAuth] Closing auth window")
+            authWindow.close()
+            dialog.terminate()
+            channel.close()
+        })
+    }
 
     async #sftp(): Promise<CloudStorageHandler> {
         // This is a credentials-based flow (no OAuth). Here you would:

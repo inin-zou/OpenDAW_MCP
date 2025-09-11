@@ -63,6 +63,7 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                     )),
                 MenuItem.default({
                     label: "Cloud Services",
+                    separatorBefore: true,
                     hidden: !Browser.isLocalHost() && location.hash !== "#cloud"
                 }).setRuntimeChildrenProcedure(parent => {
                     parent.addMenuItem(
