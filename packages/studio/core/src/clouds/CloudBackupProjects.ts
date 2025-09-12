@@ -159,9 +159,8 @@ export class CloudBackupProjects {
                     this.#cloudHandler.download(metaPath), network.DefaultRetry)
                 await WorkerAgents.Opfs.write(ProjectPaths.projectFile(uuid), new Uint8Array(projectArrayBuffer))
                 await WorkerAgents.Opfs.write(ProjectPaths.projectMeta(uuid), new Uint8Array(metaArrayBuffer))
-                const hasCover = files.some(file => file.endsWith(coverPath))
+                const hasCover = files.some(file => file.endsWith("image.bin"))
                 if (hasCover) {
-                    console.debug("We have a cover for this project!")
                     const arrayBuffer = await Promises.guardedRetry(() =>
                         this.#cloudHandler.download(coverPath), network.DefaultRetry)
                     await WorkerAgents.Opfs.write(ProjectPaths.projectCover(uuid), new Uint8Array(arrayBuffer))

@@ -5,7 +5,9 @@ import {CloudBackupProjects} from "./CloudBackupProjects"
 import {CloudAuthManager} from "./CloudAuthManager"
 import {CloudService} from "./CloudService"
 
-// TODO Update views after syncing
+// TODO Update views after syncing!
+// TODO How to retry upload?
+// TODO Add cancel and rewind sync
 
 export namespace CloudBackup {
     export const backup = async (cloudAuthManager: CloudAuthManager, service: CloudService) => {
@@ -43,7 +45,7 @@ export namespace CloudBackup {
         const log = (text: string) => notification.message = text
         const [progressSamples, progressProjects] = Progress.split(progress => progressValue.setValue(progress), 2)
         try {
-            // await CloudBackupSamples.start(cloudHandler, progressSamples, log)
+            await CloudBackupSamples.start(cloudHandler, progressSamples, log)
             await CloudBackupProjects.start(cloudHandler, progressProjects, log)
         } finally {
             progressValue.terminate()
