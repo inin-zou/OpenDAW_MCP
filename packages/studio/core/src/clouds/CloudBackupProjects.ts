@@ -148,7 +148,8 @@ export class CloudBackupProjects {
                 const uuid = UUID.parse(uuidAsString)
                 const path = `${CloudBackupProjects.RemotePath}/${uuidAsString}`
                 this.#log(`Downloading project '${meta.name}'`)
-                const files = await this.#cloudHandler.list(CloudBackupProjects.RemotePath)
+                const files = await Promises.guardedRetry(() =>
+                    this.#cloudHandler.list(path), network.DefaultRetry)
                 const projectPath = `${path}/project.od`
                 const metaPath = `${path}/meta.json`
                 const coverPath = `${path}/image.bin`

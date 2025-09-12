@@ -43,7 +43,7 @@ export namespace CloudBackup {
         const log = (text: string) => notification.message = text
         const [progressSamples, progressProjects] = Progress.split(progress => progressValue.setValue(progress), 2)
         try {
-            await CloudBackupSamples.start(cloudHandler, progressSamples, log)
+            // await CloudBackupSamples.start(cloudHandler, progressSamples, log)
             await CloudBackupProjects.start(cloudHandler, progressProjects, log)
         } finally {
             progressValue.terminate()

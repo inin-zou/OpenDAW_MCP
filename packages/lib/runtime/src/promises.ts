@@ -14,6 +14,7 @@ import {
     TerminableOwner,
     TimeSpan
 } from "@opendaw/lib-std"
+import {Wait} from "./wait"
 
 export type Resolve<T> = (value: T) => void
 export type Reject = (reason?: unknown) => void
@@ -55,12 +56,13 @@ export namespace Promises {
     export const tryCatch = <T>(promise: Promise<T>): Promise<ResolveResult<T> | RejectedResult> =>
         promise.then(value => new ResolveResult(value), error => new RejectedResult(error))
 
-    export const retry = <T>(
-        call: Provider<Promise<T>>,
-        retryOption: RetryOption = new IntervalRetryOption(3, TimeSpan.seconds(3))): Promise<T> =>
-        call().catch(reason => new Promise<T>((resolve, reject) => {
+    const DefaultRetryOption = new IntervalRetryOption(3, TimeSpan.seconds(3))
+
+    export const retry = <T>(factory: Provider<Promise<T>>,
+                             retryOption: RetryOption = DefaultRetryOption): Promise<T> =>
+        factory().catch(reason => new Promise<T>((resolve, reject) => {
             const onFailure = (reason: unknown) => {
-                if (!retryOption.retry(reason, () => call().then((value: T) => resolve(value), onFailure))) {
+                if (!retryOption.retry(reason, () => factory().then((value: T) => resolve(value), onFailure))) {
                     reject(reason)
                 }
             }
@@ -74,6 +76,7 @@ export namespace Promises {
                 return await factory()
             } catch (reason) {
                 if (retryIf(reason, ++count)) {
+                    await Wait.timeSpan(TimeSpan.seconds(1))
                     return attempt(count)
                 }
                 throw reason

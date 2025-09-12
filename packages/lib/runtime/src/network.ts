@@ -8,6 +8,6 @@ export namespace network {
         limit.add(() => fetch(input, init))
 
     export const DefaultRetry = (reason: unknown, count: int) => {
-        return !isInstanceOf(reason, Errors.FileNotFound) || count <= 10
+        return !isInstanceOf(reason, Errors.FileNotFound) || count <= 100
     }
 }

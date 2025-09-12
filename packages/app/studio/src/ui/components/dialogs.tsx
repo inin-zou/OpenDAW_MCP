@@ -131,7 +131,6 @@ export namespace Dialogs {
     export const progress = ({
                                  headline, message, progress, cancel, origin
                              }: RuntimeNotification.ProgressRequest): RuntimeNotification.ProgressUpdater => {
-        console.debug("PROGRESS")
         const lifecycle = new Terminator()
         const buttons: ReadonlyArray<Button> = isDefined(cancel)
             ? [{
