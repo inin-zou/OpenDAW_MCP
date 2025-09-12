@@ -5,3 +5,7 @@
 ### Admin Url
 
 https://console.cloud.google.com/
+
+### User can 'Manage App' here
+
+https://drive.google.com/drive/settings

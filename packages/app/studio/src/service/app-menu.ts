@@ -64,7 +64,9 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                             icon: IconSymbol.GoogleDrive,
                             hidden: !Browser.isLocalHost()
                         }).setTriggerProcedure(() =>
-                            CloudSync.sync(service.cloudAuthManager, "GoogleDrive").then(EmptyExec))
+                            CloudSync.sync(service.cloudAuthManager, "GoogleDrive").then(EmptyExec)),
+                        MenuItem.default({label: "Help", icon: IconSymbol.Help, separatorBefore: true})
+                            .setTriggerProcedure(() => RouteLocation.get().navigateTo("/manuals/cloud-backup"))
                     )
                 }),
                 MenuItem.default({label: "Debug", separatorBefore: true})
