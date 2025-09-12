@@ -1,12 +1,12 @@
 import css from "./Footer.sass?inline"
-import {createElement} from "@opendaw/lib-jsx"
+import {createElement, LocalLink} from "@opendaw/lib-jsx"
 import {isDefined, Lifecycle, Terminator, TimeSpan} from "@opendaw/lib-std"
 import {StudioService} from "@/service/StudioService"
 import {Surface} from "@/ui/surface/Surface"
 import {Events, Html} from "@opendaw/lib-dom"
 import {Runtime} from "@opendaw/lib-runtime"
 import {FooterLabel} from "@/service/FooterLabel"
-import {ProjectMeta} from "@opendaw/studio-core"
+import {Colors, ProjectMeta} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "footer")
 
@@ -63,6 +63,10 @@ export const Footer = ({lifecycle, service}: Construct) => {
             {labelLatency}
             <div title="Build Version">{service.buildInfo.uuid}</div>
             <div title="Build Time">{lastBuildTime}</div>
+            <div style={{flex: "1"}}/>
+            <div style={{color: Colors.cream}}>
+                <LocalLink href="/privacy">Privacy</LocalLink> · <LocalLink href="/imprint">Imprint</LocalLink>
+            </div>
         </footer>
     )
     service.registerFooter((): FooterLabel => {

@@ -138,7 +138,7 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                                 })
                         )
                     }),
-                MenuItem.default({label: "Privacy Policy", separatorBefore: true})
+                MenuItem.default({label: "Privacy", separatorBefore: true})
                     .setTriggerProcedure(() => RouteLocation.get().navigateTo("/privacy")),
                 MenuItem.default({label: "Imprint"})
                     .setTriggerProcedure(() => RouteLocation.get().navigateTo("/imprint"))
