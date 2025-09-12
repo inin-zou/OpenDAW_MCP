@@ -32,7 +32,7 @@ export class CaptureMidi extends Capture<CaptureMidiBox> {
     constructor(manager: CaptureDevices, audioUnitBox: AudioUnitBox, captureMidiBox: CaptureMidiBox) {
         super(manager, audioUnitBox, captureMidiBox)
 
-        this.#streamGenerator = Promises.sequential(() => this.#updateStream())
+        this.#streamGenerator = Promises.sequentialize(() => this.#updateStream())
 
         this.ownAll(
             captureMidiBox.channel.catchupAndSubscribe(async owner => {

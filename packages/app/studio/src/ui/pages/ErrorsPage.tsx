@@ -54,7 +54,7 @@ export const ErrorsPage: PageFactory<StudioService> = ({lifecycle}: PageContext<
                             createRows(entries)
                             await Wait.frame()
                         }
-                        const subscription = Events.subscribe(wrapper, "scroll", Promises.sequential(async () => {
+                        const subscription = Events.subscribe(wrapper, "scroll", Promises.sequentialize(async () => {
                             const threshold = 64
                             if (wrapper.scrollTop + wrapper.clientHeight >= list.scrollHeight - threshold) {
                                 const entries: ReadonlyArray<Entry> = await loadMore()

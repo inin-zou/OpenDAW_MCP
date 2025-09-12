@@ -1,4 +1,4 @@
-import {CloudStorageHandler} from "./CloudStorageHandler"
+import {CloudHandler} from "./CloudHandler"
 import {Errors, isDefined, Option, panic} from "@opendaw/lib-std"
 
 type DriveFile = {
@@ -19,7 +19,7 @@ const ROOT_ID = "appDataFolder"
 
 // written by ChatGPT
 
-export class GoogleDriveHandler implements CloudStorageHandler {
+export class GoogleDriveHandler implements CloudHandler {
     readonly #accessToken: string
 
     constructor(accessToken: string) {this.#accessToken = accessToken}

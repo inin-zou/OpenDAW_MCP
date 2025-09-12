@@ -67,6 +67,21 @@ export namespace Promises {
             onFailure(reason)
         }))
 
+    export const guardedRetry = <T>(factory: Provider<Promise<T>>,
+                                    retryIf: (reason: unknown, count: int) => boolean): Promise<T> => {
+        const attempt = async (count: int = 0): Promise<T> => {
+            try {
+                return await factory()
+            } catch (reason) {
+                if (retryIf(reason, ++count)) {
+                    return attempt(count)
+                }
+                throw reason
+            }
+        }
+        return attempt()
+    }
+
     // this is for testing the catch branch
     export const fail = <T>(after: TimeSpan, thenUse: Provider<Promise<T>>): Provider<Promise<T>> => {
         let use: Provider<Promise<T>> = () =>
@@ -91,7 +106,12 @@ export namespace Promises {
         })
     }
 
-    export const sequential = <A, T>(handler: Func<A, Promise<T>>): Func<A, Promise<T>> => {
+    export const sequentialAll = <T, R>(factories: Array<Provider<Promise<R>>>): Promise<Array<R>> =>
+        factories.reduce((promise, factory) => promise
+            .then(async results => [...results, await factory()]), Promise.resolve([] as Array<R>)
+        )
+
+    export const sequentialize = <A, T>(handler: Func<A, Promise<T>>): Func<A, Promise<T>> => {
         let lastPromise: Promise<unknown> = Promise.resolve()
         return (arg: A): Promise<T> => {
             const execute = () => handler(arg)
@@ -116,6 +136,30 @@ export namespace Promises {
             }
             return resolving
         }
+    }
+
+    export const allWithLimit = async <T, U>(tasks: ReadonlyArray<Provider<Promise<T | U>>>, limit = 1)
+        : Promise<Array<T | U>> => {
+        const results: Array<T | U> = new Array(tasks.length)
+        let index = 0
+        let hasError = false
+        const run = async () => {
+            while (index < tasks.length && !hasError) {
+                const i = index++
+                try {
+                    const value = await tasks[i]()
+                    if (!hasError) {
+                        results[i] = value
+                    }
+                } catch (reason) {
+                    hasError = true
+                    throw reason
+                }
+            }
+        }
+
+        await Promise.all(Array.from({length: Math.min(limit, tasks.length)}, run))
+        return results
     }
 
     export const allSettledWithLimit = async <T, U>(tasks: ReadonlyArray<Provider<Promise<T | U>>>, limit = 1)

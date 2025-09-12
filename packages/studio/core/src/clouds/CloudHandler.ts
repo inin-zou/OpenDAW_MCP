@@ -1,4 +1,4 @@
-export interface CloudStorageHandler {
+export interface CloudHandler {
     upload(path: string, data: ArrayBuffer): Promise<void>
     exists(path: string): Promise<boolean>
     download(path: string): Promise<ArrayBuffer>

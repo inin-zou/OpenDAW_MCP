@@ -27,7 +27,7 @@ export class CaptureAudio extends Capture<CaptureAudioBox> {
         super(manager, audioUnitBox, captureAudioBox)
 
         this.#stream = new MutableObservableOption<MediaStream>()
-        this.#streamGenerator = Promises.sequential(() => this.#updateStream())
+        this.#streamGenerator = Promises.sequentialize(() => this.#updateStream())
 
         this.ownAll(
             captureAudioBox.requestChannels.catchupAndSubscribe(owner => {

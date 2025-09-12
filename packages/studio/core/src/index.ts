@@ -34,8 +34,8 @@ export * from "./sync-log/SyncLogReader"
 export * from "./sync-log/SyncLogWriter"
 
 export * from "./clouds/CloudAuthManager"
-export * from "./clouds/CloudStorageHandler"
-export * from "./clouds/CloudSync"
+export * from "./clouds/CloudHandler"
+export * from "./clouds/CloudBackup"
 
 export * from "./AudioDevices"
 export * from "./AudioOfflineRenderer"

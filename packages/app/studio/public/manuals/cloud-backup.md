@@ -1,13 +1,25 @@
 # Cloud Backup
 
-openDAW supports storing your projects in **Google Drive** and **Dropbox**.  
-Both services require a one-time **OAuth login**. OAuth is the official login method provided by many cloud services. It
-means:
+openDAW supports privately synchronizing your projects in **Google Drive** and **Dropbox**.  
+Both services require a one-time **OAuth login**. OAuth is the official login method provided by many cloud services.
+
+## Flow
 
 - You log in directly on the provider’s website
 - openDAW receives a secure access token from them
-- openDAW never sees your password
-- No personal data or assets are stored on openDAW servers — everything stays in your own cloud account
+- openDAW never sees your password or personal data
+- No personal data or assets are stored on openDAW servers
+- Everything stays in your own cloud account
+
+---
+
+## How it works
+
+openDAW backs up your projects and samples to your connected cloud service. The first backup copies all projects and
+samples stored locally into a hidden app folder in your cloud. Each backup after that adds new projects and samples,
+updates changed ones, and deletes those removed locally so your local assets and your cloud backup stay aligned.
+
+**openDAW does not auto-update. You need to run a backup whenever you think it is necessary.**
 
 ---
 

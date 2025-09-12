@@ -1,11 +1,11 @@
 import {Dropbox, DropboxResponse, DropboxResponseError, files} from "dropbox"
-import {Errors, isDefined, Option, panic, TimeSpan} from "@opendaw/lib-std"
-import {Promises, Wait} from "@opendaw/lib-runtime"
-import {CloudStorageHandler} from "./CloudStorageHandler"
+import {Errors, isDefined, Option, panic} from "@opendaw/lib-std"
+import {Promises} from "@opendaw/lib-runtime"
+import {CloudHandler} from "./CloudHandler"
 
 // written by ChatGPT
 
-export class DropboxHandler implements CloudStorageHandler {
+export class DropboxHandler implements CloudHandler {
     readonly #accessToken: string
 
     #dropboxClient: Option<Dropbox> = Option.None
@@ -31,26 +31,20 @@ export class DropboxHandler implements CloudStorageHandler {
         }
     }
 
-    // TODO If the download fails completely, we should abort the parent task at hand
-
     async download(path: string): Promise<ArrayBuffer> {
         const client = await this.#ensureClient()
         const fullPath = this.#getFullPath(path)
-        let attempts = 10
-        while (attempts-- > 0) {
-            try {
-                const response = await client.filesDownload({path: fullPath})
-                const {result: {fileBlob}} = response as DropboxResponse<files.FileMetadata & { fileBlob: Blob }>
-                return fileBlob.arrayBuffer()
-            } catch (error) {
-                if (this.#isNotFoundError(error)) {
-                    console.log(`The error above is expected. The file at '${path}' does not exist.`)
-                    throw new Errors.FileNotFound(path)
-                }
-                await Wait.timeSpan(TimeSpan.seconds(1))
+        try {
+            const response = await client.filesDownload({path: fullPath})
+            const {result: {fileBlob}} = response as DropboxResponse<files.FileMetadata & { fileBlob: Blob }>
+            return fileBlob.arrayBuffer()
+        } catch (error) {
+            if (this.#isNotFoundError(error)) {
+                console.log(`The error above is expected. The file at '${path}' does not exist.`)
+                throw new Errors.FileNotFound(path)
             }
+            throw error
         }
-        return panic(`Failed to download '${path}' after 10 retries`)
     }
 
     async exists(path: string): Promise<boolean> {

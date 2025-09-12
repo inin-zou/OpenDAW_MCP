@@ -1,12 +1,9 @@
 import {
     Arrays,
-    EmptyExec,
     Errors,
-    isInstanceOf,
     isUndefined,
     Nullish,
     Objects,
-    Option,
     panic,
     Procedure,
     Progress,
@@ -17,7 +14,7 @@ import {
 import {Promises} from "@opendaw/lib-runtime"
 import {ProjectMeta} from "../project/ProjectMeta"
 import {ProjectStorage} from "../project/ProjectStorage"
-import {CloudStorageHandler} from "./CloudStorageHandler"
+import {CloudHandler} from "./CloudHandler"
 import {WorkerAgents} from "../WorkerAgents"
 import {ProjectPaths} from "../project/ProjectPaths"
 
@@ -31,11 +28,11 @@ type ProjectDomains = Record<"local" | "cloud", Projects>
 
 // TODO List project folder to see if cover exists (less errors in console)
 
-export class CloudSyncProjects {
+export class CloudBackupProjects {
     static readonly RemotePath = "projects"
     static readonly RemoteCatalogPath = `${this.RemotePath}/index.json`
 
-    static async start(cloudHandler: CloudStorageHandler,
+    static async start(cloudHandler: CloudHandler,
                        progress: Progress.Handler,
                        log: Procedure<string>) {
         log("Collecting all project domains...")
@@ -45,24 +42,24 @@ export class CloudSyncProjects {
                     record[UUID.toString(entry.uuid)] = Objects.include(entry.meta, ...catalogFields)
                     return record
                 }, {})),
-            cloudHandler.download(CloudSyncProjects.RemoteCatalogPath)
+            cloudHandler.download(CloudBackupProjects.RemoteCatalogPath)
                 .then(json => JSON.parse(new TextDecoder().decode(json)))
                 .catch(reason => reason instanceof Errors.FileNotFound ? Arrays.empty() : panic(reason))
         ])
-        return new CloudSyncProjects(cloudHandler, {local, cloud}, log).#start(progress)
+        return new CloudBackupProjects(cloudHandler, {local, cloud}, log).#start(progress)
     }
 
-    readonly #cloudHandler: CloudStorageHandler
+    readonly #cloudHandler: CloudHandler
     readonly #projectDomains: ProjectDomains
     readonly #log: Procedure<string>
 
-    private constructor(cloudHandler: CloudStorageHandler, projectDomains: ProjectDomains, log: Procedure<string>) {
+    private constructor(cloudHandler: CloudHandler, projectDomains: ProjectDomains, log: Procedure<string>) {
         this.#cloudHandler = cloudHandler
         this.#projectDomains = projectDomains
         this.#log = log
     }
 
-    async #start(progress: Progress.Handler) {
+    async #start(progress: Progress.Handler): Promise<void> {
         const trashed = await ProjectStorage.loadTrashedIds()
         const [uploadProgress, trashProgress, downloadProgress] = Progress.splitWithWeights(progress, [0.45, 0.10, 0.45])
         await this.#upload(uploadProgress)
@@ -70,23 +67,24 @@ export class CloudSyncProjects {
         await this.#download(trashed, downloadProgress)
     }
 
-    async #upload(progress: Progress.Handler) {
+    async #upload(progress: Progress.Handler): Promise<void> {
         const {local, cloud} = this.#projectDomains
         const isUnsynced = (localProject: MetaFields, cloudProject: Nullish<MetaFields>) =>
             isUndefined(cloudProject) || new Date(cloudProject.modified).getTime() < new Date(localProject.modified).getTime()
-        const unsyncedProjects: ReadonlyArray<[string, MetaFields]> = Object.entries(local)
+        const unsyncedProjects: ReadonlyArray<[UUID.String, MetaFields]> = Object.entries(local)
             .filter(([uuid, localProject]) => isUnsynced(localProject, cloud[uuid as UUID.String]))
+            .map(([uuid, localProject]) => ([UUID.asString(uuid), localProject]))
         if (unsyncedProjects.length === 0) {
             this.#log("No unsynced projects found.")
             progress(1.0)
             return
         }
-        const results = await Promises.allSettledWithLimit(unsyncedProjects
-            .map(([uuidAsString, meta]: [string, MetaFields], index, {length}) => async () => {
+        const uploaded = await Promises.sequentialAll(unsyncedProjects
+            .map(([uuidAsString, meta]: [UUID.String, MetaFields], index, {length}) => async () => {
                 progress((index + 1) / length)
                 this.#log(`Uploading project '${meta.name}'`)
                 const uuid = UUID.parse(uuidAsString)
-                const folder = `${CloudSyncProjects.RemotePath}/${uuidAsString}`
+                const folder = `${CloudBackupProjects.RemotePath}/${uuidAsString}`
                 const metaJson = new TextEncoder().encode(JSON.stringify(meta)).buffer
                 const project = await ProjectStorage.loadProject(uuid)
                 const optCover = await ProjectStorage.loadCover(uuid)
@@ -96,20 +94,20 @@ export class CloudSyncProjects {
                 optCover.ifSome(cover => tasks.push(this.#cloudHandler.upload(`${folder}/image.bin`, cover)))
                 await Promises.timeout(Promise.all(tasks), TimeSpan.seconds(30), "Upload timeout (30s).")
                 return {uuidAsString, meta}
-            }), 1)
-        const uploaded = results
-            .filter(result => result.status === "fulfilled")
-            .reduce((projects, {value: project}) => {
+            }))
+        const catalog = uploaded
+            .reduce((projects, project) => {
                 projects[UUID.asString(project.uuidAsString)] = project.meta
                 return projects
             }, {...cloud})
-        await this.#uploadCatalog(uploaded)
+        await this.#uploadCatalog(catalog)
         progress(1.0)
     }
 
-    async #trash(trashed: ReadonlyArray<UUID.String>, progress: Progress.Handler) {
+    async #trash(trashed: ReadonlyArray<UUID.String>, progress: Progress.Handler): Promise<void> {
         const {cloud} = this.#projectDomains
-        const obsolete: Array<[string, MetaFields]> = Arrays.intersect(Object.entries(cloud), trashed, ([uuid, _], trashed) => uuid === trashed)
+        const obsolete: Array<[string, MetaFields]> =
+            Arrays.intersect(Object.entries(cloud), trashed, ([uuid, _], trashed) => uuid === trashed)
         if (obsolete.length > 0) {
             const approved = await RuntimeNotifier.approve({
                 headline: "Delete Projects?",
@@ -118,25 +116,23 @@ export class CloudSyncProjects {
                 cancelText: "No"
             })
             if (approved) {
-                const result: ReadonlyArray<PromiseSettledResult<UUID.String>> = await Promises.allSettledWithLimit(
+                const deleted: ReadonlyArray<UUID.String> = await Promises.sequentialAll(
                     obsolete.map(([uuid, meta], index, {length}) => async () => {
                         progress((index + 1) / length)
-                        const path = `${CloudSyncProjects.RemotePath}/${uuid}`
+                        const path = `${CloudBackupProjects.RemotePath}/${uuid}`
                         this.#log(`Deleting '${meta.name}'`)
                         await this.#cloudHandler.delete(path)
                         return UUID.asString(uuid)
-                    }), 1)
+                    }))
                 const catalog = {...cloud}
-                result
-                    .filter(result => result.status === "fulfilled")
-                    .forEach(({value: uuid}) => delete catalog[uuid])
+                deleted.forEach(uuid => delete catalog[uuid])
                 await this.#uploadCatalog(catalog)
             }
         }
         progress(1.0)
     }
 
-    async #download(trashed: ReadonlyArray<UUID.String>, progress: Progress.Handler) {
+    async #download(trashed: ReadonlyArray<UUID.String>, progress: Progress.Handler): Promise<void> {
         const {cloud, local} = this.#projectDomains
         const compareFn = ([uuidA]: [string, MetaFields], [uuidB]: [string, MetaFields]) => uuidA === uuidB
         const missingLocally = Arrays.subtract(Object.entries(cloud), Object.entries(local), compareFn)
@@ -146,40 +142,35 @@ export class CloudSyncProjects {
             progress(1.0)
             return
         }
-        const results: ReadonlyArray<PromiseSettledResult<string>> = await Promises.allSettledWithLimit(
+        await Promises.sequentialAll(
             download.map(([uuidAsString, meta], index, {length}) => async () => {
                 progress((index + 1) / length)
                 const uuid = UUID.parse(uuidAsString)
-                const path = `${CloudSyncProjects.RemotePath}/${uuidAsString}`
+                const path = `${CloudBackupProjects.RemotePath}/${uuidAsString}`
                 this.#log(`Downloading project '${meta.name}'`)
-                const projectArrayBuffer = await this.#cloudHandler.download(`${path}/project.od`)
-                const metaArrayBuffer = await this.#cloudHandler.download(`${path}/meta.json`)
-                const coverArrayBuffer = await this.#cloudHandler.download(`${path}/image.bin`)
-                    .then(arrayBuffer => Option.wrap(arrayBuffer))
-                    .catch(error => isInstanceOf(error, Errors.FileNotFound) ? Option.None : panic(error))
-                Promise.all([
-                    WorkerAgents.Opfs.write(ProjectPaths.projectFile(uuid), new Uint8Array(projectArrayBuffer)),
-                    WorkerAgents.Opfs.write(ProjectPaths.projectMeta(uuid), new Uint8Array(metaArrayBuffer)),
-                    coverArrayBuffer.match({
-                        none: () => Promise.resolve(),
-                        some: arrayBuffer => WorkerAgents.Opfs.write(ProjectPaths.projectCover(uuid), new Uint8Array(arrayBuffer))
-                    })
-                ]).then(EmptyExec)
+                const files = await this.#cloudHandler.list(CloudBackupProjects.RemotePath)
+                const projectPath = `${path}/project.od`
+                const metaPath = `${path}/meta.json`
+                const coverPath = `${path}/image.bin`
+                const projectArrayBuffer = await this.#cloudHandler.download(projectPath)
+                const metaArrayBuffer = await this.#cloudHandler.download(metaPath)
+                await WorkerAgents.Opfs.write(ProjectPaths.projectFile(uuid), new Uint8Array(projectArrayBuffer))
+                await WorkerAgents.Opfs.write(ProjectPaths.projectMeta(uuid), new Uint8Array(metaArrayBuffer))
+                const hasCover = files.some(file => file.endsWith(coverPath))
+                if (hasCover) {
+                    const arrayBuffer = await this.#cloudHandler.download(coverPath)
+                    await WorkerAgents.Opfs.write(ProjectPaths.projectCover(uuid), new Uint8Array(arrayBuffer))
+                }
                 return uuidAsString
-            }), 1)
-        const failure = results.filter(result => result.status === "rejected")
-        if (failure.length > 0) {
-            this.#log(`Some projects could not be downloaded (${failure[0].reason})`)
-        } else {
-            this.#log("Download projects complete.")
-        }
+            }))
+        this.#log("Download projects complete.")
         progress(1.0)
     }
 
-    async #uploadCatalog(catalog: Projects) {
+    async #uploadCatalog(catalog: Projects): Promise<void> {
         this.#log("Uploading project catalog...")
         const jsonString = JSON.stringify(catalog, null, 2)
         const buffer = new TextEncoder().encode(jsonString).buffer
-        return this.#cloudHandler.upload(CloudSyncProjects.RemoteCatalogPath, buffer)
+        return this.#cloudHandler.upload(CloudBackupProjects.RemoteCatalogPath, buffer)
     }
 }

@@ -1,5 +1,5 @@
 import {asDefined, Errors, isDefined, isUndefined, Maps, panic, RuntimeNotifier, TimeSpan} from "@opendaw/lib-std"
-import {CloudStorageHandler} from "./CloudStorageHandler"
+import {CloudHandler} from "./CloudHandler"
 import {Promises} from "@opendaw/lib-runtime"
 import {Service} from "./Service"
 
@@ -27,11 +27,11 @@ export class CloudAuthManager {
 
     readonly id = CloudAuthManager.#ID++
 
-    readonly #memoizedHandlers = new Map<Service, () => Promise<CloudStorageHandler>>()
+    readonly #memoizedHandlers = new Map<Service, () => Promise<CloudHandler>>()
 
     private constructor() {}
 
-    async getHandler(service: Service): Promise<CloudStorageHandler> {
+    async getHandler(service: Service): Promise<CloudHandler> {
         const memo = Maps.createIfAbsent(this.#memoizedHandlers, service, service => {
             switch (service) {
                 case "Dropbox": {
@@ -65,7 +65,7 @@ export class CloudAuthManager {
         scope: string
         extraAuthParams?: Record<string, string>
         extraTokenParams?: Record<string, string>
-    }): Promise<CloudStorageHandler> {
+    }): Promise<CloudHandler> {
         const redirectUri = `${location.origin}/auth-callback.html`
         const {codeVerifier, codeChallenge} = await CloudAuthManager.#createCodes()
         const params = new URLSearchParams({
@@ -83,7 +83,7 @@ export class CloudAuthManager {
         if (isUndefined(authWindow)) {
             return Errors.warn("Failed to open authentication window. Please check popup blockers.")
         }
-        const {resolve, reject, promise} = Promise.withResolvers<CloudStorageHandler>()
+        const {resolve, reject, promise} = Promise.withResolvers<CloudHandler>()
         const channel = new BroadcastChannel("auth-callback")
         const dialog = RuntimeNotifier.progress({
             headline: "Cloud Service",
@@ -137,7 +137,7 @@ export class CloudAuthManager {
         })
     }
 
-    async #oauthDropbox(): Promise<CloudStorageHandler> {
+    async #oauthDropbox(): Promise<CloudHandler> {
         return this.#oauthPkceFlow({
             service: "dropbox",
             clientId: "jtehjzxaxf3bf1l",
@@ -150,7 +150,7 @@ export class CloudAuthManager {
         })
     }
 
-    async #oauthGoogle(): Promise<CloudStorageHandler> {
+    async #oauthGoogle(): Promise<CloudHandler> {
         const clientId = "628747153367-gt1oqcn3trr9l9a7jhigja6l1t3f1oik.apps.googleusercontent.com"
         const scope = "https://www.googleapis.com/auth/drive.appdata"
 
@@ -171,7 +171,7 @@ export class CloudAuthManager {
             return Errors.warn("Failed to open authentication window. Please check popup blockers.")
         }
 
-        const {resolve, reject, promise} = Promise.withResolvers<CloudStorageHandler>()
+        const {resolve, reject, promise} = Promise.withResolvers<CloudHandler>()
         const channel = new BroadcastChannel("auth-callback")
         const dialog = RuntimeNotifier.progress({
             headline: "Google Drive",
@@ -203,7 +203,7 @@ export class CloudAuthManager {
         })
     }
 
-    async #sftp(): Promise<CloudStorageHandler> {
+    async #sftp(): Promise<CloudHandler> {
         // This is a credentials-based flow (no OAuth). Here you would:
         // 1) Prompt the user for host, port, username, password / key.
         // 2) Instantiate the SFTP handler with those credentials.
@@ -214,7 +214,7 @@ export class CloudAuthManager {
         // return new SFTPHandler({host, port, username, passwordOrKey})
     }
 
-    async #createHandler(service: string, token: string): Promise<CloudStorageHandler> {
+    async #createHandler(service: string, token: string): Promise<CloudHandler> {
         switch (service) {
             case "dropbox": {
                 const {DropboxHandler} = await import("./DropboxHandler")

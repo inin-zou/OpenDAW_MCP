@@ -6,7 +6,7 @@ import {EmptyExec, isDefined, panic, RuntimeNotifier} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
-import {CloudSync, WorkerAgents} from "@opendaw/studio-core"
+import {CloudBackup, WorkerAgents} from "@opendaw/studio-core"
 import {Promises} from "@opendaw/lib-runtime"
 
 export const initAppMenu = (service: StudioService) => MenuItem.root()
@@ -58,13 +58,13 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                             label: "Dropbox",
                             icon: IconSymbol.Dropbox
                         }).setTriggerProcedure(() =>
-                            CloudSync.sync(service.cloudAuthManager, "Dropbox").then(EmptyExec)),
+                            CloudBackup.backup(service.cloudAuthManager, "Dropbox").then(EmptyExec)),
                         MenuItem.default({
                             label: "GoogleDrive",
                             icon: IconSymbol.GoogleDrive,
                             hidden: !Browser.isLocalHost()
                         }).setTriggerProcedure(() =>
-                            CloudSync.sync(service.cloudAuthManager, "GoogleDrive").then(EmptyExec)),
+                            CloudBackup.backup(service.cloudAuthManager, "GoogleDrive").then(EmptyExec)),
                         MenuItem.default({label: "Help", icon: IconSymbol.Help, separatorBefore: true})
                             .setTriggerProcedure(() => RouteLocation.get().navigateTo("/manuals/cloud-backup"))
                     )
