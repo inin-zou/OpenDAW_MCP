@@ -1,1 +1,0 @@
-export type Service = "Dropbox" | "GoogleDrive" | "SFTP"

@@ -1,0 +1,1 @@
+export type CloudService = "Dropbox" | "GoogleDrive" | "SFTP"

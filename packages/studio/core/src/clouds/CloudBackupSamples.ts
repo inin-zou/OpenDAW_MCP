@@ -1,5 +1,5 @@
-import {Arrays, Errors, isInstanceOf, panic, Procedure, Progress, RuntimeNotifier, UUID} from "@opendaw/lib-std"
-import {Promises} from "@opendaw/lib-runtime"
+import {Arrays, Errors, panic, Procedure, Progress, RuntimeNotifier, UUID} from "@opendaw/lib-std"
+import {network, Promises} from "@opendaw/lib-runtime"
 import {SamplePeaks} from "@opendaw/lib-fusion"
 import {AudioData, Sample} from "@opendaw/studio-adapters"
 import {OpenSampleAPI} from "../samples/OpenSampleAPI"
@@ -119,8 +119,7 @@ export class CloudBackupSamples {
                 progress((index + 1) / length)
                 this.#log(`Downloading sample '${sample.name}'`)
                 const path = CloudBackupSamples.createPath(sample.uuid)
-                const buffer = await Promises.guardedRetry(() => this.#cloudHandler.download(path),
-                    (reason) => !isInstanceOf(reason, Errors.FileNotFound))
+                const buffer = await Promises.guardedRetry(() => this.#cloudHandler.download(path), network.DefaultRetry)
                 const waveAudio = WavFile.decodeFloats(buffer)
                 const audioData: AudioData = {
                     sampleRate: waveAudio.sampleRate,

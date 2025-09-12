@@ -40,7 +40,6 @@ export class DropboxHandler implements CloudHandler {
             return fileBlob.arrayBuffer()
         } catch (error) {
             if (this.#isNotFoundError(error)) {
-                console.log(`The error above is expected. The file at '${path}' does not exist.`)
                 throw new Errors.FileNotFound(path)
             }
             throw error

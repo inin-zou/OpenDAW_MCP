@@ -1,7 +1,7 @@
 import {asDefined, Errors, isDefined, isUndefined, Maps, panic, RuntimeNotifier, TimeSpan} from "@opendaw/lib-std"
 import {CloudHandler} from "./CloudHandler"
 import {Promises} from "@opendaw/lib-runtime"
-import {Service} from "./Service"
+import {CloudService} from "./CloudService"
 
 export class CloudAuthManager {
     static create(): CloudAuthManager {return new CloudAuthManager()}
@@ -27,11 +27,11 @@ export class CloudAuthManager {
 
     readonly id = CloudAuthManager.#ID++
 
-    readonly #memoizedHandlers = new Map<Service, () => Promise<CloudHandler>>()
+    readonly #memoizedHandlers = new Map<CloudService, () => Promise<CloudHandler>>()
 
     private constructor() {}
 
-    async getHandler(service: Service): Promise<CloudHandler> {
+    async getHandler(service: CloudService): Promise<CloudHandler> {
         const memo = Maps.createIfAbsent(this.#memoizedHandlers, service, service => {
             switch (service) {
                 case "Dropbox": {
@@ -178,7 +178,6 @@ export class CloudAuthManager {
             message: "Please authorize access to app data...",
             cancel: () => reject("cancelled")
         })
-
         channel.onmessage = async (event: MessageEvent<any>) => {
             const data = asDefined(event.data, "No data")
             console.debug("[CloudAuth] Received via BroadcastChannel:", this.id, data)
@@ -194,7 +193,6 @@ export class CloudAuthManager {
                 reject(null)
             }
         }
-
         return promise.finally(() => {
             console.debug("[CloudAuth] Closing auth window")
             authWindow.close()
