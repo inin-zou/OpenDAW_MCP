@@ -74,7 +74,7 @@ def handle_http_request(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             for tool_name, tool_info in mcp._tool_manager._tools.items():
                 tools.append({
                     'name': tool_name,
-                    'description': tool_info.get('description', 'No description'),
+                    'description': getattr(tool_info, 'description', 'No description'),
                 })
             
             return {

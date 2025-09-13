@@ -19,3 +19,4 @@ lerna-debug.log
 /packages/app/localhost.pem
 /packages/app/localhost-key.pem
 uv.lock
+.vercel
