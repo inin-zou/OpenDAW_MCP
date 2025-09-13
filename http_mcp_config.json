@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "opendaw": {
+      "url": "http://localhost:8000/mcp",
+      "transport": "http"
+    }
+  }
+}
