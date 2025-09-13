@@ -13,13 +13,17 @@ Both services require a one-time **OAuth login**. OAuth is the official login me
 
 ---
 
+## How to run a backup
+
+Every time you click openDAW menu > Cloud Backup > `Select service`, openDAW synchronizes all projects and samples with
+your connected cloud service, uploading new and changed files and removing those that were deleted locally.
+
 ## How it works
 
-openDAW backs up your projects and samples to your connected cloud service. The first backup copies all projects and
-samples stored locally into a hidden app folder in your cloud. Each backup after that adds new projects and samples,
-updates changed ones, and deletes those removed locally so your local assets and your cloud backup stay aligned.
-
-**openDAW does not auto-update. You need to run a backup whenever you think it is necessary.**
+During backup, openDAW uploads new and modified files and updates its index.json catalog for each domain (projects and
+samples). If a backup is aborted, some files may remain in the cloud without being referenced in the catalog. It is also
+not recommended to modify or move the files directly in the cloud, as remote changes can confuse the backup system and
+cause it to stop working as expected.
 
 ---
 

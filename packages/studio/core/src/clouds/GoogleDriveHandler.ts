@@ -1,5 +1,5 @@
 import {CloudHandler} from "./CloudHandler"
-import {Errors, isDefined, Option, panic} from "@opendaw/lib-std"
+import {assert, Errors, isDefined, Option, panic} from "@opendaw/lib-std"
 
 type DriveFile = {
     id: string
@@ -17,10 +17,10 @@ const DRIVE_UPLOAD_API = "https://www.googleapis.com/upload/drive/v3/files"
 const FOLDER_MIME = "application/vnd.google-apps.folder"
 const ROOT_ID = "appDataFolder"
 
-// written by ChatGPT
-
 export class GoogleDriveHandler implements CloudHandler {
     readonly #accessToken: string
+
+    #ensureFolderInProgress: boolean = false
 
     constructor(accessToken: string) {this.#accessToken = accessToken}
 
@@ -42,7 +42,6 @@ export class GoogleDriveHandler implements CloudHandler {
         const {dir, base} = this.#splitPath(path)
         const parentId = await this.#ensureFolderPath(dir)
         const existing = await this.#findFileInFolder(base, parentId)
-
         if (existing.nonEmpty()) {
             const fileId = existing.unwrap().id
             const res = await fetch(`${DRIVE_UPLOAD_API}/${fileId}?uploadType=media`, {
@@ -172,8 +171,12 @@ export class GoogleDriveHandler implements CloudHandler {
         return Option.wrap(currentId)
     }
 
-    // Ensure folder path exists, create missing segments
     async #ensureFolderPath(parts: string[]): Promise<string> {
+        // We found a bug when writing multiple files at a yet non-existing folder at the same time.
+        // Some of them are still waiting for #ensureFolderPath to resolve.
+        // Unless somebody knows how to use Google Drive's API correctly, we are stuck with that 'solution'.
+        assert(!this.#ensureFolderInProgress, "Google Drive can get confused when multiple uploads are in progress")
+        this.#ensureFolderInProgress = true
         let currentId: string = ROOT_ID
         for (const part of parts) {
             const found = await this.#findFolderInFolder(part, currentId)
@@ -184,6 +187,7 @@ export class GoogleDriveHandler implements CloudHandler {
             const created = await this.#createFolder(part, currentId)
             currentId = created.id
         }
+        this.#ensureFolderInProgress = false
         return currentId
     }
 

@@ -7,6 +7,7 @@ import {
     panic,
     Procedure,
     Progress,
+    Provider,
     RuntimeNotifier,
     TimeSpan,
     UUID
@@ -84,21 +85,26 @@ export class CloudBackupProjects {
                 this.#log(`Uploading project '${meta.name}'`)
                 const uuid = UUID.parse(uuidAsString)
                 const folder = `${CloudBackupProjects.RemotePath}/${uuidAsString}`
-                const metaJson = new TextEncoder().encode(JSON.stringify(meta)).buffer
-                const project = await ProjectStorage.loadProject(uuid)
-                const optCover = await ProjectStorage.loadCover(uuid)
-                const tasks: Array<Promise<void>> = []
-                tasks.push(this.#cloudHandler.upload(`${folder}/project.od`, project))
-                tasks.push(this.#cloudHandler.upload(`${folder}/meta.json`, metaJson))
-                optCover.ifSome(cover => tasks.push(this.#cloudHandler.upload(`${folder}/image.bin`, cover)))
+                const metaFile = await ProjectStorage.loadMeta(uuid)
+                const projectFile = await ProjectStorage.loadProject(uuid)
+                const optCoverFile = await ProjectStorage.loadCover(uuid)
+                const tasks: Array<Provider<Promise<void>>> = []
+                const removeProjectPath = `${folder}/project.od`
+                const remoteMetaPath = `${folder}/meta.json`
+                tasks.push(() => this.#cloudHandler.upload(removeProjectPath, projectFile))
+                tasks.push(() => this.#cloudHandler.upload(remoteMetaPath, metaFile))
+                optCoverFile.ifSome(cover => {
+                    const removeCoverPath = `${folder}/image.bin`
+                    return tasks.push(() => this.#cloudHandler.upload(removeCoverPath, cover))
+                })
                 await Promises.approvedRetry(() =>
-                        Promises.timeout(Promise.all(tasks), TimeSpan.minutes(10), "Upload timeout (10 min)."),
-                    error => ({
-                        headline: "Upload failed",
-                        message: `Failed to upload project '${meta.name}'. '${error}'`,
-                        approveText: "Retry",
-                        cancelText: "Cancel"
-                    }))
+                    Promises.timeout(Promises.sequentialAll(tasks),
+                        TimeSpan.minutes(10), "Upload timeout (10 min)."), error => ({
+                    headline: "Upload failed",
+                    message: `Failed to upload project '${meta.name}'. '${error}'`,
+                    approveText: "Retry",
+                    cancelText: "Cancel"
+                }))
                 return {uuidAsString, meta}
             }))
         const catalog = uploaded
@@ -156,6 +162,22 @@ export class CloudBackupProjects {
                 this.#log(`Downloading project '${meta.name}'`)
                 const files = await Promises.guardedRetry(() =>
                     this.#cloudHandler.list(path), network.DefaultRetry)
+                const hasProjectFile = files.includes("project.od")
+                const hasMetaFile = files.includes("meta.json")
+                if (!hasProjectFile || !hasMetaFile) {
+                    console.warn(`hasProjectFile: ${hasProjectFile}, hasMetaFile: ${hasMetaFile} for ${uuidAsString}`)
+                    const approvedDeletion = await RuntimeNotifier.approve({
+                        headline: "Download failed",
+                        message: `Project '${meta.name}' is corrupted. Delete it from cloud?.`,
+                        approveText: "Yes",
+                        cancelText: "Ignore"
+                    })
+                    if (approvedDeletion) {
+                        await this.#cloudHandler.delete(path)
+                    } else {
+                        return uuidAsString
+                    }
+                }
                 const projectPath = `${path}/project.od`
                 const metaPath = `${path}/meta.json`
                 const coverPath = `${path}/image.bin`

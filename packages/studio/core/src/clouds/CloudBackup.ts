@@ -29,8 +29,9 @@ export namespace CloudBackup {
                 message: "Everything is up to date."
             })
         } catch (reason: unknown) {
+            console.warn(reason)
             await RuntimeNotifier.info({
-                headline: `Could not sync with ${service}`,
+                headline: `Could not sync`,
                 message: String(reason)
             })
         } finally {

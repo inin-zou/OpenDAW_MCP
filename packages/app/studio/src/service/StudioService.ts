@@ -251,7 +251,7 @@ export class StudioService implements ProjectEnv {
         if (this.project.editing.isEmpty()) {
             this.profileService.setValue(Option.None)
         } else {
-            const approved = await Dialogs.approve({
+            const approved = await RuntimeNotifier.approve({
                 headline: "Closing Project?",
                 message: "You will lose all progress!"
             })
@@ -259,7 +259,14 @@ export class StudioService implements ProjectEnv {
         }
     }
 
-    cleanSlate(): void {
+    async cleanSlate() {
+        if (!this.project.editing.isEmpty()) {
+            const approved = await RuntimeNotifier.approve({
+                headline: "Closing Project?",
+                message: "You will lose all progress!"
+            })
+            if (!approved) {return}
+        }
         this.profileService.setValue(Option.wrap(
             new ProjectProfile(UUID.generate(), Project.new(this), ProjectMeta.init("Untitled"), Option.None)))
     }

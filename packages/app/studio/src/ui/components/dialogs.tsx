@@ -2,6 +2,7 @@ import {createElement, JsxValue} from "@opendaw/lib-jsx"
 import {Button, Dialog, DialogHandler} from "@/ui/components/Dialog.tsx"
 import {
     Arrays,
+    EmptyExec,
     Errors,
     Exec,
     isDefined,
@@ -73,7 +74,7 @@ export namespace Dialogs {
         return promise
     }
     export const info = async ({headline, message, okText, buttons, origin, abortSignal}: Info): Promise<void> =>
-        show({headline, content: (<p>{message}</p>), okText, buttons, origin, abortSignal})
+        show({headline, content: (<p>{message}</p>), okText, buttons, origin, abortSignal}).catch(EmptyExec)
 
     export type ApproveCreation = {
         headline?: string

@@ -6,15 +6,17 @@ import {EmptyExec, isDefined, panic, RuntimeNotifier, RuntimeSignal} from "@open
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
-import {CloudBackup, ProjectSignals, WorkerAgents} from "@opendaw/studio-core"
+import {CloudBackup, Colors, ProjectSignals, WorkerAgents} from "@opendaw/studio-core"
 import {Promises} from "@opendaw/lib-runtime"
 
 export const initAppMenu = (service: StudioService) => MenuItem.root()
     .setRuntimeChildrenProcedure(parent => {
             parent.addMenuItem(
-                MenuItem.header({label: "openDAW", icon: IconSymbol.OpenDAW}),
-                MenuItem.default({label: "New"})
+                MenuItem.header({label: "openDAW", icon: IconSymbol.OpenDAW, color: Colors.green}),
+                MenuItem.default({label: "Dashboard"})
                     .setTriggerProcedure(() => service.closeProject()),
+                MenuItem.default({label: "New", separatorBefore: true})
+                    .setTriggerProcedure(() => service.cleanSlate()),
                 MenuItem.default({label: "Open...", shortcut: [ModfierKeys.System.Cmd, "O"]})
                     .setTriggerProcedure(() => service.browse()),
                 MenuItem.default({
@@ -118,7 +120,7 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                                 .setTriggerProcedure(async () => {
                                     const approved = await RuntimeNotifier.approve({
                                         headline: "Clear Local Storage",
-                                        message: "Are you sure? This cannot be undone!"
+                                        message: "Are you sure? All your samples and projects will be deleted.\nThis cannot be undone!"
                                     })
                                     if (approved) {
                                         const {status, error} =
@@ -139,10 +141,13 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                                 })
                         )
                     }),
-                MenuItem.default({label: "Privacy", separatorBefore: true})
-                    .setTriggerProcedure(() => RouteLocation.get().navigateTo("/privacy")),
-                MenuItem.default({label: "Imprint"})
-                    .setTriggerProcedure(() => RouteLocation.get().navigateTo("/imprint"))
+                MenuItem.default({label: "Legal", separatorBefore: true})
+                    .setRuntimeChildrenProcedure(parent => parent.addMenuItem(
+                        MenuItem.default({label: "Privacy Policy"})
+                            .setTriggerProcedure(() => RouteLocation.get().navigateTo("/privacy")),
+                        MenuItem.default({label: "Imprint"})
+                            .setTriggerProcedure(() => RouteLocation.get().navigateTo("/imprint"))
+                    ))
             )
         }
     )

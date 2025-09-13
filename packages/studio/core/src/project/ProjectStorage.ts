@@ -40,6 +40,10 @@ export namespace ProjectStorage {
         return WorkerAgents.Opfs.read(ProjectPaths.projectFile(uuid)).then(array => array.buffer as ArrayBuffer)
     }
 
+    export const loadMeta = async (uuid: UUID.Bytes): Promise<ArrayBuffer> => {
+        return WorkerAgents.Opfs.read(ProjectPaths.projectMeta(uuid)).then(array => array.buffer as ArrayBuffer)
+    }
+
     export const loadCover = async (uuid: UUID.Bytes): Promise<Option<ArrayBuffer>> => {
         return WorkerAgents.Opfs.read(ProjectPaths.projectCover(uuid))
             .then(array => Option.wrap(array.buffer as ArrayBuffer), () => Option.None)
