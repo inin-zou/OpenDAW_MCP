@@ -1,6 +1,6 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/andremichelle/openDAW/refs/heads/main/packages/app/studio/public/favicon.svg" height="120"/>
-  <h1 align="center">openDAW</h1>
+  <h1 align="center">openDAW FastMCP Server</h1>
 </p>
 
 <p align="center">
@@ -9,14 +9,42 @@
 <a href="https://github.com/andremichelle/opendaw" rel="nofollow"><img src="https://img.shields.io/github/stars/andremichelle/opendaw" alt="stars"></a>
 </p>
 
-**openDAW** is a next-generation web-based Digital Audio Workstation (DAW) designed to **democratize** music production
-and to **resurface the process of making music** by making **high-quality** creation tools accessible to everyone, with
-a strong focus on **education** and data-privacy. Please consider supporting this project
-on [Patreon](https://www.patreon.com/join/openDAW) or [ko-fi](https://ko-fi.com/opendaw).
+**openDAW FastMCP Server** is a next-generation HTTP-based Model Context Protocol (MCP) server that brings the power of **openDAW** music production capabilities to AI assistants and applications. Built with the **FastMCP framework**, it provides seamless integration with cloud storage, real-time streaming, and comprehensive music production tools through a modern HTTP API.
+
+This server democratizes access to professional music production tools by making them available through AI interfaces, with a strong focus on **education**, **accessibility**, and **data-privacy**.
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/andremichelle/openDAW/refs/heads/main/assets/studio-teaser.png"/>
 </p>
+
+---
+
+## Features
+
+- **FastMCP Framework**: Built with the latest FastMCP template for optimal performance and reliability
+- **HTTP Streamable Protocol**: Full compatibility with MCP HTTP streaming specification
+- **AWS S3 Integration**: Seamless cloud storage for projects, audio files, and MIDI data
+- **Real-time Streaming**: Server-Sent Events (SSE) for live updates and real-time collaboration
+- **Comprehensive MCP Tools**: Complete suite of music production tools accessible via MCP protocol
+- **AI-Powered Prompts**: Intelligent music creation assistance and workflow optimization
+- **Alpic Compatible**: Ready for one-click deployment on Alpic platform
+- **Cross-Platform**: Works with any MCP-compatible AI assistant or application
+
+## API Endpoints
+
+### Core HTTP Endpoints
+- `GET /` - Server information and capabilities overview
+- `GET /health` - Health check endpoint for monitoring
+- `POST /mcp` - Main MCP protocol endpoint for tool execution
+- `GET /mcp/stream` - Server-Sent Events streaming for real-time updates
+
+### MCP Tools Available
+- `create_project` - Create new music projects with customizable parameters
+- `load_project` - Load and access existing projects from cloud storage
+- `add_track` - Add audio, MIDI, or instrument tracks to projects
+- `list_projects` - Browse and search through all available projects
+- `generate_audio` - AI-powered audio generation and synthesis
+- `export_project` - Export projects in various formats (WAV, MP3, MIDI, etc.)
 
 ---
 
@@ -102,86 +130,138 @@ Huge thanks to our [ambassadors](https://opendaw.org/ambassadors), whose dedicat
 
 ---
 
-### Repositories
+## Local Development
 
-* [openDAW](https://github.com/andremichelle/opendaw)
-* [openDAW-headless (SDK)](https://github.com/andremichelle/opendaw-headless)
-
-### Roadmap
-
-This roadmap represents an estimation of the upcoming development steps. Timelines and priorities may shift as openDAW
-evolves.
-
-#### 2025/Q4
-
-- [ ] Fine-tune recording including loops (takes)
-- [ ] Implement audio playback algorithms (pitch, stretch, absolute) including interpolation
-- [ ] Sample editor
-- [ ] Pushing event flow and painting routines into SDK
-
-#### 2026/Q1
-
-- [ ] Preset API
-- [ ] Full implementation of connecting several cloud services to store samples, projects, and presets
-- [ ] Fine-tune timeline clips (recording, switch times)
-- [ ] Fine-tune MIDI effects
-- [ ] Implement missing region actions like flatten
-
-#### 2026/Q2
-
-- [ ] Add at least one more synthesizer
-- [ ] Add several effect devices
-- [ ] Start Modular System
-- [ ] Polish UI
-
-#### 2026/Q3
-
-- [ ] Testing & QA
-- [ ] Launch 1.0
-
-### Prepare, Clone, Installation, and Run
-
-openDAW tries to avoid external libraries and frameworks. Following is a list of the external libraries we currently use
-in the web studio:
-
-* [jszip](https://www.npmjs.com/package/jszip) (for openDAW project bundle file)
-* [markdown-it](https://www.npmjs.com/package/markdown-it) + [markdown-it-table](https://www.npmjs.com/package/markdown-it-table) (
-  for help pages)
-* [d3-force](https://d3js.org/d3-force) (for graph debugging)
+### Prerequisites
 
 Before starting, ensure you have the following installed on your system:
 
-- [Git](https://git-scm.com/) is required for cloning the repository and managing submodules.
-- [mkcert](https://github.com/FiloSottile/mkcert#installation) is required to create a certificate for developing with
-  https protocol.
-- [Node.js](nodejs.org) version **>= 23**. This is necessary for running the development server and installing
-  dependencies.
-- [Sass](https://sass-lang.com/) While Sass is handled internally during the development process, you will need to
-  ensure you have the
-  binaries available in your environment if used outside the build system.
-- [TypeScript](https://www.typescriptlang.org/)
-- [OpenSSL](https://openssl-library.org/) For generating local development certificates (), OpenSSL needs to be
-  installed on
-  your system. Most Linux/macOS systems have OpenSSL pre-installed.
-
-### Clone
-
-`git clone https://github.com/andremichelle/opendaw.git && cd opendaw`
+- **Python 3.8+** - Required for running the FastMCP server
+- **pip** - Python package manager for installing dependencies
+- **AWS CLI** (optional) - For configuring AWS credentials
+- **Docker** (optional) - For containerized deployment
 
 ### Installation
 
-* `npm run cert` (only for the very first time)
-* `npm run clean` (to revert to clean slate, removes all `node_modules` and `dist` folders)
-* `npm install` (for the first time and after `npm run clean`)
-* `npm run build` (for the first time and after `npm run clean`)
-* `npm run dev:studio` | `npm run dev:headless` (start dev server)
-* Navigate to https://localhost:8080 (port is important > cors sample api)
+1. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### Flow Charts
+2. **Set environment variables:**
+   ```bash
+   export AWS_ACCESS_KEY_ID=your_access_key
+   export AWS_SECRET_ACCESS_KEY=your_secret_key
+   export AWS_REGION=eu-north-1
+   export S3_BUCKET=musixtral
+   ```
 
-<img width="6551" height="7057" alt="image" src="https://github.com/user-attachments/assets/266a9fb2-4b72-4752-bcf1-85fda2ff2cf1" />
+3. **Run the server:**
+   ```bash
+   python fastmcp_server.py
+   ```
+
+4. **Test the server:**
+   ```bash
+   curl http://localhost:8000/health
+   ```
+
+## Docker Deployment
+
+1. **Build image:**
+   ```bash
+   docker build -t opendaw-fastmcp .
+   ```
+
+2. **Run container:**
+   ```bash
+   docker run -p 8000:8000 \
+     -e AWS_ACCESS_KEY_ID=your_key \
+     -e AWS_SECRET_ACCESS_KEY=your_secret \
+     -e AWS_REGION=eu-north-1 \
+     -e S3_BUCKET=musixtral \
+     opendaw-fastmcp
+   ```
+
+## Alpic Deployment
+
+1. **Upload repository** to Alpic platform
+2. **Configure environment variables** in Alpic dashboard:
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
+   - `AWS_REGION` (default: eu-north-1)
+   - `S3_BUCKET` (default: musixtral)
+3. **Deploy** using the `alpic.json` configuration
+4. **Update AI Assistant** MCP configuration with deployed URL
+
+## Usage Examples
+
+### Create a Project
+```bash
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "create_project",
+      "arguments": {
+        "name": "My Song",
+        "tempo": 120
+      }
+    }
+  }'
+```
+
+### Add a Track
+```bash
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/call",
+    "params": {
+      "name": "add_track",
+      "arguments": {
+        "project_id": "your-project-id",
+        "name": "Lead Vocal",
+        "track_type": "audio"
+      }
+    }
+  }'
+```
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `AWS_ACCESS_KEY_ID` | AWS access key | Required |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret key | Required |
+| `AWS_REGION` | AWS region | `eu-north-1` |
+| `S3_BUCKET` | S3 bucket name | `musixtral` |
+| `PORT` | Server port | `8000` |
+
+## Architecture
+
+```
+AI Assistant → HTTP MCP Server → AWS S3 Storage
+                      ↓
+              FastMCP Framework
+              - Tools (create, load, add tracks)
+              - Resources (project listings)
+              - Prompts (AI music creation)
+```
 
 ---
+
+### Repositories
+
+* [openDAW](https://github.com/andremichelle/opendaw) - Main web-based DAW
+* [openDAW-headless (SDK)](https://github.com/andremichelle/opendaw-headless) - Headless SDK
 
 [![Custom Caption: Watch the Demo](https://img.youtube.com/vi/VPTXeJY6Eaw/0.jpg)](https://www.youtube.com/watch?v=VPTXeJY6Eaw)
 
