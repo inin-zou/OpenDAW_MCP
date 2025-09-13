@@ -18,3 +18,4 @@ lerna-debug.log
 /packages/app/studio/public/build-info.json
 /packages/app/localhost.pem
 /packages/app/localhost-key.pem
+uv.lock

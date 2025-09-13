@@ -16,8 +16,15 @@ from storage_manager import StorageManager
 # Initialize FastMCP server
 mcp = fastmcp.FastMCP("OpenDAW MCP Server")
 
-# Initialize storage manager
-storage = StorageManager()
+# Initialize storage manager (will be created when needed)
+storage = None
+
+def get_storage():
+    """Get storage manager instance, creating it if needed"""
+    global storage
+    if storage is None:
+        storage = StorageManager()
+    return storage
 
 @mcp.tool(
     title="Create Project",
