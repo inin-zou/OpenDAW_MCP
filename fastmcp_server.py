@@ -6,15 +6,19 @@ Compatible with Alpic deployment platform
 """
 
 import os
-import uuid
+import json
+import asyncio
+from typing import Dict, Any, List, Optional
 from datetime import datetime
-from typing import List, Dict, Any
-from pydantic import Field
+import uuid
+from pydantic import BaseModel, Field
+from fastmcp import FastMCP
+from mistralai import Mistral
 import fastmcp
 from storage_manager import StorageManager
 
 # Initialize FastMCP server
-mcp = fastmcp.FastMCP("OpenDAW MCP Server")
+mcp = FastMCP("OpenDAW MCP Server")
 
 # Initialize storage manager (will be created when needed)
 storage = None
@@ -150,6 +154,107 @@ def generate_audio(
         
     except Exception as e:
         return f"❌ Error generating audio: {str(e)}"
+
+@mcp.tool(
+    title="Generate JSON Track",
+    description="Generate a JSON track using Mistral AI multimodal LLM",
+)
+def generate_json_track(
+    project_id: str = Field(description="Project ID"),
+    track_name: str = Field(description="Track name"),
+    prompt: str = Field(description="Description of the track to generate (e.g., 'upbeat electronic melody', 'ambient soundscape')"),
+    track_type: str = Field(default="melody", description="Type of track: melody, rhythm, bass, harmony, ambient"),
+) -> str:
+    """Generate a JSON track using Mistral AI multimodal LLM"""
+    try:
+        # Check if Mistral API key is available
+        mistral_api_key = os.getenv("MISTRAL_API_KEY")
+        if not mistral_api_key:
+            return "❌ MISTRAL_API_KEY environment variable not set"
+        
+        # Initialize Mistral AI client
+        mistral_client = Mistral(api_key=mistral_api_key)
+        
+        # Create a detailed prompt for JSON track generation
+        system_prompt = f"""You are a music composition AI. Generate a JSON representation of a {track_type} track based on the user's description.
+
+The JSON should include:
+- notes: array of note objects with pitch, duration, timing
+- tempo: BPM value
+- key: musical key
+- time_signature: like "4/4"
+- instruments: array of instrument names
+- effects: array of audio effects
+- metadata: title, genre, mood
+
+Return ONLY valid JSON, no additional text."""
+
+        user_prompt = f"Create a {track_type} track: {prompt}"
+        
+        # Create messages for chat completion
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        # Call Mistral AI API
+        response = mistral_client.chat.complete(
+            model="mistral-large-latest",
+            messages=messages,
+            temperature=0.7,
+            max_tokens=2000
+        )
+        
+        # Extract generated content
+        generated_content = response.choices[0].message.content
+        
+        # Try to parse as JSON to validate
+        try:
+            track_json = json.loads(generated_content)
+        except json.JSONDecodeError:
+            # If not valid JSON, wrap in a basic structure
+            track_json = {
+                "title": track_name,
+                "type": track_type,
+                "description": prompt,
+                "generated_content": generated_content,
+                "tempo": 120,
+                "key": "C major",
+                "time_signature": "4/4"
+            }
+        
+        # Load existing project
+        project_data = storage._sync_load_project(project_id)
+        if not project_data:
+            return f"❌ Project {project_id} not found"
+        
+        # Create new track
+        track_id = str(uuid.uuid4())
+        new_track = {
+            "id": track_id,
+            "name": track_name,
+            "type": "json_ai_generated",
+            "track_type": track_type,
+            "prompt": prompt,
+            "data": track_json,
+            "generated_by": "mistral_ai",
+            "created_at": datetime.now().isoformat()
+        }
+        
+        # Add track to project
+        project_data["tracks"].append(new_track)
+        project_data["lastModified"] = datetime.now().isoformat()
+        
+        # Save updated project
+        success = storage._sync_save_project(project_id, project_data)
+        
+        if success:
+            return f"✅ Generated and added JSON track '{track_name}' to project\n🆔 Track ID: {track_id}\n🎵 Type: {track_type}\n📊 Total tracks: {len(project_data['tracks'])}\n🎼 Generated content preview: {str(track_json)[:200]}..."
+        else:
+            return f"❌ Failed to save updated project"
+        
+    except Exception as e:
+        return f"❌ Error generating JSON track: {str(e)}"
 
 @mcp.tool(
     title="List Projects",
