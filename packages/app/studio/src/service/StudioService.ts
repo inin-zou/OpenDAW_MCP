@@ -260,7 +260,7 @@ export class StudioService implements ProjectEnv {
     }
 
     async cleanSlate() {
-        if (!this.project.editing.isEmpty()) {
+        if (this.hasProfile && !this.project.editing.isEmpty()) {
             const approved = await RuntimeNotifier.approve({
                 headline: "Closing Project?",
                 message: "You will lose all progress!"
