@@ -2,11 +2,11 @@ import {MenuItem} from "@/ui/model/menu-item"
 import {StudioService} from "@/service/StudioService"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {RouteLocation} from "@opendaw/lib-jsx"
-import {EmptyExec, isDefined, panic, RuntimeNotifier} from "@opendaw/lib-std"
+import {EmptyExec, isDefined, panic, RuntimeNotifier, RuntimeSignal} from "@opendaw/lib-std"
 import {Browser, ModfierKeys} from "@opendaw/lib-dom"
 import {SyncLogService} from "@/service/SyncLogService"
 import {IconSymbol} from "@opendaw/studio-adapters"
-import {CloudBackup, WorkerAgents} from "@opendaw/studio-core"
+import {CloudBackup, ProjectSignals, WorkerAgents} from "@opendaw/studio-core"
 import {Promises} from "@opendaw/lib-runtime"
 
 export const initAppMenu = (service: StudioService) => MenuItem.root()
@@ -124,6 +124,7 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                                         const {status, error} =
                                             await Promises.tryCatch(WorkerAgents.Opfs.delete(""))
                                         if (status === "resolved") {
+                                            RuntimeSignal.dispatch(ProjectSignals.StorageUpdated)
                                             await RuntimeNotifier.info({
                                                 headline: "Clear Local Storage",
                                                 message: "Your Local Storage is cleared"

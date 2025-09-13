@@ -4,6 +4,7 @@ import {CloudBackupSamples} from "./CloudBackupSamples"
 import {CloudBackupProjects} from "./CloudBackupProjects"
 import {CloudAuthManager} from "./CloudAuthManager"
 import {CloudService} from "./CloudService"
+import {ProjectSignals} from "../project/ProjectSignals"
 
 export namespace CloudBackup {
     export const backup = async (cloudAuthManager: CloudAuthManager, service: CloudService) => {
@@ -33,7 +34,7 @@ export namespace CloudBackup {
                 message: String(reason)
             })
         } finally {
-            RuntimeSignal.dispatch(FinishedSignal)
+            RuntimeSignal.dispatch(ProjectSignals.StorageUpdated)
         }
     }
 
@@ -50,6 +51,4 @@ export namespace CloudBackup {
             notification.terminate()
         }
     }
-
-    export const FinishedSignal = {type: "cloud-backup-finished"}
 }

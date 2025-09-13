@@ -19,6 +19,7 @@ export * from "./project/ProjectEnv"
 export * from "./project/ProjectMeta"
 export * from "./project/ProjectPaths"
 export * from "./project/ProjectProfile"
+export * from "./project/ProjectSignals"
 export * from "./project/ProjectStorage"
 
 export * from "./samples/SampleStorage"

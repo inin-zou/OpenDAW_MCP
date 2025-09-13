@@ -1,10 +1,10 @@
 import css from "./SampleBrowser.sass?inline"
-import {clamp, DefaultObservableValue, Lifecycle, StringComparator, Terminator} from "@opendaw/lib-std"
+import {clamp, DefaultObservableValue, Lifecycle, RuntimeSignal, StringComparator, Terminator} from "@opendaw/lib-std"
 import {Await, createElement, Frag, Hotspot, HotspotUpdater, Inject, replaceChildren} from "@opendaw/lib-jsx"
 import {Events, Html, Keyboard} from "@opendaw/lib-dom"
 import {Runtime} from "@opendaw/lib-runtime"
 import {IconSymbol} from "@opendaw/studio-adapters"
-import {SampleStorage} from "@opendaw/studio-core"
+import {ProjectSignals, SampleStorage} from "@opendaw/studio-core"
 import {StudioService} from "@/service/StudioService.ts"
 import {ThreeDots} from "@/ui/spinner/ThreeDots.tsx"
 import {Button} from "@/ui/components/Button.tsx"
@@ -33,6 +33,7 @@ export const SampleBrowser = ({lifecycle, service}: Construct) => {
     const entriesLifeSpan = lifecycle.own(new Terminator())
     const reload = Inject.ref<HotspotUpdater>()
     lifecycle.own(location.subscribe(() => reload.get().update()))
+    lifecycle.own(RuntimeSignal.subscribe(signal => signal === ProjectSignals.StorageUpdated && reload.get().update()))
     const filter = new DefaultObservableValue("")
     const searchInput = <SearchInput lifecycle={lifecycle} model={filter}/>
     const slider: HTMLInputElement = <input type="range" min="0.0" max="1.0" step="0.001"/>

@@ -62,13 +62,14 @@ export namespace ProjectDialogs {
 
     export const showBrowseDialog = async (service: StudioService): Promise<[UUID.Bytes, ProjectMeta]> => {
         const {resolve, reject, promise} = Promise.withResolvers<[UUID.Bytes, ProjectMeta]>()
+        const lifecycle = new Terminator()
         const dialog: HTMLDialogElement = (
             <Dialog headline={"Browse Projects"}
                     icon={IconSymbol.FileList}
                     buttons={[{text: "Ok", onClick: () => dialog.close()}]}
                     cancelable={true}>
                 <div style={{height: "2em"}}/>
-                <ProjectBrowser service={service} select={(result) => {
+                <ProjectBrowser lifecycle={lifecycle} service={service} select={(result) => {
                     resolve(result)
                     dialog.close()
                 }}/>
@@ -78,7 +79,7 @@ export namespace ProjectDialogs {
         dialog.onkeydown = event => {if (event.code === "Enter") {dialog.close()}}
         Surface.get().flyout.appendChild(dialog)
         dialog.showModal()
-        return promise
+        return promise.finally(() => lifecycle.terminate())
     }
 
     export const showExportStemsDialog = async (project: Project): Promise<ExportStemsConfiguration> => {

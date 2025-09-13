@@ -6,7 +6,7 @@ import {IconSymbol} from "@opendaw/studio-adapters"
 import {Dialogs} from "@/ui/components/dialogs"
 import {Await, createElement, DomElement, Frag, Group} from "@opendaw/lib-jsx"
 import {Html} from "@opendaw/lib-dom"
-import {CloudBackup, ProjectMeta, ProjectStorage} from "@opendaw/studio-core"
+import {ProjectMeta, ProjectSignals, ProjectStorage} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "ProjectBrowser")
 
@@ -26,7 +26,7 @@ export const ProjectBrowser = ({service, lifecycle, select}: Construct) => {
                        <span>{reason instanceof DOMException ? reason.name : String(reason)}</span>
                    )}
                    repeat={exec => lifecycle.own(RuntimeSignal
-                       .subscribe(signal => signal.type === CloudBackup.FinishedSignal.type && exec()))}
+                       .subscribe(signal => signal === ProjectSignals.StorageUpdated && exec()))}
                    success={projects => (
                        <Frag>
                            <header>
