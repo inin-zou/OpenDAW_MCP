@@ -15,7 +15,7 @@ export class CloudBackupSamples {
     static readonly RemoteCatalogPath = `${this.RemotePath}/index.json`
     static readonly areSamplesEqual = ({uuid: a}: Sample, {uuid: b}: Sample) => a === b
 
-    static createPath(uuid: UUID.String): string {return `${this.RemotePath}/${uuid}.wav`}
+    static pathFor(uuid: UUID.String): string {return `${this.RemotePath}/${uuid}.wav`}
 
     static async start(cloudHandler: CloudHandler,
                        progress: Progress.Handler,
@@ -67,7 +67,13 @@ export class CloudBackupSamples {
                 const arrayBuffer = await SampleStorage.loadSample(UUID.parse(sample.uuid))
                     .then(([{frames: channels, numberOfChannels, numberOfFrames: numFrames, sampleRate}]) =>
                         WavFile.encodeFloats({channels, numberOfChannels, numFrames, sampleRate}))
-                await this.#cloudHandler.upload(CloudBackupSamples.createPath(sample.uuid), arrayBuffer)
+                const path = CloudBackupSamples.pathFor(sample.uuid)
+                await Promises.approvedRetry(() => this.#cloudHandler.upload(path, arrayBuffer), error => ({
+                    headline: "Upload failed",
+                    message: `Failed to upload sample '${sample.name}'. '${error}'`,
+                    approveText: "Retry",
+                    cancelText: "Cancel"
+                }))
                 return sample
             }))
         const catalog: Array<Sample> = Arrays.merge(cloud, uploadedSamples, CloudBackupSamples.areSamplesEqual)
@@ -96,7 +102,7 @@ export class CloudBackupSamples {
             obsolete.map((sample, index, {length}) => async () => {
                 progress((index + 1) / length)
                 this.#log(`Deleting '${sample.name}'`)
-                await this.#cloudHandler.delete(CloudBackupSamples.createPath(sample.uuid))
+                await this.#cloudHandler.delete(CloudBackupSamples.pathFor(sample.uuid))
                 return sample
             }))
         const catalog = cloud.slice()
@@ -118,7 +124,7 @@ export class CloudBackupSamples {
             async () => {
                 progress((index + 1) / length)
                 this.#log(`Downloading sample '${sample.name}'`)
-                const path = CloudBackupSamples.createPath(sample.uuid)
+                const path = CloudBackupSamples.pathFor(sample.uuid)
                 const buffer = await Promises.guardedRetry(() => this.#cloudHandler.download(path), network.DefaultRetry)
                 const waveAudio = WavFile.decodeFloats(buffer)
                 const audioData: AudioData = {

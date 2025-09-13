@@ -9,6 +9,8 @@ import {
     Nullable,
     Option,
     Provider,
+    RuntimeNotification,
+    RuntimeNotifier,
     safeExecute,
     Terminable,
     TerminableOwner,
@@ -70,7 +72,7 @@ export namespace Promises {
         }))
 
     export const guardedRetry = <T>(factory: Provider<Promise<T>>,
-                                    retryIf: (reason: unknown, count: int) => boolean): Promise<T> => {
+                                    retryIf: (error: unknown, count: int) => boolean): Promise<T> => {
         const attempt = async (count: int = 0): Promise<T> => {
             try {
                 return await factory()
@@ -78,6 +80,21 @@ export namespace Promises {
                 if (retryIf(reason, ++count)) {
                     await Wait.timeSpan(TimeSpan.seconds(1))
                     return attempt(count)
+                }
+                throw reason
+            }
+        }
+        return attempt()
+    }
+
+    export const approvedRetry = <T>(factory: Provider<Promise<T>>,
+                                     approve: Func<unknown, RuntimeNotification.ApproveRequest>): Promise<T> => {
+        const attempt = async (): Promise<T> => {
+            try {
+                return await factory()
+            } catch (reason) {
+                if (await RuntimeNotifier.approve(approve(reason))) {
+                    return attempt()
                 }
                 throw reason
             }

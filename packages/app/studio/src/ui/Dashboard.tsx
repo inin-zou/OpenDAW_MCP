@@ -14,7 +14,7 @@ type Construct = {
     service: StudioService
 }
 
-export const Dashboard = ({service}: Construct) => {
+export const Dashboard = ({lifecycle, service}: Construct) => {
     const time = TimeSpan.millis(new Date(service.buildInfo.date).getTime() - new Date().getTime()).toUnitString()
     return (
         <div className={className}>
@@ -60,6 +60,7 @@ export const Dashboard = ({service}: Construct) => {
                     <div>
                         <h3>Your Projects</h3>
                         <ProjectBrowser service={service}
+                                        lifecycle={lifecycle}
                                         select={async ([uuid, meta]) => {
                                             const handler = Dialogs.processMonolog("Loading...")
                                             await service.profileService.loadExisting(uuid, meta)

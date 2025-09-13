@@ -50,21 +50,19 @@ export const initAppMenu = (service: StudioService) => MenuItem.root()
                     )),
                 MenuItem.default({
                     label: "Cloud Backup",
-                    separatorBefore: true,
-                    hidden: !Browser.isLocalHost() && location.hash !== "#cloud"
+                    separatorBefore: true
                 }).setRuntimeChildrenProcedure(parent => {
                     parent.addMenuItem(
                         MenuItem.default({
                             label: "Dropbox",
                             icon: IconSymbol.Dropbox
                         }).setTriggerProcedure(() =>
-                            CloudBackup.backup(service.cloudAuthManager, "Dropbox").then(EmptyExec)),
+                            CloudBackup.backup(service.cloudAuthManager, "Dropbox").catch(EmptyExec)),
                         MenuItem.default({
                             label: "GoogleDrive",
-                            icon: IconSymbol.GoogleDrive,
-                            hidden: !Browser.isLocalHost()
+                            icon: IconSymbol.GoogleDrive
                         }).setTriggerProcedure(() =>
-                            CloudBackup.backup(service.cloudAuthManager, "GoogleDrive").then(EmptyExec)),
+                            CloudBackup.backup(service.cloudAuthManager, "GoogleDrive").catch(EmptyExec)),
                         MenuItem.default({label: "Help", icon: IconSymbol.Help, separatorBefore: true})
                             .setTriggerProcedure(() => RouteLocation.get().navigateTo("/manuals/cloud-backup"))
                     )

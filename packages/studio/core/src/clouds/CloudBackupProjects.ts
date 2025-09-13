@@ -26,8 +26,6 @@ type MetaFields = Pick<ProjectMeta, CatalogFields>
 type Projects = Record<UUID.String, MetaFields>
 type ProjectDomains = Record<"local" | "cloud", Projects>
 
-// TODO List project folder to see if cover exists (less errors in console)
-
 export class CloudBackupProjects {
     static readonly RemotePath = "projects"
     static readonly RemoteCatalogPath = `${this.RemotePath}/index.json`
@@ -70,7 +68,8 @@ export class CloudBackupProjects {
     async #upload(progress: Progress.Handler): Promise<void> {
         const {local, cloud} = this.#projectDomains
         const isUnsynced = (localProject: MetaFields, cloudProject: Nullish<MetaFields>) =>
-            isUndefined(cloudProject) || new Date(cloudProject.modified).getTime() < new Date(localProject.modified).getTime()
+            isUndefined(cloudProject)
+            || new Date(cloudProject.modified).getTime() < new Date(localProject.modified).getTime()
         const unsyncedProjects: ReadonlyArray<[UUID.String, MetaFields]> = Object.entries(local)
             .filter(([uuid, localProject]) => isUnsynced(localProject, cloud[uuid as UUID.String]))
             .map(([uuid, localProject]) => ([UUID.asString(uuid), localProject]))
@@ -92,7 +91,14 @@ export class CloudBackupProjects {
                 tasks.push(this.#cloudHandler.upload(`${folder}/project.od`, project))
                 tasks.push(this.#cloudHandler.upload(`${folder}/meta.json`, metaJson))
                 optCover.ifSome(cover => tasks.push(this.#cloudHandler.upload(`${folder}/image.bin`, cover)))
-                await Promises.timeout(Promise.all(tasks), TimeSpan.seconds(30), "Upload timeout (30s).")
+                await Promises.approvedRetry(() =>
+                        Promises.timeout(Promise.all(tasks), TimeSpan.minutes(10), "Upload timeout (10 min)."),
+                    error => ({
+                        headline: "Upload failed",
+                        message: `Failed to upload project '${meta.name}'. '${error}'`,
+                        approveText: "Retry",
+                        cancelText: "Cancel"
+                    }))
                 return {uuidAsString, meta}
             }))
         const catalog = uploaded

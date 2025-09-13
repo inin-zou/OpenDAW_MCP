@@ -1,21 +1,22 @@
 import css from "./ProjectBrowser.sass?inline"
 import {StudioService} from "@/service/StudioService"
-import {Procedure, StringComparator, TimeSpan, UUID} from "@opendaw/lib-std"
+import {Lifecycle, Procedure, RuntimeSignal, StringComparator, TimeSpan, UUID} from "@opendaw/lib-std"
 import {Icon} from "@/ui/components/Icon"
 import {IconSymbol} from "@opendaw/studio-adapters"
 import {Dialogs} from "@/ui/components/dialogs"
 import {Await, createElement, DomElement, Frag, Group} from "@opendaw/lib-jsx"
 import {Html} from "@opendaw/lib-dom"
-import {ProjectMeta, ProjectStorage} from "@opendaw/studio-core"
+import {CloudBackup, ProjectMeta, ProjectStorage} from "@opendaw/studio-core"
 
 const className = Html.adoptStyleSheet(css, "ProjectBrowser")
 
 type Construct = {
     service: StudioService
+    lifecycle: Lifecycle
     select: Procedure<[UUID.Bytes, ProjectMeta]>
 }
 
-export const ProjectBrowser = ({service, select}: Construct) => {
+export const ProjectBrowser = ({service, lifecycle, select}: Construct) => {
     const now = new Date().getTime()
     return (
         <div className={className}>
@@ -24,6 +25,8 @@ export const ProjectBrowser = ({service, select}: Construct) => {
                    failure={({reason}) => (
                        <span>{reason instanceof DOMException ? reason.name : String(reason)}</span>
                    )}
+                   repeat={exec => lifecycle.own(RuntimeSignal
+                       .subscribe(signal => signal.type === CloudBackup.FinishedSignal.type && exec()))}
                    success={projects => (
                        <Frag>
                            <header>

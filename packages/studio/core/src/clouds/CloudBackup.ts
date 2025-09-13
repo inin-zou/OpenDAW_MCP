@@ -1,13 +1,9 @@
-import {DefaultObservableValue, Progress, RuntimeNotifier, unitValue} from "@opendaw/lib-std"
+import {DefaultObservableValue, Progress, RuntimeNotifier, RuntimeSignal, unitValue} from "@opendaw/lib-std"
 import {CloudHandler} from "./CloudHandler"
 import {CloudBackupSamples} from "./CloudBackupSamples"
 import {CloudBackupProjects} from "./CloudBackupProjects"
 import {CloudAuthManager} from "./CloudAuthManager"
 import {CloudService} from "./CloudService"
-
-// TODO Update views after syncing!
-// TODO How to retry upload?
-// TODO Add cancel and rewind sync
 
 export namespace CloudBackup {
     export const backup = async (cloudAuthManager: CloudAuthManager, service: CloudService) => {
@@ -36,6 +32,8 @@ export namespace CloudBackup {
                 headline: `Could not sync with ${service}`,
                 message: String(reason)
             })
+        } finally {
+            RuntimeSignal.dispatch(FinishedSignal)
         }
     }
 
@@ -52,4 +50,6 @@ export namespace CloudBackup {
             notification.terminate()
         }
     }
+
+    export const FinishedSignal = {type: "cloud-backup-finished"}
 }
