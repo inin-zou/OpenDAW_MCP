@@ -7,14 +7,13 @@ Implements proper MCP protocol for client connections
 import os
 import sys
 import json
-import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-def handler(request):
-    """Vercel handler for MCP protocol requests"""
+def handler(request, context=None):
+    """Vercel serverless function handler"""
     try:
         # Import MCP server components
         from fastmcp_server import mcp
@@ -24,38 +23,40 @@ def handler(request):
             os.environ["AWS_ACCESS_KEY_ID"] = "dummy_key"
             os.environ["AWS_SECRET_ACCESS_KEY"] = "dummy_secret"
         
-        method = request.method
-        path = request.url.path if hasattr(request.url, 'path') else '/'
+        # Extract method from request
+        method = getattr(request, 'method', 'GET')
         
-        # Handle MCP protocol requests
-        if method == 'POST':
-            # Parse request body
-            try:
-                if hasattr(request, 'get_json'):
-                    body = request.get_json()
-                else:
-                    body = json.loads(request.body.decode('utf-8') if request.body else '{}')
-            except:
-                body = {}
-            
+        if method == 'GET':
+            # Return MCP server info
+            response = get_server_info(mcp)
+        elif method == 'POST':
             # Handle MCP JSON-RPC requests
-            if 'method' in body:
-                return handle_mcp_request(body, mcp)
+            try:
+                body = getattr(request, 'body', '{}')
+                if isinstance(body, bytes):
+                    body = body.decode('utf-8')
+                request_data = json.loads(body) if body else {}
+            except (json.JSONDecodeError, AttributeError):
+                request_data = {}
+            
+            response = handle_mcp_request(request_data, mcp)
+        else:
+            response = {
+                'error': 'Method not allowed',
+                'message': 'Only GET and POST methods are supported'
+            }
         
-        elif method == 'GET':
-            # Handle GET requests for capabilities and info
-            if path.endswith('/capabilities'):
-                return get_capabilities(mcp)
-            elif path.endswith('/tools'):
-                return get_tools(mcp)
-            elif path.endswith('/resources'):
-                return get_resources(mcp)
-            elif path.endswith('/prompts'):
-                return get_prompts(mcp)
-            else:
-                # Default: return server info
-                return get_server_info(mcp)
-    
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
+            'body': json.dumps(response)
+        }
+        
     except Exception as e:
         return {
             'statusCode': 500,
@@ -181,14 +182,7 @@ def handle_mcp_request(body: Dict[str, Any], mcp) -> Dict[str, Any]:
             'result': result
         }
         
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps(response)
-        }
+        return response
     
     except Exception as e:
         error_response = {
@@ -200,45 +194,7 @@ def handle_mcp_request(body: Dict[str, Any], mcp) -> Dict[str, Any]:
             }
         }
         
-        return {
-            'statusCode': 500,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps(error_response)
-        }
-
-def get_capabilities(mcp) -> Dict[str, Any]:
-    """Get MCP server capabilities"""
-    tools_count = len(mcp._tool_manager._tools)
-    resources_count = len(mcp._resource_manager._resources)
-    prompts_count = len(mcp._prompt_manager._prompts)
-    
-    return {
-        'statusCode': 200,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        },
-        'body': json.dumps({
-            'protocolVersion': '2024-11-05',
-            'capabilities': {
-                'tools': {'listChanged': False},
-                'resources': {'listChanged': False, 'subscribe': False},
-                'prompts': {'listChanged': False}
-            },
-            'serverInfo': {
-                'name': 'OpenDAW MCP Server',
-                'version': '1.0.0'
-            },
-            'counts': {
-                'tools': tools_count,
-                'resources': resources_count,
-                'prompts': prompts_count
-            }
-        })
-    }
+        return error_response
 
 def get_server_info(mcp) -> Dict[str, Any]:
     """Get server information"""
@@ -247,95 +203,19 @@ def get_server_info(mcp) -> Dict[str, Any]:
     prompts_count = len(mcp._prompt_manager._prompts)
     
     return {
-        'statusCode': 200,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        },
-        'body': json.dumps({
-            'name': 'OpenDAW MCP Server',
-            'version': '1.0.0',
-            'protocol': 'MCP',
-            'protocolVersion': '2024-11-05',
-            'status': 'healthy',
-            'tools': tools_count,
-            'resources': resources_count,
-            'prompts': prompts_count,
-            'endpoints': {
-                'mcp': '/api/mcp',
-                'capabilities': '/api/mcp/capabilities',
-                'tools': '/api/mcp/tools',
-                'resources': '/api/mcp/resources',
-                'prompts': '/api/mcp/prompts'
-            }
-        })
+        'name': 'OpenDAW MCP Server',
+        'version': '1.0.0',
+        'protocol': 'MCP',
+        'protocolVersion': '2024-11-05',
+        'status': 'healthy',
+        'tools': tools_count,
+        'resources': resources_count,
+        'prompts': prompts_count,
+        'endpoints': {
+            'mcp': '/api/mcp',
+            'capabilities': '/api/mcp/capabilities',
+            'tools': '/api/mcp/tools',
+            'resources': '/api/mcp/resources',
+            'prompts': '/api/mcp/prompts'
+        }
     }
-
-def get_tools(mcp) -> Dict[str, Any]:
-    """Get available tools"""
-    tools = []
-    for tool_name, tool_info in mcp._tool_manager._tools.items():
-        tools.append({
-            'name': tool_name,
-            'description': getattr(tool_info, 'description', 'No description'),
-        })
-    
-    return {
-        'statusCode': 200,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        },
-        'body': json.dumps({
-            'tools': tools,
-            'count': len(tools)
-        })
-    }
-
-def get_resources(mcp) -> Dict[str, Any]:
-    """Get available resources"""
-    resources = []
-    for resource_name, resource_info in mcp._resource_manager._resources.items():
-        resources.append({
-            'name': resource_name,
-            'uri': f'resource://{resource_name}',
-            'description': getattr(resource_info, 'description', 'No description'),
-        })
-    
-    return {
-        'statusCode': 200,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        },
-        'body': json.dumps({
-            'resources': resources,
-            'count': len(resources)
-        })
-    }
-
-def get_prompts(mcp) -> Dict[str, Any]:
-    """Get available prompts"""
-    prompts = []
-    for prompt_name, prompt_info in mcp._prompt_manager._prompts.items():
-        prompts.append({
-            'name': prompt_name,
-            'description': getattr(prompt_info, 'description', 'No description'),
-        })
-    
-    return {
-        'statusCode': 200,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        },
-        'body': json.dumps({
-            'prompts': prompts,
-            'count': len(prompts)
-        })
-    }
-
-# Vercel handler
-def handler_wrapper(request):
-    """Wrapper for Vercel deployment"""
-    return handler(request)
