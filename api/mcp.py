@@ -8,12 +8,24 @@ import os
 import sys
 import json
 from typing import Dict, Any
+from flask import Flask, request, jsonify
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-def handler(request, context=None):
-    """Vercel serverless function handler"""
+app = Flask(__name__)
+
+@app.route('/api/mcp', methods=['GET', 'POST', 'OPTIONS'])
+def mcp_endpoint():
+    """MCP protocol endpoint"""
+    if request.method == 'OPTIONS':
+        # Handle CORS preflight
+        response = jsonify({})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        return response
+    
     try:
         # Import MCP server components
         from fastmcp_server import mcp
@@ -23,52 +35,36 @@ def handler(request, context=None):
             os.environ["AWS_ACCESS_KEY_ID"] = "dummy_key"
             os.environ["AWS_SECRET_ACCESS_KEY"] = "dummy_secret"
         
-        # Extract method from request
-        method = getattr(request, 'method', 'GET')
-        
-        if method == 'GET':
+        if request.method == 'GET':
             # Return MCP server info
-            response = get_server_info(mcp)
-        elif method == 'POST':
+            response_data = get_server_info(mcp)
+        elif request.method == 'POST':
             # Handle MCP JSON-RPC requests
             try:
-                body = getattr(request, 'body', '{}')
-                if isinstance(body, bytes):
-                    body = body.decode('utf-8')
-                request_data = json.loads(body) if body else {}
-            except (json.JSONDecodeError, AttributeError):
+                request_data = request.get_json() or {}
+            except Exception:
                 request_data = {}
             
-            response = handle_mcp_request(request_data, mcp)
+            response_data = handle_mcp_request(request_data, mcp)
         else:
-            response = {
+            response_data = {
                 'error': 'Method not allowed',
                 'message': 'Only GET and POST methods are supported'
             }
         
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type'
-            },
-            'body': json.dumps(response)
-        }
+        response = jsonify(response_data)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        return response
         
     except Exception as e:
-        return {
-            'statusCode': 500,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps({
-                'error': str(e),
-                'message': 'MCP Server Error'
-            })
-        }
+        error_response = jsonify({
+            'error': str(e),
+            'message': 'MCP Server Error'
+        })
+        error_response.headers.add('Access-Control-Allow-Origin', '*')
+        return error_response, 500
 
 def handle_mcp_request(body: Dict[str, Any], mcp) -> Dict[str, Any]:
     """Handle MCP JSON-RPC requests"""
